@@ -29,6 +29,8 @@ Analyze iOS/TCA code for performance optimization:
 
 Provides specific optimizations with measurable improvements (FPS, memory, load time).
 
+> **Performance Patterns**: See TCA Essentials and Critical Patterns in .cursor/rules for TCA-specific performance optimizations.
+
 **Agent Used:** May invoke `tca-developer` for TCA-specific optimizations.
 
 ## Usage

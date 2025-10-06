@@ -22,6 +22,8 @@ Analyze iOS/TCA code for bugs and debugging strategies. Focus on:
 
 Provides specific debugging steps, breakpoint suggestions, and fixes.
 
+> **Debugging Patterns**: See Critical Patterns and Debugging/Logging guides in .cursor/rules for comprehensive debugging strategies.
+
 **Agent Used:** This command may invoke `tca-developer` agent for TCA debugging.
 
 ## Usage

@@ -1,6 +1,9 @@
 # Create or Extend iOS + TCA Feature
 
-Create new feature or extend existing one following TCA + Clean Architecture patterns:
+Create new feature or extend existing one following TCA + Clean Architecture patterns.
+
+**Scope**: Creates production code only (Store, View, Use Case, Service, Repository, Models).
+**Testing**: Use `/test` command separately to generate comprehensive tests.
 
 **Creating New Feature:**
 - TCA Store with @ObservableState and Actions
@@ -28,7 +31,8 @@ Create new feature or extend existing one following TCA + Clean Architecture pat
 - Service (if multi-repository, `FeatureNameService.swift`)
 - Repository (if data access needed, `FeatureNameRepository.swift`)
 - Models (`FeatureNameModels.swift`)
-- Tests (`FeatureNameStoreTests.swift`, `FeatureNameUseCaseTests.swift`)
+
+**Note**: Use `/test` command to generate tests for created features.
 
 **Best Practices Applied:**
 - @ObservableState for state management
@@ -41,16 +45,21 @@ Create new feature or extend existing one following TCA + Clean Architecture pat
 - Accessibility support
 - Navigation setup
 
+> **Detailed Guides**: See .cursor/rules for comprehensive patterns:
+> - Architecture Essentials (Clean Architecture, layer responsibilities)
+> - TCA Essentials (State, Actions, Effects patterns)
+> - Critical Patterns (safety rules, common pitfalls)
+> - Localization Rules (L10n naming conventions)
+> - TCA Testing Best Practices (testing patterns, pitfalls)
+
 **Localization:**
 - Adds L10n keys to appropriate Localizable.strings
 - Generates SwiftGen constants structure
 - No hardcoded strings
 
 **Testing:**
-- Complete TestStore setup
-- Mocked dependencies
-- Happy path + edge cases
-- Integration tests for Use Cases
+Tests are generated separately using `/test` command.
+> See `/test` command for comprehensive test generation.
 
 **File Locations:**
 - Views: `DigitalShelf/Screens/FeatureName/`

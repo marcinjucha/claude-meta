@@ -39,6 +39,8 @@ Migrate legacy iOS code to TCA and Clean Architecture patterns:
 
 Provides step-by-step migration plan with before/after code examples.
 
+> **Migration Patterns**: See Architecture Essentials and TCA Essentials in .cursor/rules for complete modern patterns and anti-patterns.
+
 **Agent Used:** May invoke `tca-developer` and `ios-architect`.
 
 ## Usage

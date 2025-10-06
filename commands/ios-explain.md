@@ -24,6 +24,8 @@ Analyze and explain iOS/TCA code focusing on:
 
 Provides clear explanations suitable for code reviews, onboarding, and documentation.
 
+> **Pattern Reference**: See .cursor/rules for detailed explanations of all patterns (Architecture, TCA, Design System, Testing).
+
 **Agent Used:** May invoke `tca-developer` or `ios-architect` depending on focus.
 
 ## Usage

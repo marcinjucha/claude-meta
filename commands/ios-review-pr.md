@@ -39,6 +39,13 @@ Comprehensive pre-PR validation combining quality, architecture, and testing che
 
 Provides actionable checklist of issues to fix before creating PR.
 
+> **Review Guidelines**: See .cursor/rules for complete checklists:
+> - Architecture Essentials (code organization, comments)
+> - Critical Patterns (safety rules, common pitfalls)
+> - TCA Essentials (TCA best practices)
+> - Localization Rules (design system compliance)
+> - TCA Testing Best Practices (testing quality)
+
 **Agent Used:** May invoke `tca-developer`, `ios-architect`, and `ios-swiftui-designer`.
 
 ## Usage

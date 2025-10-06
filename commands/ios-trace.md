@@ -14,6 +14,8 @@ Analyze how data flows through Clean Architecture layers:
 - Identify dependency cycles
 - Check Repository → Repository dependencies
 
+> **Architecture Details**: See Architecture Essentials in .cursor/rules for complete layer responsibilities and dependency rules.
+
 **Performance Insights:**
 - Find redundant data fetches
 - Identify N+1 query problems

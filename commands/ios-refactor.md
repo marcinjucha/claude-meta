@@ -32,6 +32,8 @@ Analyze code for refactoring opportunities in iOS/TCA context:
 
 Provides specific refactoring steps with before/after examples following project patterns.
 
+> **Refactoring Patterns**: See Architecture Essentials and Critical Patterns in .cursor/rules for detailed refactoring guidelines and anti-patterns.
+
 **Agent Used:** May invoke `tca-developer`, `ios-architect`, or `ios-swiftui-designer`.
 
 ## Usage

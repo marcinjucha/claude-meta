@@ -30,6 +30,8 @@ Automatically generate comprehensive tests for TCA features and Use Cases:
 
 Generates complete, working tests ready to run.
 
+> **Testing Patterns**: See TCA Testing Best Practices in .cursor/rules for comprehensive testing patterns, pitfalls, and debugging strategies.
+
 **Agent Used:** May invoke `tca-developer` for TCA testing patterns.
 
 ## Usage

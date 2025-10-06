@@ -30,6 +30,11 @@ Perform comprehensive code quality analysis for iOS/TCA code:
 
 Provides specific improvements with code examples following project standards.
 
+> **Quality Standards**: See .cursor/rules for complete guidelines:
+> - Architecture Essentials (layer separation, SOLID principles)
+> - TCA Essentials (TCA patterns and anti-patterns)
+> - Localization Rules (L10n, Colors, .defaultFont())
+
 **Agent Used:** May invoke `tca-developer`, `ios-architect`, or `ios-swiftui-designer`.
 
 ## Usage
