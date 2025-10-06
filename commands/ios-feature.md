@@ -37,7 +37,7 @@ Create new feature or extend existing one following TCA + Clean Architecture pat
 **Best Practices Applied:**
 - @ObservableState for state management
 - BindingReducer() for form bindings
-- @Dependency with DependencyKey
+- @Dependency (DependencyKey for shared services in same file, Use Cases use makeWithDeps only)
 - makeWithDeps factory for testing
 - Proper cancellation IDs
 - Publisher patterns (not TaskGroups)

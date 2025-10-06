@@ -103,46 +103,12 @@ publisher.weakSink(on: self) { strongSelf, value in
 
 ### 1. STATE DESIGN
 - ✅ @ObservableState macro and Equatable conformance
-- ✅ Immutable properties (let, not var except @Presents)
-- ✅ IdentifiedArrayOf<T> for collections needing O(1) lookups
 - ✅ Computed properties for derived data (isFormValid, errorMessage)
 - ✅ LoadingState<T> enum for async data states
 - ✅ Minimal state: derive what you can, store only what you must
 - ❌ NO massive state objects (split into focused features)
 
-```swift
-// Loading State Pattern
-enum LoadingState<T: Equatable>: Equatable {
-    case idle
-    case loading
-    case loaded(T)
-    case failed(String)
-
-    var isLoading: Bool {
-        if case .loading = self { return true }
-        return false
-    }
-}
-
-@ObservableState
-struct State: Equatable {
-    var email: String = ""
-    var password: String = ""
-    var userState: LoadingState<User> = .idle
-    @Presents var alert: AlertState<Action.Alert>?
-
-    var isFormValid: Bool {
-        !email.isEmpty && password.count >= 8
-    }
-
-    var user: User? {
-        if case .loaded(let user) = userState {
-            return user
-        }
-        return nil
-    }
-}
-```
+> See TCA Essentials in .cursor/rules for complete state design patterns including LoadingState enum.
 
 ### 2. ACTION ORGANIZATION
 - ✅ ViewAction pattern: separate view/response/delegate
@@ -151,277 +117,153 @@ struct State: Equatable {
 - ✅ PresentationAction for @Presents features
 - ❌ NO generic names (update, handle, process)
 
-```swift
-enum Action {
-    case view(ViewAction)
-    case response(ResponseAction)
-    case delegate(DelegateAction)
-
-    enum ViewAction {
-        case loginButtonTapped
-        case emailChanged(String)
-    }
-    enum ResponseAction {
-        case loginResponse(Result<User, Error>)
-    }
-    enum DelegateAction {
-        case loginSucceeded(User)
-    }
-}
-```
+> See TCA Essentials in .cursor/rules for complete action organization patterns.
 
 ### 3. REDUCER STRUCTURE
 - ✅ @Reducer macro
 - ✅ BindingReducer() FIRST in body
 - ✅ Scope for child features before Reduce
 - ✅ Effect.run for async, Effect.none for sync
-- ✅ Proper error handling with Result
 - ❌ NO side effects in reducer (use Effects)
 
 ```swift
 @Reducer
-struct LoginFeature {
+struct Feature {
     var body: some ReducerOf<Self> {
-        BindingReducer()                     // ALWAYS FIRST!
+        BindingReducer()  // ALWAYS FIRST!
         Scope(state: \.child, action: \.child) { ChildFeature() }
-        Reduce { state, action in
-            switch action {
-            case .view(.loginButtonTapped):
-                state.loadingState = .loading
-                return .run { [email = state.email, password = state.password] send in
-                    await send(.response(.loginResponse(
-                        Result { try await authClient.login(email, password) }
-                    )))
-                }
-                .cancellable(id: CancelID.login)
-            }
-        }
+        Reduce { state, action in /* ... */ }
     }
 }
 ```
+
+> See TCA Essentials in .cursor/rules for complete reducer patterns.
 
 ### 4. EFFECTS & ASYNC
 - ✅ .run for async operations with try/await
 - ✅ Capture state values: [value = state.value]
 - ✅ enum CancelID for all long-running effects
 - ✅ .cancellable(id:) for cancellation support
-- ✅ .cancel(id:) on cleanup (only UI-bound effects!)
 - ✅ Debouncing: clock.sleep + cancelInFlight: true
 - ✅ Timer effects: clock.timer(interval:)
+- ⚠️ Only cancel UI-bound effects on onDisappear (not uploads/sync)
 - ❌ NO unhandled errors
 - ❌ NO forgotten cancellation
 
-```swift
-enum CancelID { case search, timer }
-
-// Debounced search
-case .view(.searchQueryChanged(let query)):
-    return .run { send in
-        try await clock.sleep(for: .milliseconds(300))
-        await send(.response(.searchResponse(
-            Result { try await searchClient.search(query) }
-        )))
-    }
-    .cancellable(id: CancelID.search, cancelInFlight: true)
-
-// Timer effect
-case .startTimer:
-    return .run { send in
-        for await _ in clock.timer(interval: .seconds(1)) {
-            await send(.timerTick)
-        }
-    }
-    .cancellable(id: CancelID.timer)
-
-case .stopTimer:
-    return .cancel(id: CancelID.timer)
-
-// Cleanup on view disappearance
-case .view(.viewDisappeared):
-    // ⚠️ Only cancel UI-bound effects (search, timers, animations)
-    // DON'T cancel uploads, sync, or persistence operations
-    return .cancel(id: CancelID.search)
-```
+> See TCA Essentials and Critical Patterns in .cursor/rules for complete effect patterns including debouncing, timers, and cancellation strategies.
 
 ### 5. DEPENDENCIES
 - ✅ @Dependency for ALL external access (APIs, storage, system)
-- ✅ DependencyKey with liveValue and testValue
+- ✅ DependencyKey for shared services (in same file as service)
 - ✅ Wrap system APIs: URLSession, UserDefaults, Date()
 - ✅ makeWithDeps factory for testing (#if DEBUG)
+- ❌ NO DependencyKey for Use Cases (feature-specific, use makeWithDeps only)
 - ❌ NO direct URLSession.shared, UserDefaults.standard
 - ❌ NO Date(), UUID() directly in reducers
 
+**Shared Services: DependencyKey in Same File**
 ```swift
-@DependencyClient
-struct AuthClient {
-    var login: (String, String) async throws -> User
+// In RouteService.swift file:
+protocol RouteServiceProtocol {
+    func routesWithHistory() -> AnyPublisher<[Route], Never>
 }
 
-extension AuthClient: DependencyKey {
-    static let liveValue = AuthClient(
-        login: { email, password in
-            try await URLSession.shared.data(/* ... */)
-        }
-    )
-    static let testValue = AuthClient(
-        login: { _, _ in User.mock }
-    )
+struct RouteService: RouteServiceProtocol {
+    @Dependency(\.routeRepository) var routeRepository
+    // implementation
 }
 
-// In reducer:
-@Dependency(\.authClient) var authClient
+// ✅ CORRECT - DependencyKey extension in same file
+extension RouteService: DependencyKey {
+    static let liveValue = RouteService()
+    static let testValue = RouteService()
+}
 
-// Testing factory:
+extension DependencyValues {
+    var routeService: RouteService {
+        get { self[RouteService.self] }
+        set { self[RouteService.self] = newValue }
+    }
+}
+```
+
+**Use Cases: Protocol + makeWithDeps (NO DependencyKey)**
+```swift
+// In RouteListUseCase.swift file:
+protocol RouteListUseCaseProtocol {
+    var routesPublisher: AnyPublisher<[Route], Never> { get }
+}
+
+final class RouteListUseCase: RouteListUseCaseProtocol {
+    @Dependency(\.routeService) var routeService
+
+    var routesPublisher: AnyPublisher<[Route], Never> {
+        routeService.routesWithHistory()
+    }
+}
+
+// ✅ CORRECT - Only makeWithDeps for local test injection (NO DependencyKey)
 #if DEBUG
-extension LoginFeature {
-    static func makeWithDeps(
-        authClient: AuthClient
-    ) -> LoginFeature {
+extension RouteListUseCase {
+    static func makeWithDeps(routeService: RouteService) -> RouteListUseCase {
         withDependencies {
-            $0.authClient = authClient
-        } operation: { LoginFeature() }
+            $0.routeService = routeService
+        } operation: { RouteListUseCase() }
     }
 }
 #endif
 ```
+
+**Why?**
+- **Use Cases**: Feature-specific, not shared → no DependencyKey, only makeWithDeps
+- **Services/Repos**: Shared across features → DependencyKey in same file
+- **DependencyKey location**: Always in same file as the type (not separate file)
 
 ### 6. NAVIGATION
 - ✅ @Presents for sheets, alerts, confirmation dialogs
 - ✅ PresentationAction in parent action enum
 - ✅ .ifLet(\.$destination, action: \.destination)
 - ✅ NavigationStack with @Bindable path
-- ✅ Parent: specific destination types
-- ✅ Child: NavigationDestination.self
+- ✅ **Parent: specific destination types**
+- ✅ **Child: NavigationDestination.self**
 - ❌ NO .sheet(isPresented:) without @Presents
 
+**Critical Navigation Rule:**
 ```swift
-@ObservableState
-struct State {
-    @Presents var destination: Destination.State?
-    @Presents var confirmationDialog: ConfirmationDialogState<Action.Dialog>?
+// Parent: Specific types only
+.navigationDestination(for: ModeEntry.self) { mode in mode.view }
+
+// Child: NavigationDestination.self
+.navigationDestination(for: NavigationDestination.self) { destination in
+    switch destination {
+    case .routeDetails: RouteDetailsView(...)
+    default: EmptyView()
+    }
 }
-
-enum Action {
-    case destination(PresentationAction<Destination.Action>)
-    case confirmationDialog(PresentationAction<Dialog>)
-
-    enum Dialog { case confirmDelete }
-}
-
-@Reducer
-struct Destination {
-    enum State { case alert(AlertState<Action.Alert>) }
-    enum Action { case alert(Alert) }
-}
-
-var body: some ReducerOf<Self> {
-    Reduce { state, action in /* ... */ }
-        .ifLet(\.$destination, action: \.destination) {
-            Destination()
-        }
-}
-
-// In view:
-.alert($store.scope(state: \.destination?.alert, action: \.destination.alert))
-.confirmationDialog($store.scope(state: \.confirmationDialog, action: \.confirmationDialog))
 ```
+
+> See Critical Patterns in .cursor/rules for complete parent/child navigation patterns and @Presents usage.
 
 ### 7. SWIFTUI INTEGRATION
-- ✅ @Bindable var store for iOS 17+
+- ✅ @Bindable var store
 - ✅ Direct binding: TextField("Email", text: $store.email)
 - ✅ Scope children: store.scope(state: \.child, action: \.child)
-- ✅ ForEach with Array wrapper for LazyStack compatibility
-- ✅ WithPerceptionTracking for observation
-- ❌ NO ViewStore for iOS 17+
+- ✅ ForEach with Array wrapper: ForEach(Array(store.scope(...)))
+- ❌ NO ViewStore (outdated)
 - ❌ NO manual send for bindings (use BindingReducer)
-- ❌ NO direct ForEach over IdentifiedArrayOf in lazy containers
 
-```swift
-struct LoginView: View {
-    @Bindable var store: StoreOf<LoginFeature>
-
-    var body: some View {
-        Form {
-            TextField("Email", text: $store.email)
-            Button("Login") {
-                store.send(.view(.loginButtonTapped))
-            }
-            .disabled(!store.isFormValid)
-        }
-    }
-}
-
-// Collection rendering (CRITICAL for performance)
-struct ItemListView: View {
-    @Bindable var store: StoreOf<ItemList>
-
-    var body: some View {
-        List {
-            // ✅ CORRECT - Array wrapper for LazyStack compatibility
-            ForEach(Array(store.scope(state: \.items, action: \.items))) { itemStore in
-                ItemRowView(store: itemStore)
-            }
-        }
-    }
-}
-
-// ❌ WRONG - Direct ForEach causes issues with lazy loading
-// ForEach(store.scope(state: \.items, action: \.items)) { ... }
-```
+> See TCA Essentials in .cursor/rules for complete SwiftUI integration patterns.
 
 ### 8. TESTING
 
-> **Complete Testing Guide**: See TCA Testing Best Practices in .cursor/rules for comprehensive testing patterns, common pitfalls, and debugging strategies.
+> See **ios-testing-specialist** agent and TCA Testing Best Practices in .cursor/rules for comprehensive testing patterns.
 
-- ✅ TestStore for state and effect validation
+**Quick Checklist:**
+- ✅ TestStore with lazy var (NOT in setUp())
 - ✅ withDependencies for mocking
-- ✅ TestClock for timing control (advance, sleep)
-- ✅ Test cancellation and error cases
-- ✅ await store.receive for all emitted actions
-- ✅ lazy var for TestStore initialization (NOT in setUp())
-- ❌ NO untested effects
+- ✅ await store.receive for all actions
+- ✅ Use keypaths: await sut.receive(\.action)
 - ❌ NO skipInFlightEffects() when no effects exist
-
-```swift
-final class LoginFeatureTests: XCTestCase {
-    // ✅ Use lazy var for TestStore (NOT in setUp())
-    lazy var store = TestStore(initialState: LoginFeature.State()) {
-        LoginFeature()
-    } withDependencies: {
-        $0.authClient.login = { _, _ in User.mock }
-    }
-
-    func testLogin() async {
-        await store.send(.view(.loginButtonTapped)) {
-            $0.userState = .loading
-        }
-        await store.receive(\.response.loginResponse.success) {
-            $0.userState = .loaded(User.mock)
-        }
-    }
-
-    // Testing debounced effects with TestClock
-    func testSearchDebounce() async {
-        let clock = TestClock()
-        let store = TestStore(initialState: SearchFeature.State()) {
-            SearchFeature()
-        } withDependencies: {
-            $0.continuousClock = clock
-        }
-
-        await store.send(.searchQueryChanged("swift")) {
-            $0.searchQuery = "swift"
-        }
-
-        // ✅ Advance clock to trigger debounced effect
-        await clock.advance(by: .milliseconds(300))
-
-        await store.receive(\.performSearch) {
-            $0.isSearching = true
-        }
-    }
-}
-```
 
 ## ANTI-PATTERNS TO FLAG
 

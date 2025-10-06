@@ -6,7 +6,7 @@ Perform comprehensive code quality analysis for iOS/TCA code:
 - State/Action/Reducer structure correctness
 - Action naming conventions (descriptive, action-oriented)
 - Effect patterns (proper cancellation, error handling)
-- @Dependency usage (proper DependencyKey, makeWithDeps factory)
+- @Dependency usage (DependencyKey in same file for shared services, makeWithDeps for Use Cases)
 - Missing BindingReducer() when using @Bindable
 
 **Swift/iOS Standards:**
