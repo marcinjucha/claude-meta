@@ -1,0 +1,189 @@
+// Copyright © 2024 Scandit. All rights reserved.
+
+import SwiftUI
+
+struct ImageLoaderView: View {
+    let image: Refreshable<UIImage>
+    let refresh: () -> Void
+    let showFailureMessage: Bool
+    let showNetworkStatus: Bool
+    let width: Double?
+    let aspectRatio: CGFloat
+
+    @State private var arrowRotation = 0.0
+
+#if DEBUG
+    @ObserveInjection private var forceRedraw
+#endif
+
+    init(
+        image: Refreshable<UIImage>,
+        refresh: @escaping () -> Void,
+        showNetworkStatus: Bool = false,
+        width: Double? = nil,
+        aspectRatio: CGFloat = .defaultAspectRatio,
+        arrowRotation: Double = 0.0
+    ) {
+        self.init(
+            image: image,
+            refresh: refresh,
+            showNetworkStatus: showNetworkStatus,
+            showFailureMessage: showNetworkStatus,
+            width: width,
+            aspectRatio: aspectRatio,
+            arrowRotation: arrowRotation
+        )
+    }
+
+    init(
+        image: Refreshable<UIImage>,
+        refresh: @escaping () -> Void = {},
+        showNetworkStatus: Bool = false,
+        showFailureMessage: Bool = false,
+        width: Double? = nil,
+        aspectRatio: CGFloat = .defaultAspectRatio,
+        arrowRotation: Double = 0.0
+    ) {
+        self.image = image
+        self.refresh = refresh
+        self.showNetworkStatus = showNetworkStatus
+        self.showFailureMessage = showFailureMessage
+        self.width = width
+        self.aspectRatio = aspectRatio
+        self.arrowRotation = arrowRotation
+    }
+
+    private let networkStore = TCAStore(
+        initialState: .init(config: .imageLoader),
+        reducer: { NetworkStatusFeature() }
+    )
+
+    var body: some View {
+        ZStack {
+            switch image {
+            case .loading,
+                .idle,
+                .failure where !showFailureMessage:
+                Color.clear
+                    .aspectRatio(.defaultAspectRatio, contentMode: .fit)
+                loaderButton
+            case .success(let value):
+                Image(uiImage: value)
+                    .resizable()
+                    .frame(maxWidth: .infinity)
+                    .aspectRatio(contentMode: .fit)
+            case .refreshing(let current):
+                Image(uiImage: current)
+                    .resizable()
+                    .frame(maxWidth: .infinity)
+                    .aspectRatio(contentMode: .fit)
+                loader
+            case .failure:
+                failure
+            }
+        }
+        .when(width.isNotNil) {
+            $0
+                .frame(width: width!, height: width! * aspectRatio)
+                .when(!image.isSuccess) {
+                    $0.background(Colors.neutral20.swiftui)
+                }
+        }
+        .when(!image.isSuccess && width.isNil) {
+            $0
+                .aspectRatio(aspectRatio, contentMode: .fit)
+                .background(Colors.neutral20.swiftui)
+        }
+        .enableInjection()
+    }
+
+    @ViewBuilder
+    private var failure: some View {
+        VStack(spacing: 0) {
+            if showNetworkStatus {
+                NetworkStatusView(store: networkStore)
+            }
+
+            VStack {
+                Text(L10n.ImageLoader.Failure.topText)
+                    .layoutPriority(1)
+                Spacer()
+                Images.UpdateFlow.alertSignNopadding.swiftui
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxHeight: 64)
+                Spacer()
+                Text(L10n.ImageLoader.Failure.bottomText)
+                    .layoutPriority(1)
+            }
+            .multilineTextAlignment(.center)
+            .defaultFont(size: .callout)
+            .foregroundStyle(Colors.neutral90)
+            .padding(12)
+        }
+        .onTapGesture {
+            refresh()
+        }
+    }
+
+    private var loaderButton: some View {
+        VStack(spacing: 19) {
+            ZStack {
+                Color.black
+                    .opacity(0.5)
+                    .frame(width: 40, height: 40)
+
+                Images.Svm.refreshArrow.swiftui
+                    .rotationEffect(.degrees(arrowRotation))
+                    .onTapGesture {
+                        refresh()
+                    }
+            }
+            .clipShape(RoundedCorners(radius: 8))
+            .padding(5)
+            .when(image.isFailure) {
+                $0.onTapGesture {
+                    refresh()
+                }
+            }
+        }
+        .onAppear {
+            guard image.isLoading else { return }
+
+            startAnimation(isLoading: image.isLoading)
+        }
+        .onChange(of: image.isLoading) { _, newValue in
+            startAnimation(isLoading: newValue)
+        }
+    }
+
+    private var loader: some View {
+        ActivityIndicator(style: .medium)
+    }
+
+    private func startAnimation(isLoading: Bool) {
+        withAnimation(
+            isLoading
+            ? .linear(duration: 1.0)
+                .repeatForever(autoreverses: false) : .default
+        ) {
+            arrowRotation = isLoading ? 360.0 : 0.0
+        }
+    }
+}
+
+#Preview {
+    Group {
+        ImageLoaderView(image: Refreshable.idle, refresh: {})
+        ImageLoaderView(image: Refreshable.loading, refresh: {})
+        ImageLoaderView(image: Refreshable.failure, refresh: {})
+        ImageLoaderView(
+            image: Refreshable.refreshing(current: .from(color: .red)),
+            refresh: {}
+        )
+        ImageLoaderView(
+            image: Refreshable.success(.from(color: .red)),
+            refresh: {}
+        )
+    }
+}

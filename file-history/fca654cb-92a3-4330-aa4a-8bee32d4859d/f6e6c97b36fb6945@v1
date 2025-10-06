@@ -1,0 +1,364 @@
+// Copyright © 2024 Scandit. All rights reserved.
+
+import Combine
+import ComposableArchitecture
+import Foundation
+import UIKit
+
+protocol PreviewLoading {
+    func previewNeedsUpdate(forModuleId id: Int) async throws -> Bool
+    func loadPreview(forModuleId id: Int) async throws -> UIImage
+    func markCompleted() async
+}
+
+enum ModulePreviewError: Error {
+    case emptyImage
+    case imageCompressionFailed
+    case tooManyRequests
+    case networkUnavailable
+}
+
+enum OfflineReadinessStatus: Equatable {
+    case readyToStart(initialProgress: ModulePreviewProgress)
+    case offlineReady
+    case outdated
+}
+
+enum PreviewResult {
+    case cached(UIImage)
+    case fresh(UIImage)
+}
+
+protocol ModulePreviewRepository: PreviewLoading {
+    /// Sets the initial state up.
+    func setup() async throws
+
+    /// Current preview loading operation
+    /// A new operation automatically cancels any existing operation
+    var previewLoadingOperation: PreviewLoader { get }
+
+    /// Size of the currently cached previews in MB. Returns nil if read fails.
+    var previewCacheSizeInMegabytes: Double? { get async }
+
+    /// Returns the offline readiness status for the given store
+    /// - Parameter storeId: The ID of the store to get the offline readiness status for
+    /// - Parameter ignoreMissing: When determining the age of the offline ready data,
+    /// only check the previews that have been downloaded and ignore the newly added
+    /// - Returns: The offline readiness status for the given store
+    func offlineReadinessStatus(
+        forStore storeId: Int
+    ) async -> OfflineReadinessStatus
+
+    /// Returns the preview for the given module ID, first returning cached data if
+    /// available,
+    /// then fetching fresh data if needed
+    /// - Parameter id: The ID of the module to get the preview for
+    /// - Returns: A tuple containing the cached image (if available) and a Task for the
+    /// fresh image
+    func preview(
+        forModuleId id: Int
+    ) async throws -> (cached: UIImage?, fresh: Task<UIImage, Error>)
+
+    /// Returns the cached preview for the given module ID
+    /// - Parameter id: The ID of the module to get the cached preview for
+    /// - Returns: The cached preview for the given module ID
+    func cachedPreview(forModuleId id: Int) async -> UIImage?
+
+    /// Returns the last update date of the cached preview for the given module ID
+    /// - Parameter id: The ID of the module to get the last update date for
+    /// - Returns: The last update date of the cached preview for the given module ID
+    func previewDate(forModuleId id: Int) async -> Date?
+
+    /// Removes all cached previews
+    func removeModulePreviews() async
+
+    /// Starts loading previews for the given modules
+    /// - Parameter storeId: The ID of the store to load module previews for
+    /// - Throws: An error if the previews cannot be loaded
+    func loadPreviews(forStoreId storeId: Int) async throws -> PreviewLoader
+
+    /// Retries the current preview loading operation
+    /// - Throws: An error if the previews cannot be loaded
+    func retry() async throws
+
+    /// Prunes old previews for the given store
+    /// - Parameter storeID: The ID of the store to prune old previews for
+    func pruneOldPreviews(forStore storeID: Store.ID) async
+}
+
+actor CachedModulePreviewRepository: ModulePreviewRepository {
+    nonisolated let previewLoadingOperation: PreviewLoader
+
+    private let modulePreviewCache: ModulePreviewCache
+    private let previewService: ModulePreviewService
+    private let localAislesRepository: LocalAislesRepository
+    private let imageWidth: Int
+    private let cacheValidity: TimeInterval
+
+    @Dependency(\.settingsManager)
+    private var settingsManager
+
+    init(
+        modulePreviewCache: ModulePreviewCache,
+        previewService: ModulePreviewService,
+        localAislesRepository: LocalAislesRepository,
+        imageWidth: Int,
+        cacheValidity: TimeInterval
+    ) {
+        self.modulePreviewCache = modulePreviewCache
+        self.previewService = previewService
+        self.localAislesRepository = localAislesRepository
+        self.imageWidth = imageWidth
+        self.cacheValidity = cacheValidity
+        previewLoadingOperation = PreviewLoader(idleTimerControl: IdleTimerHandler.shared)
+        previewLoadingOperation.previewLoader = self
+    }
+
+    private func modules(inStore storeId: Int) -> [PersistedShelfScanModule] {
+        localAislesRepository
+            .aisles(forStore: storeId)?
+            .flatMap(\.modules) ?? []
+    }
+
+    func setup() async throws {
+        try await modulePreviewCache.setup()
+    }
+
+    var previewCacheSizeInMegabytes: Double? {
+        get async {
+            do {
+                return try await modulePreviewCache.sizeInMegabytes
+            } catch {
+                Log.fileManager.error(error, "Error reading preview size cache")
+                return nil
+            }
+        }
+    }
+
+    func offlineReadinessStatus(
+        forStore storeId: Int
+    ) async -> OfflineReadinessStatus {
+        let modules = modules(inStore: storeId)
+        guard await modulePreviewCache.isComplete else {
+            return .readyToStart(
+                initialProgress: .preparing(totalModules: modules.count)
+            )
+        }
+        let moduleIDs = modules.map(\.id)
+        let lastUpdateDates = await lastUpdateDates(forModuleIDs: moduleIDs)
+            .map(\.1)
+
+        guard let oldest = lastUpdateDates.oldest else {
+            // All dates nil
+            return .readyToStart(initialProgress: .preparing(totalModules: modules.count))
+        }
+
+        if !oldest.isWithinLast(settingsManager.downloadExpirationPeriod) {
+            return .readyToStart(initialProgress: .preparing(totalModules: modules.count))
+        } else if !oldest.isWithinLast(settingsManager.downloadOutdatedPeriod) {
+            return .outdated
+        } else {
+            return .offlineReady
+        }
+    }
+
+    private func lastUpdateDates(forModuleIDs moduleIDs: [Int]) async -> [(Int, Date?)] {
+        var results: [(Int, Date?)] = []
+        for id in moduleIDs {
+            await results.append((id, previewDate(forModuleId: id)))
+        }
+        return results
+    }
+
+    func loadPreviews(forStoreId storeId: Int) async throws -> PreviewLoader {
+        let moduleIds = modules(inStore: storeId).map(\.id)
+        await previewLoadingOperation.loadPreviews(forModules: moduleIds)
+        return previewLoadingOperation
+    }
+
+    func retry() async throws {
+        await previewLoadingOperation.retry()
+    }
+
+    func pruneOldPreviews(forStore storeID: Store.ID) async {
+        switch await offlineReadinessStatus(forStore: storeID) {
+        case .readyToStart:
+            // If we don't have offline status anymore, we can remove the previews
+            await removeModulePreviews()
+        case .offlineReady, .outdated:
+            break
+        }
+    }
+
+    func removeModulePreviews() async {
+        await previewLoadingOperation.cancel()
+        await modulePreviewCache.clearCache()
+    }
+
+    func preview(
+        forModuleId id: Int
+    ) async throws -> (cached: UIImage?, fresh: Task<UIImage, Error>) {
+        let cachedImage = await cachedPreview(forModuleId: id)
+        let loadTask = Task {
+            try await loadPreview(forModuleId: id)
+        }
+
+        return (cachedImage, loadTask)
+    }
+
+    func cachedPreview(forModuleId id: Int) async -> UIImage? {
+        guard let data = await modulePreviewCache.loadImage(forModuleId: id),
+            let image = UIImage(data: data)
+        else {
+            return nil
+        }
+        return image
+    }
+
+    func previewDate(forModuleId id: Int) async -> Date? {
+        await modulePreviewCache.lastUpdateDate(forModuleId: id)
+    }
+
+    func previewNeedsUpdate(forModuleId id: Int) async throws -> Bool {
+        guard let localDate = await previewDate(forModuleId: id) else {
+            return true
+        }
+        guard let remoteDate = try await previewService.lastUpdatedPreview(forModuleId: id) else {
+            // If no remote date, the module doesn't have a preview on server.
+            // Update local timestamp to current time so it doesn't affect offline readiness status
+            await modulePreviewCache.updateTimestamp(forModuleId: id, date: Date())
+            Log.modulePreviews.info("Updated timestamp for module \(id) without remote preview")
+            return false
+        }
+        return remoteDate > localDate
+    }
+
+    func loadPreview(forModuleId id: Int) async throws -> UIImage {
+        let image: UIImage?
+        do {
+            image = try await previewService.fetchModulePreview(
+                moduleId: id,
+                widthInPoints: imageWidth
+            )
+        } catch {
+            if let error = error as? DigitalShelfAPIService.ResponseError,
+                error.type == .tooManyRequests {
+                throw ModulePreviewError.tooManyRequests
+            } else if let urlErrorCode = (error as? URLError)?.urlErrorCode,
+                urlErrorCode == URLError.Code.notConnectedToInternet {
+                throw ModulePreviewError.networkUnavailable
+            }
+            throw error
+        }
+
+        guard let image else {
+            throw ModulePreviewError.emptyImage
+        }
+
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            throw ModulePreviewError.imageCompressionFailed
+        }
+        try await modulePreviewCache.saveImage(imageData, forModuleId: id)
+
+        return image
+    }
+
+    func markCompleted() async {
+        await modulePreviewCache.markComplete()
+    }
+}
+
+// MARK: - Preview Implementation
+
+#if DEBUG
+
+actor FakeModulePreviewRepository: ModulePreviewRepository {
+    nonisolated let previewLoadingOperation: PreviewLoader = PreviewLoader(idleTimerControl: IdleTimerHandler.shared)
+
+    // MARK: - Tracking for Tests
+    var pruneOldPreviewsCallCount: Int = 0
+    var lastPrunedStoreId: Store.ID?
+    var removeModulePreviewsCallCount: Int = 0
+
+    var previewCacheSizeInMegabytes: Double? {
+        get async { 0.0 }
+    }
+
+    func setup() async throws {
+        // No-op
+    }
+
+    func offlineReadinessStatus(forStore storeId: Int) async -> OfflineReadinessStatus {
+        .offlineReady
+    }
+
+    func preview(forModuleId id: Int) async throws -> (cached: UIImage?, fresh: Task<UIImage, Error>) {
+        let placeholderImage = createPlaceholderImage()
+        let freshTask = Task<UIImage, Error> { placeholderImage }
+        return (cached: placeholderImage, fresh: freshTask)
+    }
+
+    func cachedPreview(forModuleId id: Int) async -> UIImage? {
+        createPlaceholderImage()
+    }
+
+    func previewDate(forModuleId id: Int) async -> Date? {
+        Date()
+    }
+
+    func removeModulePreviews() async {
+        removeModulePreviewsCallCount += 1
+    }
+
+    func loadPreviews(forStoreId storeId: Int) async throws -> PreviewLoader {
+        previewLoadingOperation
+    }
+
+    func retry() async throws {
+        // No-op
+    }
+
+    func pruneOldPreviews(forStore storeID: Store.ID) async {
+        pruneOldPreviewsCallCount += 1
+        lastPrunedStoreId = storeID
+    }
+
+    // MARK: - PreviewLoading Protocol Methods
+
+    func previewNeedsUpdate(forModuleId id: Int) async throws -> Bool {
+        false
+    }
+
+    func loadPreview(forModuleId id: Int) async throws -> UIImage {
+        createPlaceholderImage()
+    }
+
+    func markCompleted() async {
+        // No-op
+    }
+
+    // MARK: - Helper Methods
+
+    private func createPlaceholderImage() -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 300, height: 400))
+        return renderer.image { context in
+            UIColor.systemGray5.setFill()
+            context.fill(CGRect(origin: .zero, size: CGSize(width: 300, height: 400)))
+
+            UIColor.white.setStroke()
+            let path = UIBezierPath(roundedRect: CGRect(x: 50, y: 100, width: 200, height: 200), cornerRadius: 10)
+            path.lineWidth = 2
+            path.stroke()
+
+            UIColor.black.setFill()
+            "Preview".draw(
+                at: CGPoint(x: 130, y: 190),
+                withAttributes: [
+                    .font: UIFont.systemFont(ofSize: 16),
+                    .foregroundColor: UIColor.black,
+                ]
+            )
+        }
+    }
+}
+#endif

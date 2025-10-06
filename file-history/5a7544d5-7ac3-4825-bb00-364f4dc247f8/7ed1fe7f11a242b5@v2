@@ -1,0 +1,258 @@
+# Coding Standards
+
+## Role
+Central reference for code quality standards across all layers of the Next.js feature-based architecture.
+
+## 💬 CODE COMMENTS BEST PRACTICES
+
+### Golden Rule: Comments Explain WHY, Not WHAT
+
+Code should be self-documenting through clear naming and structure. Comments are for explaining non-obvious decisions, business rules, and context that can't be expressed in code.
+
+## When to Write Comments
+
+### ✅ ALWAYS Comment
+
+**1. Business Rules**
+```typescript
+export async function createOrderUseCase(props): Promise<ClientResult<OrderDTO>> {
+  // Business rule: Orders cannot be created if any product is out of stock
+  // This check must happen after fetching to avoid race conditions with inventory
+  const outOfStockProducts = productsResult.value.filter(p => p.stock === 0)
+  if (outOfStockProducts.length > 0) {
+    return clientError(`Out of stock: ${outOfStockProducts.map(p => p.name).join(", ")}`)
+  }
+
+  // Recalculate total with current prices to prevent price manipulation
+  // Client-submitted total is ignored for security reasons
+  const recalculatedTotal = calculateTotal(productsResult.value, props.data.quantities)
+}
+```
+
+**2. Security Considerations**
+```typescript
+export function CheckoutForm() {
+  async function onSubmit(data: FormData) {
+    // Critical: We intentionally don't validate card data client-side
+    // to avoid PCI compliance issues. All payment validation happens server-side.
+    const result = await processCheckoutAction(formData)
+  }
+}
+```
+
+**3. Performance Optimizations**
+```typescript
+export async function fetchProductsRepository(filters?: FilterDTO): Promise<ProductDTO[]> {
+  const result = await client.query({
+    query: LIST_PRODUCTS,
+    variables: { filters },
+    // cache-first: Products rarely change, avoid unnecessary API calls
+    // Update: Use network-only if inventory needs real-time accuracy
+    fetchPolicy: "cache-first",
+  })
+}
+```
+
+**4. Race Condition Prevention**
+```typescript
+// Step 3: Reserve inventory immediately to prevent overselling
+// This is critical for products with limited stock
+const reservationResult = await executePromise(() =>
+  props.context.inventoryRepository.reserve(orderResult.value.id, props.data.productIds)
+)
+```
+
+**5. Workarounds and Bug Fixes**
+```typescript
+export function ProductList() {
+  // Workaround: Next.js 14 has a bug with dynamic imports in production
+  // Using static import until Next.js 14.2 is released
+  // See: https://github.com/vercel/next.js/issues/12345
+  const ProductModal = StaticProductModal
+}
+```
+
+**6. API Quirks**
+```typescript
+function mapProductResponseToDTO(response: ProductResponse): ProductDTO {
+  // Filter out soft-deleted products (deletedAt !== null)
+  // Backend returns them for admin views, but we hide from customers
+  return queryData.products
+    .filter(p => !p.deletedAt)
+    .map(mapProductResponseToDTO)
+}
+```
+
+**7. Complex Test Scenarios**
+```typescript
+it("should handle concurrent inventory updates", async () => {
+  // This test verifies race condition handling when two users
+  // try to purchase the last item simultaneously
+  vi.mocked(client.mutate).mockResolvedValue(
+    createMockInventoryGraphQLResponse({ stock: 0 })
+  )
+
+  const result = await createOrderUseCase({ context, data })
+
+  // Expected: Order should fail gracefully, not create oversold order
+  expect(result.isFailure).toBe(true)
+})
+```
+
+### ❌ NEVER Comment
+
+**1. Standard Patterns**
+```typescript
+❌ BAD:
+// Execute repository with executePromise
+const result = await executePromise(() => props.context.repository(props.data))
+
+// Check if failed
+if (result.isFailure) return clientError("Failed")
+
+// Return success
+return clientValue(result.value)
+```
+
+**2. Self-Explanatory Code**
+```typescript
+❌ BAD:
+// Get user by ID
+const user = await fetchUser(id)
+
+// Register email field
+<input {...register("email")} />
+
+// Show error message
+{errors.email && <span>{errors.email.message}</span>}
+```
+
+**3. Type Definitions**
+```typescript
+❌ BAD:
+// User DTO type
+export type UserDTO = {
+  id: string      // User ID
+  email: string   // User email
+  name: string    // User name
+}
+```
+
+**4. Obvious Validations**
+```typescript
+❌ BAD:
+// Validate email contains @
+const schema = z.object({
+  email: z.string().email("Invalid email"),
+})
+```
+
+**5. Standard Architecture Patterns**
+```typescript
+❌ BAD:
+// Inject dependencies
+const result = await useCase({
+  context: { repository: createRepository },
+  data: parsed.data,
+})
+```
+
+**6. Test Arrange/Act/Assert**
+```typescript
+❌ BAD:
+// Arrange
+const mockResult = { isFailure: false, value: { id: "123" } }
+vi.mocked(useCase).mockResolvedValue(mockResult)
+
+// Act
+await action(formData)
+
+// Assert
+expect(useCase).toHaveBeenCalled()
+```
+
+## Layer-Specific Comment Guidelines
+
+### Components
+- ✅ Security considerations (PCI, XSS prevention)
+- ✅ UX decisions (debouncing, optimistic updates)
+- ✅ Browser compatibility workarounds
+- ✅ Performance optimizations (memo, callbacks)
+- ❌ React Hook Form patterns
+- ❌ Form field registrations
+- ❌ Standard error handling
+
+### Actions
+- ✅ Why specific validation rules exist
+- ✅ Business context for redirects
+- ❌ Standard Zod validation
+- ❌ Dependency injection patterns
+
+### Use Cases
+- ✅ Business rules and their reasons
+- ✅ Security considerations
+- ✅ Race condition prevention
+- ✅ Order of operations importance
+- ❌ Standard executePromise wrapper
+- ❌ Standard error handling
+- ❌ Dependency injection setup
+
+### Repositories
+- ✅ Cache strategy decisions (why cache-first vs network-only)
+- ✅ Data filtering/transformation logic
+- ✅ API quirks or workarounds
+- ✅ Accessibility considerations (WCAG)
+- ❌ Standard GraphQL patterns
+- ❌ Obvious field mappings
+- ❌ Standard error handling
+
+### Tests
+- ✅ Why specific test data values matter
+- ✅ Race conditions being tested
+- ✅ Security scenarios (price manipulation, XSS)
+- ✅ Non-obvious mock behavior
+- ❌ Standard Arrange/Act/Assert labels
+- ❌ Obvious test setup
+- ❌ Standard assertions
+
+## Comment Format
+
+### Single-Line Comments
+```typescript
+// Brief explanation for simple cases
+const total = price * quantity
+```
+
+### Multi-Line Comments for Complex Logic
+```typescript
+// Business rule: Orders cannot be created if any product is out of stock.
+// This check must happen after fetching fresh data to avoid race conditions
+// where inventory changes between cart creation and checkout.
+const outOfStockProducts = productsResult.value.filter(p => p.stock === 0)
+```
+
+### Inline Comments for Specific Values
+```typescript
+vi.mocked(client.query).mockResolvedValue(
+  createMockProductGraphQLResponse({
+    price: 25.99, // Current price - different from submitted to test price manipulation
+  })
+)
+```
+
+## Code Review Checklist
+
+When reviewing code, verify:
+- [ ] No comments explaining WHAT the code does
+- [ ] Comments explain WHY decisions were made
+- [ ] Business rules are documented
+- [ ] Security considerations are noted
+- [ ] Performance decisions are justified
+- [ ] Workarounds reference issue trackers
+- [ ] Complex test scenarios are explained
+- [ ] Standard patterns are NOT commented
+
+## Reference
+- Based on Clean Code by Robert C. Martin
+- Adapted from iOS project comment guidelines
+- Aligned with Next.js feature-based architecture principles

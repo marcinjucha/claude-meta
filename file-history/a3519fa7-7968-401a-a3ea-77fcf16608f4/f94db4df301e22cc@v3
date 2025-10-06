@@ -1,0 +1,53 @@
+# Explain iOS + TCA Code
+
+Analyze and explain iOS/TCA code focusing on:
+
+**Screen Logic:**
+- State structure and data flow
+- Action organization
+- Business logic and async patterns
+- Dependency management
+- Navigation implementation
+
+**Code Organization:**
+- Layer identification (views, business logic, data access, models)
+- Service vs direct data access patterns
+- Data abstraction
+- Dependency flow
+
+**Implementation Details:**
+- SwiftUI view composition
+- Design system usage (Colors, L10n, .defaultFont())
+- Async/await patterns
+- Publisher subscriptions
+- Error handling
+
+Provides clear explanations suitable for code reviews, onboarding, and documentation.
+
+**Agent Used:** May invoke `tca-developer` or `ios-architect` depending on focus.
+
+**Relevant Cursor Rules:**
+- `architecture-essentials.mdc` - Layer identification and responsibilities
+- `tca-essentials.mdc` - TCA patterns and state management explanation
+- `data-layer-essentials.mdc` - Data flow and reactive patterns
+
+**Creating Custom Agents/Rules:**
+If you need specialized context for this workflow:
+
+*Agent (Claude Code):*
+1. Use chat + documentation/files to create agent content
+2. Run `/agents > Create new agent` to save
+3. Add natural language triggers
+
+*Rule (Cursor AI):*
+1. Use chat + documentation/files (@Web, @Docs) to create rule content
+2. Run `/Generate Cursor Rules` to save
+3. Configure globs pattern and semantic matching
+
+## Usage
+```
+/explain [file_path]
+```
+
+## Parameters
+- `file_path`: Path to the file to analyze and explain (required)

@@ -1,0 +1,110 @@
+import { TallyWebhookPayload } from "@/features/survey/logic/survey-type"
+import { NextRequest, NextResponse } from "next/server"
+import { writeFile, readFile, unlink } from "fs/promises"
+import { join } from "path"
+import { existsSync } from "fs"
+import { tmpdir } from "os"
+
+export async function POST(request: NextRequest) {
+  try {
+    // Pobierz dane z webhook
+    const body: TallyWebhookPayload = await request.json()
+
+    console.log("body", body)
+
+    // Walidacja podstawowa
+    if (!body.data || !body.data.fields) {
+      return NextResponse.json({ error: "Invalid webhook payload" }, { status: 400 })
+    }
+
+    // Zapisz body do tymczasowego foldera (writable w środowisku serverless)
+    const tempDir = tmpdir()
+    const fileName = `webhook-${body.data.respondentId}.json`
+    const filePath = join(tempDir, fileName)
+
+    // Zapisz dane do pliku
+    await writeFile(filePath, JSON.stringify(body, null, 2), "utf-8")
+
+    console.log(`Webhook data saved to: ${filePath}`)
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Webhook error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+// Opcjonalnie: obsługa GET dla testowania
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    console.log("GET request - respondentId:", id)
+
+    if (!id) {
+      return NextResponse.json(
+        {
+          error: "id parameter is required",
+          example: "?id=your-id",
+        },
+        { status: 400 },
+      )
+    }
+
+    // Ścieżka do pliku z webhook data w temp directory
+    const tempDir = tmpdir()
+    const fileName = `webhook-${id}.json`
+    const filePath = join(tempDir, fileName)
+
+    // Sprawdź czy plik istnieje
+    if (!existsSync(filePath)) {
+      console.log(`File not found: ${filePath}`)
+      return NextResponse.json(
+        {
+          error: "Webhook data not found for this id",
+          id,
+          filePath: fileName,
+        },
+        { status: 404 },
+      )
+    }
+
+    // Odczytaj plik i wyświetl w konsoli
+    const fileContent = await readFile(filePath, "utf-8")
+    const webhookData: TallyWebhookPayload = JSON.parse(fileContent)
+
+    console.log("=== WEBHOOK DATA FROM FILE ===")
+    console.log("File:", fileName)
+    console.log("RespondentId:", webhookData.data.respondentId)
+    console.log("FormId:", webhookData.data.formId)
+    console.log("FormName:", webhookData.data.formName)
+    console.log("CreatedAt:", webhookData.data.createdAt)
+    console.log("Fields count:", webhookData.data.fields.length)
+    console.log("Full webhook data:", JSON.stringify(webhookData, null, 2))
+    console.log("=== END WEBHOOK DATA ===")
+
+    // Usuń plik po udanym odczytaniu
+    await unlink(filePath)
+    console.log(`File deleted: ${filePath}`)
+
+    return NextResponse.json({
+      message: "Webhook data found, displayed in console, and file deleted",
+      id,
+      fileName,
+      formName: webhookData.data.formName,
+      fieldsCount: webhookData.data.fields.length,
+      timestamp: new Date().toISOString(),
+      deleted: true,
+    })
+  } catch (error) {
+    console.error("GET endpoint error:", error)
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
+  }
+}

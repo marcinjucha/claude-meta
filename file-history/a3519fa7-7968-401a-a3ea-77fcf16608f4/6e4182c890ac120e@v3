@@ -1,0 +1,59 @@
+# Generate Tests for iOS + TCA
+
+Automatically generate comprehensive tests for TCA features and Use Cases:
+
+**Screen Tests:**
+- Test setup with proper mocking
+- State change validation
+- Async behavior testing
+- Action flow validation
+- All dependencies mocked
+- Timer and delayed effects testing
+- Navigation testing
+
+**Business Logic Tests:**
+- Integration tests with real components where appropriate
+- Reactive data flow testing
+- Error handling scenarios
+- Edge cases coverage
+
+**Test Data:**
+- Sample data generation
+- Mocked dependencies
+- Test helpers
+
+**Best Practices:**
+- Tests properly initialized
+- All actions handled
+- Proper test patterns followed
+- No unnecessary test complexity
+
+Generates complete, working tests ready to run.
+
+**Agent Used:** May invoke `tca-developer` for TCA testing patterns.
+
+**Relevant Cursor Rules:**
+- `tca-testing-best-practices.mdc` - Comprehensive TCA testing patterns and strategies
+- `critical-patterns.mdc` - Two-level testing approach (presentation vs business)
+
+**Creating Custom Agents/Rules:**
+If you need specialized context for this workflow:
+
+*Agent (Claude Code):*
+1. Use chat + documentation/files to create agent content
+2. Run `/agents > Create new agent` to save
+3. Add natural language triggers
+
+*Rule (Cursor AI):*
+1. Use chat + documentation/files (@Web, @Docs) to create rule content
+2. Run `/Generate Cursor Rules` to save
+3. Configure globs pattern and semantic matching
+
+## Usage
+```
+/test [file_path] [test_focus]
+```
+
+## Parameters
+- `file_path`: Path to the file to generate tests for (required)
+- `test_focus`: Optional specific test scenario (e.g., "happy path", "error handling", "edge cases")

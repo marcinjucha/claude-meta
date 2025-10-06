@@ -1,0 +1,392 @@
+# Cursor AI & Claude Code: Practical Training for Development Teams
+
+**Duration:** ~75 minutes
+**Target Audience:** Developers (iOS, Python, ML, all stacks)
+**Focus:** Hands-on, practical, platform-agnostic
+
+---
+
+## 1. Tools Overview (5 min)
+
+### Cursor AI vs Claude Code
+- **Cursor AI**: IDE with built-in AI, inline editing, composer mode
+- **Claude Code**: CLI tool, powerful agents system, terminal-based
+- **When to use which:**
+  - Cursor: Quick edits, inline completions, file-by-file work
+  - Claude Code: Complex refactoring, multi-file changes, systematic reviews
+
+---
+
+## 2. Context System: CLAUDE.md Files (10 min)
+
+### Two Levels of Context
+
+**Global CLAUDE.md** (`~/.claude/CLAUDE.md`)
+- Personal preferences across all projects
+- Example: "Don't run tests automatically, I'll do it in Xcode"
+- Language preferences
+- Work style preferences
+
+**Project CLAUDE.md** (`project-root/CLAUDE.md`)
+- Project-specific context and guidelines
+- Architecture overview (Clean Architecture, 4-layer system)
+- Tech stack (SwiftUI, TCA, GRDB)
+- Critical patterns (Publishers not TaskGroups, @Dependency capture rules)
+- Common commands (fastlane, testing, build)
+- Project structure
+
+### Why This Matters
+- Claude reads these files automatically
+- Provides context without repeating yourself
+- Ensures consistent guidance across sessions
+- Team knowledge in one place
+
+### Example from Our iOS Project
+```markdown
+## Architecture
+4-Layer Clean Architecture:
+- Presentation (SwiftUI + TCA)
+- Business (Use Cases + Services)
+- Data (Repositories)
+- Models
+
+## Critical Rules
+- NEVER access @Dependency inside TaskGroup (crashes!)
+- Use Publishers pattern in TCA (NOT TaskGroups)
+- Repository NEVER calls another Repository (create Service)
+```
+
+---
+
+## 3. Agents System (15 min)
+
+### What Are Agents?
+Specialized AI assistants that automatically handle specific tasks:
+- Code review specialists
+- Testing experts
+- Architecture reviewers
+- Debugging helpers
+
+### Key Learning: Natural, Conversational, Context-Based Language
+
+**❌ Technical/Documentation Style:**
+```markdown
+description: Use this agent when implementing or reviewing TCA (The Composable Architecture) code...
+- Implementing new TCA features (State, Action, Reducer)
+- Creating dependencies with @Dependency and DependencyKey
+```
+
+**✅ Natural, Context-Aware Style:**
+```markdown
+description: Use this agent when working on screen logic and view behavior...
+- "I built a new screen, can you check if it's working right?"
+- "This view isn't updating when state changes"
+- "Added dependency for fetching routes/stores/data"
+```
+
+### Why Natural Language?
+Because in your project context:
+- **Everyone knows** it's TCA → so say "screen logic" not "TCA Feature"
+- **Everyone knows** it's iOS → so say "view" not "SwiftUI View"
+- **Everyone knows** the architecture → so say "business logic" not "Use Case"
+
+### Agent Examples
+
+**iOS Project:**
+- `ios-tca-developer` - Screen logic, state management
+- `ios-swiftui-designer` - UI styling, layout, design system
+- `ios-architect` - Code organization, where logic belongs
+- `ios-testing-specialist` - Writing and fixing tests
+
+**Python/ML Project (examples):**
+- `ml-model-reviewer` - Model architecture and training
+- `data-pipeline-specialist` - ETL and data processing
+- `api-developer` - FastAPI/Flask endpoints
+- `testing-specialist` - pytest and integration tests
+
+### Creating Your Own Agent
+
+**Structure:**
+```markdown
+---
+name: your-agent-name
+description: Natural language trigger phrases...
+model: sonnet
+---
+
+You are an expert in [domain]...
+```
+
+**Best Practices:**
+1. Use natural phrases your team actually says
+2. Reference project-specific terms (routes, models, pipelines)
+3. Include common problem descriptions
+4. Keep examples realistic
+
+---
+
+## 4. Commands System (10 min)
+
+### What Are Commands?
+Reusable workflows triggered with `/command-name`
+
+### Structure
+```markdown
+# Command Title
+
+Description of what it does
+
+**Checklist items or steps**
+
+**Agent Used:** May invoke `agent-name`
+
+## Usage
+```
+/command [parameter1] [parameter2]
+```
+
+## Parameters
+- `parameter1`: Description (required/optional)
+```
+
+### Examples from iOS Project
+
+**/review-pr** - Pre-PR validation
+- Code quality checks
+- Architecture compliance
+- Design system usage
+- Test coverage
+
+**/test** - Generate comprehensive tests
+- Screen tests
+- Business logic tests
+- Mock setup
+
+**/debug** - Analyze and fix issues
+- View not updating
+- Memory leaks
+- Crashes
+
+### Creating Custom Commands
+
+**Example: Python/ML**
+```markdown
+# /review-model
+
+Check ML model implementation:
+
+**Model Architecture:**
+- Layer structure appropriate
+- Activation functions correct
+- Dropout/regularization present
+
+**Training:**
+- Loss function appropriate
+- Optimizer configuration
+- Learning rate schedule
+
+**Agent Used:** May invoke `ml-model-reviewer`
+```
+
+---
+
+## 5. Rules System (.cursor/rules) (10 min)
+
+### What Are Rules?
+Project-specific guidelines and patterns for Cursor AI
+
+### Structure
+```markdown
+---
+description: Brief description
+---
+
+# Rule Title
+
+## When to use this guide
+
+**Keywords that trigger this:**
+- keyword1, keyword2
+- natural phrases
+
+**Natural examples:**
+- "example user request"
+- "another common scenario"
+
+## Patterns and Guidelines
+[Your content here]
+```
+
+### Examples from iOS Project
+
+**tca-essentials.mdc** - Screen logic patterns
+**architecture-essentials.mdc** - Code organization
+**localization-rules.mdc** - String localization
+
+### When to Create Rules
+- Recurring patterns in your codebase
+- Common mistakes to prevent
+- Project conventions (naming, structure)
+- Technology-specific best practices
+
+### Platform-Agnostic Examples
+
+**Python:**
+- `fastapi-patterns.mdc` - API endpoint patterns
+- `pytest-best-practices.mdc` - Testing conventions
+- `pydantic-models.mdc` - Data validation
+
+**ML:**
+- `pytorch-patterns.mdc` - Model architecture
+- `data-loading.mdc` - Dataset preparation
+- `training-loops.mdc` - Training best practices
+
+---
+
+## 6. Best Practices (10 min)
+
+### 1. Natural Language Principle
+**Use language your team uses in daily conversation**
+
+❌ "Implement TCA Reducer with BindingReducer composition"
+✅ "Build screen with proper state management"
+
+❌ "Create Repository following Clean Architecture Data Layer patterns"
+✅ "Add data access for fetching user info"
+
+### 2. Context-Aware Descriptions
+**Assume project knowledge**
+
+Your team knows:
+- The tech stack (iOS/Python/ML)
+- The architecture (Clean/Microservices/Monolith)
+- Common patterns (TCA/Redux/MVC)
+
+So descriptions can be shorter and more natural.
+
+### 3. Project-Specific Terminology
+**Use YOUR domain language**
+
+iOS Project: routes, aisles, stores, mapping, capture
+E-commerce: products, orders, inventory, checkout
+ML Project: models, datasets, training, inference
+
+### 4. Avoiding Overlap
+- Each agent should have clear, distinct responsibility
+- Commands should compose agents, not duplicate them
+- Rules should complement, not conflict
+
+### 5. Maintenance
+- Review quarterly
+- Update when patterns change
+- Remove outdated content
+- Keep examples realistic
+
+---
+
+## 7. Live Demo: iOS Project Workflow (15 min)
+
+### Scenario 1: Building New Feature
+**User:** "I need to build a route list screen with filtering"
+
+**Claude triggers:** `ios-tca-developer` agent
+- Reviews screen logic setup
+- Checks state management
+- Validates async patterns
+
+### Scenario 2: Styling Issues
+**User:** "This view has hardcoded colors and strings"
+
+**Claude triggers:** `ios-swiftui-designer` agent
+- Fixes to use Colors enum
+- Replaces with L10n constants
+- Ensures design system compliance
+
+### Scenario 3: Code Organization
+**User:** "Where should this route sorting logic go?"
+
+**Claude triggers:** `ios-architect` agent
+- Analyzes current structure
+- Recommends appropriate layer
+- Explains reasoning
+
+### Scenario 4: Pre-PR Check
+**User:** `/review-pr Screens/RouteList/`
+
+**Command executes:**
+- Checks code quality
+- Validates architecture
+- Reviews design system usage
+- Assesses test coverage
+
+### Before/After Our Refactoring
+
+**Before (Technical):**
+```markdown
+description: Use this agent when implementing TCA features (State, Action, Reducer)
+```
+
+**After (Natural):**
+```markdown
+description: Use this agent when:
+- "I built a new screen, can you check it?"
+- "View isn't updating when state changes"
+- "Need to add loading state"
+```
+
+**Impact:**
+- Better agent triggering accuracy
+- More natural conversations
+- Less confusion about which agent to use
+
+---
+
+## 8. Q&A & Discussion (10 min)
+
+### Common Questions
+
+**Q: How do I know which agent will be triggered?**
+A: Claude analyzes your natural language request and matches it to agent descriptions.
+
+**Q: Can I have agents for multiple languages in one project?**
+A: Yes! Agents are in `~/.claude/agents/` (global) so they work across all projects.
+
+**Q: How often should I update CLAUDE.md?**
+A: Update when architecture changes, new patterns emerge, or critical rules are added.
+
+**Q: Do commands replace agents?**
+A: No, commands *use* agents. Commands are workflows, agents are specialists.
+
+**Q: What if I don't have Cursor AI?**
+A: Rules are Cursor-specific, but agents/commands work in Claude Code (CLI).
+
+---
+
+## Key Takeaways
+
+1. **CLAUDE.md files** provide automatic context - use them!
+2. **Write descriptions naturally** - like you talk to teammates
+3. **Be context-aware** - assume project knowledge
+4. **Agents are specialists** - one clear responsibility each
+5. **Commands are workflows** - compose agents together
+6. **Maintain regularly** - keep content fresh and relevant
+
+---
+
+## Next Steps
+
+1. **Try it:** Create one agent for your most common task
+2. **Document:** Add/update your project's CLAUDE.md
+3. **Share:** Collaborate on team agents and commands
+4. **Iterate:** Refine based on what works
+
+---
+
+## Resources
+
+- Agent examples: `~/.claude/agents/`
+- Command examples: `~/.claude/commands/`
+- Cursor rules: `.cursor/rules/`
+- Project context: `CLAUDE.md`
+
+**Questions? Let's discuss!**

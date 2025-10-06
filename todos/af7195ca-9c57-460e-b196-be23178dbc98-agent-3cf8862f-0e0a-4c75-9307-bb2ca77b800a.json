@@ -1,0 +1,17 @@
+[
+  {
+    "content": "Create MappingModeModulePreviewUseCase with protocol and implementation",
+    "status": "in_progress",
+    "activeForm": "Creating MappingModeModulePreviewUseCase with protocol and implementation"
+  },
+  {
+    "content": "Update MappingModeModulePreviewFeature to use the new use case",
+    "status": "pending",
+    "activeForm": "Updating MappingModeModulePreviewFeature to use the new use case"
+  },
+  {
+    "content": "Update MappingFlowStore to pass use case to feature if needed",
+    "status": "pending",
+    "activeForm": "Updating MappingFlowStore to pass use case to feature if needed"
+  }
+]

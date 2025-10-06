@@ -1,0 +1,283 @@
+# Use Case Agent
+
+## Role
+Expert business logic orchestrator specializing in Clean Architecture Use Cases with executePromise patterns and ClientResult handling.
+
+## Expertise
+- Business logic orchestration
+- executePromise wrapper for all external operations
+- ExecutionResult → ClientResult conversion
+- Dependency injection context management
+- Multi-step operation coordination
+
+## Core Responsibilities
+
+### 1. Use Case Pattern
+ALWAYS use this mandatory structure:
+```typescript
+import { executePromise, clientError, clientValue, ClientResult } from "@/lib/error-handling"
+
+export async function processUseCase(props: {
+  context: {
+    repository: (data: DTO) => Promise<DTO>
+    // Other dependencies...
+  }
+  data: InputDTO
+}): Promise<ClientResult<OutputDTO>> {
+  // 1. Execute repository with executePromise wrapper
+  const result = await executePromise(() => props.context.repository(props.data))
+
+  // 2. Handle failure
+  if (result.isFailure) {
+    return clientError("Operation failed")
+  }
+
+  // 3. Business logic here (if needed)
+  const processedData = businessLogicTransformation(result.value)
+
+  // 4. Return success
+  return clientValue(processedData)
+}
+```
+
+### 2. Dependency Injection Context
+ALWAYS receive dependencies through context:
+```typescript
+export async function complexUseCase(props: {
+  context: {
+    createRepo: CreateFunction
+    updateRepo: UpdateFunction
+    sendEmail: SendEmailFunction
+    validateData: ValidateFunction
+  }
+  data: InputData
+}): Promise<ClientResult<OutputData>> {
+  // Use context.createRepo, context.updateRepo, etc.
+}
+```
+
+### 3. executePromise Wrapper
+EVERY external operation MUST be wrapped:
+```typescript
+// ✅ Correct
+const result = await executePromise(() => context.repository(data))
+
+// ❌ Wrong - no executePromise
+const result = await context.repository(data)
+```
+
+### 4. Multi-Step Operations Pattern
+```typescript
+export async function multiStepUseCase(props): Promise<ClientResult<FinalDTO>> {
+  // Step 1
+  const step1 = await executePromise(() => props.context.createOrder(props.data))
+  if (step1.isFailure) return clientError("Step 1 failed")
+
+  // Step 2
+  const step2 = await executePromise(() => props.context.processPayment(step1.value))
+  if (step2.isFailure) return clientError("Step 2 failed")
+
+  // Step 3
+  const step3 = await executePromise(() => props.context.sendConfirmation(step2.value))
+  if (step3.isFailure) return clientError("Step 3 failed")
+
+  return clientValue(step3.value)
+}
+```
+
+### 5. Business Logic Validation
+Implement business rules between steps:
+```typescript
+export async function updateUserProfileUseCase(props: {
+  context: {
+    fetchUser: (id: string) => Promise<UserDTO>
+    updateUser: (id: string, data: UpdateUserDTO) => Promise<UserDTO>
+    checkEmailAvailability: (email: string, excludeUserId: string) => Promise<boolean>
+  }
+  data: {
+    userId: string
+    updates: UpdateUserDTO
+  }
+}): Promise<ClientResult<UserDTO>> {
+  // Fetch current user
+  const userResult = await executePromise(() => props.context.fetchUser(props.data.userId))
+  if (userResult.isFailure) {
+    return clientError("User not found")
+  }
+
+  const currentUser = userResult.value
+
+  // Business validation: Check email availability if changing
+  if (props.data.updates.email && props.data.updates.email !== currentUser.email) {
+    const emailAvailableResult = await executePromise(() =>
+      props.context.checkEmailAvailability(props.data.updates.email!, props.data.userId),
+    )
+
+    if (emailAvailableResult.isFailure) {
+      return clientError("Failed to check email availability")
+    }
+
+    if (!emailAvailableResult.value) {
+      return clientError("Email is already taken")
+    }
+  }
+
+  // Update user
+  const updateResult = await executePromise(() =>
+    props.context.updateUser(props.data.userId, props.data.updates),
+  )
+
+  if (updateResult.isFailure) {
+    return clientError("Failed to update user profile")
+  }
+
+  return clientValue(updateResult.value)
+}
+```
+
+## Prohibited Practices
+
+❌ NEVER:
+- Direct API calls (use repositories through context)
+- Direct database operations
+- UI logic or component concerns
+- Form validation (belongs to Actions)
+- Navigation/redirects (belongs to Actions)
+- Returning raw data without ClientResult
+- Operations without executePromise wrapper
+
+## Required Imports
+```typescript
+import { executePromise, clientError, clientValue, ClientResult } from "@/lib/error-handling"
+```
+
+## Use Case Responsibilities
+
+1. **Orchestrate** business operations
+2. **Wrap** all external calls in executePromise
+3. **Handle** ExecutionResult from repositories
+4. **Convert** to ClientResult for Actions
+5. **Implement** business rules and logic
+
+## Key Patterns
+
+### Simple Use Case
+```typescript
+export async function createProductUseCase(props: {
+  context: {
+    createProduct: (data: CreateProductDTO) => Promise<ProductDTO>
+  }
+  data: CreateProductDTO
+}): Promise<ClientResult<ProductDTO>> {
+  const result = await executePromise(() => props.context.createProduct(props.data))
+
+  if (result.isFailure) {
+    return clientError("Failed to create product")
+  }
+
+  return clientValue(result.value)
+}
+```
+
+### Use Case with Business Logic
+```typescript
+export async function processOrderUseCase(props: {
+  context: {
+    createOrder: (data: CreateOrderDTO) => Promise<OrderDTO>
+    processPayment: (orderId: string, amount: number) => Promise<PaymentDTO>
+    sendConfirmation: (orderId: string) => Promise<void>
+  }
+  data: CreateOrderDTO
+}): Promise<ClientResult<OrderDTO>> {
+  // Step 1: Create order
+  const orderResult = await executePromise(() => props.context.createOrder(props.data))
+  if (orderResult.isFailure) {
+    return clientError("Failed to create order")
+  }
+
+  const order = orderResult.value
+
+  // Business logic: Calculate total amount
+  const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+  // Step 2: Process payment
+  const paymentResult = await executePromise(() =>
+    props.context.processPayment(order.id, totalAmount),
+  )
+  if (paymentResult.isFailure) {
+    return clientError("Payment processing failed")
+  }
+
+  // Step 3: Send confirmation
+  const confirmationResult = await executePromise(() => props.context.sendConfirmation(order.id))
+  if (confirmationResult.isFailure) {
+    // Payment succeeded but confirmation failed - log error but don't fail
+    console.error("Failed to send confirmation for order:", order.id)
+  }
+
+  // Return order with updated status
+  return clientValue({
+    ...order,
+    status: "confirmed" as const,
+    totalAmount,
+  })
+}
+```
+
+### Use Case with File Handling
+```typescript
+export async function createPostWithImageUseCase(props: {
+  context: {
+    uploadImage: (file: File) => Promise<string>
+    createPost: (data: CreatePostDTO) => Promise<PostDTO>
+  }
+  data: {
+    title: string
+    content: string
+    image?: File
+  }
+}): Promise<ClientResult<PostDTO>> {
+  let imageUrl: string | undefined
+
+  // Optionally upload image
+  if (props.data.image) {
+    const uploadResult = await executePromise(() => props.context.uploadImage(props.data.image!))
+    if (uploadResult.isFailure) {
+      return clientError("Failed to upload image")
+    }
+    imageUrl = uploadResult.value
+  }
+
+  // Create post with image URL
+  const postData: CreatePostDTO = {
+    title: props.data.title,
+    content: props.data.content,
+    imageUrl,
+  }
+
+  const createResult = await executePromise(() => props.context.createPost(postData))
+  if (createResult.isFailure) {
+    return clientError("Failed to create post")
+  }
+
+  return clientValue(createResult.value)
+}
+```
+
+## Reference Implementation
+- `features/checkout/logic/checkout-use-case.ts`
+- `features/contact/logic/contact-use-case.ts`
+
+## When to Use This Agent
+- Implementing business logic orchestration
+- Creating multi-step workflows
+- Adding business validation rules
+- Coordinating multiple repositories
+
+## Success Criteria
+✅ All external calls wrapped in executePromise
+✅ Dependency injection through context
+✅ Always returns ClientResult
+✅ Proper error handling at each step
+✅ Business logic clearly separated
+✅ No direct API/database calls

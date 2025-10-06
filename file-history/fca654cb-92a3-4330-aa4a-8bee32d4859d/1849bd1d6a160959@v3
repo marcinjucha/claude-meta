@@ -1,0 +1,334 @@
+//  Copyright © 2025 Scandit. All rights reserved.
+
+@testable import DigitalShelf
+import ComposableArchitecture
+import XCTest
+import UIKit
+
+@MainActor
+final class MappingModeModulePreviewUseCaseTests: XCTestCase {
+
+    // MARK: - Properties
+
+    private lazy var fakeRepository = FakeModulePreviewRepositorySpy()
+    private lazy var sut = MappingModeModulePreviewUseCase.makeWithDeps(
+        previewRepository: fakeRepository
+    )
+
+    private let testModuleId = 123
+    private let testImage = UIImage(systemName: "photo")!
+
+    // MARK: - Happy Path Tests
+
+    func testLoadModulePreviewHappyPathShouldReturnSuccess() async {
+        // Given
+        let expectedImage = testImage
+        fakeRepository.stubbedPreviewResult = (
+            cached: nil,
+            fresh: Task { expectedImage }
+        )
+
+        // When
+        let result = await sut.loadModulePreview(moduleId: testModuleId)
+
+        // Then
+        XCTAssertEqual(fakeRepository.invokedPreviewCount, 1)
+        XCTAssertEqual(fakeRepository.invokedPreviewParameters, testModuleId)
+
+        switch result {
+        case .success(let image):
+            XCTAssertNotNil(image)
+        case .loading, .refreshing, .failure, .idle:
+            XCTFail("Expected success, got \(result)")
+        }
+    }
+
+    func testLoadModulePreviewWithCacheHitShouldReturnSuccessWithCachedImage() async {
+        // Given
+        let cachedImage = testImage
+        fakeRepository.stubbedPreviewResult = (
+            cached: cachedImage,
+            fresh: Task {
+                try await Task.sleep(for: .seconds(10))
+                return self.testImage
+            }
+        )
+
+        // When
+        let result = await sut.loadModulePreview(moduleId: testModuleId)
+
+        // Then
+        XCTAssertEqual(fakeRepository.invokedPreviewCount, 1)
+
+        switch result {
+        case .success(let image):
+            XCTAssertNotNil(image)
+            XCTAssertEqual(image.size, cachedImage.size)
+        case .loading, .refreshing, .failure, .idle:
+            XCTFail("Expected success, got \(result)")
+        }
+    }
+
+    // MARK: - Error Handling Tests
+
+    func testLoadModulePreviewNetworkErrorShouldReturnFailure() async {
+        // Given
+        fakeRepository.stubbedPreviewError = ModulePreviewError.networkUnavailable
+
+        // When
+        let result = await sut.loadModulePreview(moduleId: testModuleId)
+
+        // Then
+        XCTAssertEqual(fakeRepository.invokedPreviewCount, 1)
+        XCTAssertTrue(result.isIdle, "Expected idle when network unavailable with ignoreOfflineStatus: true")
+    }
+
+    func testLoadModulePreviewEmptyImageErrorShouldReturnFailure() async {
+        // Given
+        fakeRepository.stubbedPreviewError = ModulePreviewError.emptyImage
+
+        // When
+        let result = await sut.loadModulePreview(moduleId: testModuleId)
+
+        // Then
+        XCTAssertEqual(fakeRepository.invokedPreviewCount, 1)
+        XCTAssertTrue(result.isFailure, "Expected failure when image is empty")
+    }
+
+    func testLoadModulePreviewTooManyRequestsErrorShouldReturnFailure() async {
+        // Given
+        fakeRepository.stubbedPreviewError = ModulePreviewError.tooManyRequests
+
+        // When
+        let result = await sut.loadModulePreview(moduleId: testModuleId)
+
+        // Then
+        XCTAssertEqual(fakeRepository.invokedPreviewCount, 1)
+        XCTAssertTrue(result.isFailure, "Expected failure when too many requests")
+    }
+
+    func testLoadModulePreviewGenericErrorShouldReturnFailure() async {
+        // Given
+        fakeRepository.stubbedPreviewError = TestPreviewError.genericError
+
+        // When
+        let result = await sut.loadModulePreview(moduleId: testModuleId)
+
+        // Then
+        XCTAssertEqual(fakeRepository.invokedPreviewCount, 1)
+        XCTAssertTrue(result.isFailure, "Expected failure on generic error")
+    }
+
+    // MARK: - Terminal State Tests
+
+    func testLoadModulePreviewWaitsForTerminalState() async {
+        // Given
+        let expectedImage = testImage
+        fakeRepository.stubbedPreviewResult = (
+            cached: nil,
+            fresh: Task {
+                try await Task.sleep(for: .milliseconds(50))
+                return expectedImage
+            }
+        )
+
+        // When
+        let result = await sut.loadModulePreview(moduleId: testModuleId)
+
+        // Then - should wait for terminal state (not return .loading)
+        switch result {
+        case .success(let image):
+            XCTAssertNotNil(image)
+        case .loading, .refreshing:
+            XCTFail("Should not return intermediate state, got \(result)")
+        case .failure, .idle:
+            break
+        }
+    }
+
+    func testLoadModulePreviewIgnoresOfflineStatus() async {
+        // Given - Use case is configured with ignoreOfflineStatus: true
+        fakeRepository.stubbedPreviewError = ModulePreviewError.networkUnavailable
+
+        // When
+        let result = await sut.loadModulePreview(moduleId: testModuleId)
+
+        // Then - should return .idle instead of .failure when network unavailable
+        XCTAssertTrue(result.isIdle, "Should return idle when network unavailable with ignoreOfflineStatus")
+    }
+
+    // MARK: - Multiple Calls Tests
+
+    func testMultipleLoadModulePreviewCalls() async {
+        // Given
+        fakeRepository.stubbedPreviewResult = (
+            cached: nil,
+            fresh: Task { self.testImage }
+        )
+
+        // When
+        let result1 = await sut.loadModulePreview(moduleId: testModuleId)
+        let result2 = await sut.loadModulePreview(moduleId: testModuleId)
+
+        // Then
+        XCTAssertEqual(fakeRepository.invokedPreviewCount, 2)
+        XCTAssertTrue(result1.isSuccess)
+        XCTAssertTrue(result2.isSuccess)
+    }
+
+    func testLoadModulePreviewWithDifferentModuleIds() async {
+        // Given
+        let moduleId1 = 123
+        let moduleId2 = 456
+        fakeRepository.stubbedPreviewResult = (
+            cached: nil,
+            fresh: Task { self.testImage }
+        )
+
+        // When
+        let result1 = await sut.loadModulePreview(moduleId: moduleId1)
+        let result2 = await sut.loadModulePreview(moduleId: moduleId2)
+
+        // Then
+        XCTAssertEqual(fakeRepository.invokedPreviewCount, 2)
+        XCTAssertEqual(fakeRepository.invokedPreviewParametersList[0], moduleId1)
+        XCTAssertEqual(fakeRepository.invokedPreviewParametersList[1], moduleId2)
+        XCTAssertTrue(result1.isSuccess)
+        XCTAssertTrue(result2.isSuccess)
+    }
+
+    // MARK: - Cached vs Fresh Image Tests
+
+    func testLoadModulePreviewWithCachedImageReturnsSuccess() async {
+        // Given
+        let cachedImage = UIImage(systemName: "star.fill")!
+        let freshImage = UIImage(systemName: "heart.fill")!
+
+        fakeRepository.stubbedPreviewResult = (
+            cached: cachedImage,
+            fresh: Task {
+                try await Task.sleep(for: .milliseconds(100))
+                return freshImage
+            }
+        )
+
+        // When
+        let result = await sut.loadModulePreview(moduleId: testModuleId)
+
+        // Then - Should eventually return fresh image (or cached if timeout)
+        switch result {
+        case .success(let image):
+            XCTAssertNotNil(image)
+        case .loading, .refreshing, .failure, .idle:
+            XCTFail("Expected success, got \(result)")
+        }
+    }
+}
+
+// MARK: - Spy Wrapper
+
+private actor FakeModulePreviewRepositorySpy: ModulePreviewRepository {
+    private let fake = FakeModulePreviewRepository()
+
+    nonisolated var previewLoadingOperation: PreviewLoader {
+        fake.previewLoadingOperation
+    }
+
+    // MARK: - Spy Properties
+
+    var invokedPreviewCount = 0
+    var invokedPreviewParameters: Int?
+    var invokedPreviewParametersList = [Int]()
+    var stubbedPreviewResult: (cached: UIImage?, fresh: Task<UIImage, Error>)?
+    var stubbedPreviewError: Error?
+
+    // MARK: - ModulePreviewRepository Implementation
+
+    var previewCacheSizeInMegabytes: Double? {
+        get async { await fake.previewCacheSizeInMegabytes }
+    }
+
+    func setup() async throws {
+        try await fake.setup()
+    }
+
+    func offlineReadinessStatus(forStore storeId: Int) async -> OfflineReadinessStatus {
+        await fake.offlineReadinessStatus(forStore: storeId)
+    }
+
+    func preview(forModuleId id: Int) async throws -> (cached: UIImage?, fresh: Task<UIImage, Error>) {
+        invokedPreviewCount += 1
+        invokedPreviewParameters = id
+        invokedPreviewParametersList.append(id)
+
+        if let error = stubbedPreviewError {
+            throw error
+        }
+
+        if let result = stubbedPreviewResult {
+            return result
+        }
+
+        return try await fake.preview(forModuleId: id)
+    }
+
+    func cachedPreview(forModuleId id: Int) async -> UIImage? {
+        await fake.cachedPreview(forModuleId: id)
+    }
+
+    func previewDate(forModuleId id: Int) async -> Date? {
+        await fake.previewDate(forModuleId: id)
+    }
+
+    func removeModulePreviews() async {
+        await fake.removeModulePreviews()
+    }
+
+    func loadPreviews(forStoreId storeId: Int) async throws -> PreviewLoader {
+        try await fake.loadPreviews(forStoreId: storeId)
+    }
+
+    func retry() async throws {
+        try await fake.retry()
+    }
+
+    func pruneOldPreviews(forStore storeID: Store.ID) async {
+        await fake.pruneOldPreviews(forStore: storeID)
+    }
+
+    // MARK: - PreviewLoading Protocol Methods
+
+    func previewNeedsUpdate(forModuleId id: Int) async throws -> Bool {
+        try await fake.previewNeedsUpdate(forModuleId: id)
+    }
+
+    func loadPreview(forModuleId id: Int) async throws -> UIImage {
+        if let error = stubbedPreviewError {
+            throw error
+        }
+        return try await fake.loadPreview(forModuleId: id)
+    }
+
+    func markCompleted() async {
+        await fake.markCompleted()
+    }
+}
+
+// MARK: - Test Error Types
+
+private enum TestPreviewError: Error, Equatable {
+    case genericError
+    case timeout
+    case invalidResponse
+
+    var localizedDescription: String {
+        switch self {
+        case .genericError:
+            return "Generic test error"
+        case .timeout:
+            return "Request timeout"
+        case .invalidResponse:
+            return "Invalid server response"
+        }
+    }
+}

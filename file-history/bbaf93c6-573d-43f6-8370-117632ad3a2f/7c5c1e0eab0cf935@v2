@@ -1,0 +1,70 @@
+// Copyright © 2024 Scandit. All rights reserved.
+
+import ComposableArchitecture
+import SwiftUI
+
+struct MappingModeModulePreviewView: View {
+    let store: TCAStoreOf<MappingModeModulePreviewFeature>
+
+#if DEBUG
+    @ObserveInjection private var forceRedraw
+#endif
+
+    var body: some View {
+        VStack(spacing: 24) {
+            moduleImageSection
+            moduleGroupSection
+
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 24)
+        .scanditNavigationBar(title: store.title)
+        .toolbar(.hidden, for: .tabBar)
+        .onAppear {
+            store.send(.onAppear)
+        }
+        .onDisappear {
+            store.send(.viewDisappeared)
+        }
+        .enableInjection()
+    }
+
+    private var moduleImageSection: some View {
+        VStack(spacing: 16) {
+            Text(L10n.MappingFlow.ModulePreview.moduleImage)
+                .defaultFont(size: 16, weight: .semibold)
+                .foregroundStyle(Colors.gray90)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                store.send(.onContinueButtonTapped)
+            } label: {
+                ImageLoaderView(
+                    image: store.moduleImage,
+                    refresh: { store.send(.refreshImage) }
+                )
+                .frame(maxHeight: 300)
+                .cornerRadius(12)
+            }
+        }
+    }
+
+    private var moduleGroupSection: some View {
+        VStack(spacing: 8) {
+            Text(L10n.MappingFlow.ModulePreview.moduleGroup)
+                .defaultFont(size: 16, weight: .semibold)
+                .foregroundStyle(Colors.gray90)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text(store.moduleGroupName)
+                .defaultFont(size: 16, weight: .regular)
+                .foregroundStyle(Colors.gray70)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Colors.gray20)
+                .cornerRadius(8)
+        }
+    }
+}

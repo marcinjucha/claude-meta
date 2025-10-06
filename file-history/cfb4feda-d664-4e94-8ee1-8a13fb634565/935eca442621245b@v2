@@ -1,0 +1,911 @@
+# UpdateFlow - CLAUDE.md
+
+UpdateFlow to moduł umożliwiający aktualizację zdjęć modułów na półkach sklepowych. Użytkownik wybiera aisle, określa kierunek skanowania, przechwytuje zdjęcia modułów w kolejności, przegląda wyniki i uploaduje do serwera.
+
+## Struktura Folderów
+
+```
+UpdateFlow/
+├── Root/                                   # Root coordinator
+│   ├── UpdateFlowRootStore.swift           # Root reducer - koordynuje nawigację
+│   ├── UpdateFlowRootView.swift            # Root view
+│   └── UpdateFlowRootUseCase.swift         # Factory dla CameraViewModel
+├── AislePreview/                           # Wybór kierunku skanowania
+│   ├── UpdateFlowAislePreviewFeature.swift # Feature - direction selection logic
+│   └── UpdateFlowAislePreviewView.swift    # View - direction picker UI
+├── Capture/                                # Przechwytywanie zdjęć modułów
+│   ├── UpdateFlowCaptureFeature.swift      # Feature - capture logic
+│   ├── UpdateFlowCaptureView.swift         # View - capture UI
+│   ├── CaptureSessionRepository.swift      # Repository - session persistence
+│   ├── Camera/
+│   │   ├── UpdateFlowCameraViewModel.swift # Camera view model (ObservableObject)
+│   │   └── UpdateFlowCameraView.swift      # Camera preview wrapper
+│   └── UserGuide/                          # User guidance overlays
+│       ├── UpdateFlowAllCaptureDoneGuide.swift
+│       ├── UpdateFlowPreviewGuide.swift
+│       └── UpdateFlowResumeGuide.swift
+├── Summary/                                # Podsumowanie i upload
+│   ├── UpdateFlowSummaryFeature.swift      # Feature - summary + upload logic
+│   └── UpdateFlowSummaryView.swift         # View - grid with thumbnails
+├── Review/                                 # Podgląd pojedynczego modułu
+│   ├── UpdateFlowModuleReviewFeature.swift # Feature - review logic
+│   └── UpdateFlowModuleReviewView.swift    # View - full screen image
+├── Recapture/                              # Ponowne przechwytywanie modułu
+│   ├── UpdateFlowRecaptureFeature.swift    # Feature - recapture logic
+│   └── UpdateFlowRecaptureView.swift       # View - recapture UI
+├── Common/                                 # Współdzielone komponenty
+│   ├── UpdateFlowModuleThumbnailView.swift # Thumbnail component
+│   ├── PagingButtonsModifier+UpdateFlow.swift
+│   └── SwiftUI+UpdateFlowExtensions.swift
+├── UpdateFlowViewfinderStateHandler.swift  # Viewfinder state machine
+├── ModulePreviewHelper.swift               # Helper - async preview loading
+└── UpdateFlowFirebaseEvent.swift           # Firebase analytics events
+```
+
+## Flow Navigation
+
+```
+AisleListView (zewnętrzny - lista aisles)
+    ↓ onAisleSelected
+UpdateFlowAislePreviewView (wybór kierunku: left→right / right→left)
+    ↓ navigateToModule
+UpdateFlowCaptureView (capture modułów w kolejności)
+    ↓ capture all modules
+UpdateFlowSummaryView (grid z thumbnails + upload)
+    ↓ onUpload → background upload
+    ↓ navigateToReview (optional)
+UpdateFlowModuleReviewView (full screen preview)
+    ↓ navigateToRecapture (optional)
+UpdateFlowRecaptureView (ponowne capture modułu)
+```
+
+**Nawigacja:**
+- `UpdateFlowRootStore` koordynuje całą nawigację przez `@Dependency(\.homeNavigation)`
+- Push destinations: `.aislePreview`, `.updateFlowCaptureView`, `.updateFlowSummary`, `.updateFlowReview`, `.updateFlowRecapture`
+- Pop to: `.updateFlowAisleList` (back to beginning after upload)
+
+## Architektura i TCA Features
+
+### 1. UpdateFlowRootStore (Root Coordinator)
+
+**Odpowiedzialność:**
+- Koordynacja między feature'ami: `AisleListViewFeature`, `UpdateFlowAislePreviewFeature`, `UpdateFlowCaptureFeature`, `UpdateFlowSummaryFeature`, `UpdateFlowModuleReviewFeature`, `UpdateFlowRecaptureFeature`
+- Zarządzanie nawigacją i cleanup state
+- Obsługa toastów i confirmation dialogs
+- Analytics tracking
+
+**State:**
+```swift
+struct State: Equatable {
+    var toast: ToastMessage?
+    var aisleList: AisleListViewFeature.State            // Zawsze obecny
+    var aislePreview: UpdateFlowAislePreviewFeature.State?
+    var capture: UpdateFlowCaptureFeature.State?
+    var summary: UpdateFlowSummaryFeature.State?
+    var review: UpdateFlowModuleReviewFeature.State?
+    var recapture: UpdateFlowRecaptureFeature.State?
+    var resumeConfirmationModel: ConfirmationDialogViewModel?
+}
+```
+
+**Kluczowe Actions i Navigation Flow:**
+```swift
+case .aisleList(.onAisleSelected(let aisle)):
+    state.aislePreview = .init(aisle: aisle)
+    useCase.clearCachedAisleData(forAisleId: aisle.id)  // Clear before new session
+    navigation.push(destination: .aislePreview)
+
+case .aislePreview(.navigateToModule(let model)):
+    state.capture = UpdateFlowCaptureFeature.State(
+        aisle: model.aisle,
+        cameraViewModel: useCase.makeCameraViewModel(),  // Factory pattern
+        moduleOrder: model.moduleOrder,
+        exportOptions: exportOptions,
+        selectedCameraType: .defaultCamera
+    )
+    navigation.push(destination: .updateFlowCaptureView)
+
+case .capture(.navigateToSummaryView(let capturedAisle, let aisle)):
+    state.summary = UpdateFlowSummaryFeature.State(
+        aisle: aisle,
+        capturedAisle: capturedAisle
+    )
+    navigation.push(destination: .updateFlowSummary)
+
+case .summary(.delegate(.navigateAfterUpload)):
+    return .run { _ in
+        await navigation.pop(to: .updateFlowAisleList)  // Back to beginning
+    }
+```
+
+**⚠️ Cleanup Pattern:**
+```swift
+case .capture(.onDisappear) where navigation.isPoppedFromStack(.updateFlowCaptureView):
+    state.capture = nil  // Clear state when popped
+```
+
+**Dependencies:**
+- `@Dependency(\.firebaseAnalytics)` - analytics
+- `@Dependency(\.homeNavigation)` - navigation
+- `UpdateFlowRootUseCase` - constructor dependency (camera factory)
+- `ShelfScanCaptureExportOptions` - constructor dependency (image export config)
+
+---
+
+### 2. UpdateFlowAislePreviewFeature
+
+**Odpowiedzialność:**
+- Wyświetlanie preview pierwszego i ostatniego modułu
+- Wybór kierunku skanowania: `.leftToRight` lub `.rightToLeft`
+- Rekomendacja kierunku na podstawie handedness preference (prawo/leworęczność)
+- Network status monitoring
+- Ładowanie thumbnails z `ModulePreviewHelper`
+
+**State:**
+```swift
+struct State: Equatable {
+    let aisle: PersistedShelfScanAisle
+    var firstModuleImage: Refreshable<UIImage> = .idle
+    var lastModuleImage: Refreshable<UIImage> = .idle
+    var captureDirection: ModuleCaptureOrder = .leftToRight
+    var handednessPreference: HandednessPreference = .rightHanded
+    var networkStatus: NetworkStatusFeature.State = .init(config: .aislePreview)
+
+    var recommendedCaptureOrder: ModuleCaptureOrder {
+        handednessPreference.defaultCaptureOrder  // rightHanded → leftToRight
+    }
+}
+```
+
+**Kluczowe Actions:**
+```swift
+case .onAppear:
+    return .merge(
+        .send(.loadHandednessPreference),
+        .send(.updateModuleThumbnails),
+        .publisher { Self.actionPublisher }.cancellable(id: CancelID.actionPublisher)
+    )
+
+case .updateModuleThumbnails:
+    // Load first + last module thumbnails concurrently
+    return .run { [state] send in
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                await helper.reloadPreview(moduleId: state.firstModule?.id) { refreshable in
+                    send(.setFirstModuleImage(refreshable))
+                }
+            }
+            if let lastModule = state.lastModule {
+                group.addTask {
+                    await helper.reloadPreview(moduleId: lastModule.id) { refreshable in
+                        send(.setLastModuleImage(refreshable))
+                    }
+                }
+            }
+        }
+    }.cancellable(id: CancelID.moduleThumbnails)
+
+case .onSelectModule(direction):
+    guard networkStatusMonitor.hasNetworkConnection else {
+        return .send(.showNoNetworkConnectionDialog)
+    }
+    return .send(.navigateToModule(AisleCaptureModel(aisle, moduleOrder: direction)))
+```
+
+**⚠️ PassthroughSubject Pattern:**
+```swift
+private static let actionPublisher = PassthroughSubject<Action, Never>()
+```
+- Static subject dla external action injection
+- Workaround dla Issue SHELF-19080: action publisher jest recreated
+
+**Dependencies:**
+- `@Dependency(\.networkStatusMonitorService)` - network status
+- `@Dependency(\.firebaseAnalytics)` - analytics
+- `@Dependency(\.modulePreviewRepository)` - module previews
+- `@Dependency(\.keyValueStorage)` - handedness preference storage
+- `Navigation` - constructor dependency (navigation control)
+
+---
+
+### 3. UpdateFlowCaptureFeature
+
+**Odpowiedzialność:**
+- Przechwytywanie zdjęć modułów w wybranej kolejności
+- Zarządzanie `UpdateFlowCameraViewModel` (camera session)
+- Tracking progress: completed/total modules
+- Undo last capture
+- Exit confirmation (jeśli są zmiany)
+- Module preview loading
+- Viewfinder state handling
+
+**State:**
+```swift
+struct State: Equatable {
+    let aisle: PersistedShelfScanAisle
+    let cameraViewModel: UpdateFlowCameraViewModel
+    let viewFinderStateHandler = UpdateFlowViewfinderStateHandler()
+    let moduleOrder: ModuleCaptureOrder
+    let exportOptions: ShelfScanCaptureExportOptions
+
+    var currentModule: ShelfScanModuleCapture?
+    var modulePreview: Refreshable<UIImage> = .loading
+    var selectedCameraType: DeviceCameraType
+    var isTakingPhoto: Bool = false
+    var isCapturing: Bool = false
+    var isFirstAppear = true
+    var isInitialized = false
+
+    var isShutterButtonDisabled: Bool {
+        currentModule == nil || !isCapturing || isTakingPhoto || isFullyCaptured
+    }
+
+    var completedModules: Int {
+        capturedAisle?.modules.count ?? 0
+    }
+
+    var isFullyCaptured: Bool {
+        capturedAisle?.modules.count == aisle.modules.count
+    }
+
+    var modulesInOrderOfCapture: [ShelfScanModuleCapture] {
+        guard let capturedAisle else { return [] }
+        return capturedAisle.modules.sorted(by: moduleOrder)
+    }
+}
+```
+
+**Kluczowe Actions i Flow:**
+```swift
+case .onAppear:
+    return .merge(
+        .send(.subscribeToCamera),
+        .send(.subscribeToViewFinderState),
+        .send(.checkForResume),
+        .send(.analytics(.captureCameraScreen))
+    )
+
+case .subscribeToCamera:
+    let isCapturingPublisher = state.cameraViewModel.$isCapturing
+        .map { Action.updateCapturingState($0) }
+    let capturedImagePublisher = state.cameraViewModel.imagePublisher
+        .map { Action.handleCapturedImage($0) }
+
+    return .publisher {
+        isCapturingPublisher.merge(with: capturedImagePublisher)
+    }.cancellable(id: Cancel.camera)
+
+case .onShutterButtonTapped:
+    state.isTakingPhoto = true
+    state.cameraViewModel.capture()
+    state.viewFinderStateHandler.onCaptureStarted(
+        moduleName: state.currentModuleReference,
+        showSuccessfullyCapturedMessage: state.completedModules > 0
+    )
+
+case .handleCapturedImage(let image):
+    state.isTakingPhoto = false
+    guard let currentModule = state.currentModule else { return .none }
+
+    return .run { send in
+        let thumbnailImage = await exportOptions.thumbnail(from: image)
+        let imageData = await exportOptions.data(from: image)
+
+        await send(.persistCapture(
+            module: currentModule,
+            image: image,
+            thumbnailImage: thumbnailImage,
+            imageData: imageData
+        ))
+    }
+
+case .persistCapture(let module, let image, let thumbnailImage, let imageData):
+    captureSessionRepository.persist(
+        module: module,
+        withImage: image,
+        thumbnail: thumbnailImage,
+        imageData: imageData
+    )
+
+    if state.isFullyCaptured {
+        return .send(.navigateToSummaryView(state.capturedAisle!, state.aisle))
+    } else {
+        return .send(.selectNextModule)
+    }
+```
+
+**⚠️ Camera Lifecycle:**
+```swift
+case .onAppear:
+    state.cameraViewModel.onAppear()  // Initialize + start session
+
+case .onDisappear:
+    state.cameraViewModel.onDisappear()  // Stop + uninitialize
+    return .cancel(id: Cancel.camera)
+```
+
+**Dependencies:**
+- `@Dependency(\.firebaseAnalytics)` - analytics
+- `@Dependency(\.userGuideDisplayHistory)` - user guide tracking
+- `@Dependency(\.modulePreviewRepository)` - module preview loading
+- `@Dependency(\.captureSessionRepository)` - session persistence
+- `Navigation` - constructor dependency
+
+---
+
+### 4. UpdateFlowCameraViewModel (ObservableObject)
+
+**⚠️ NIE jest TCA Feature - to ObservableObject!**
+
+**Odpowiedzialność:**
+- Wrapper dla `Capturing` protocol (camera session)
+- Publishers: `@Published var isCapturing`, `imagePublisher: AnyPublisher<UIImage, Never>`
+- Lifecycle: `onAppear()`, `onDisappear()`
+- Camera switching: `update(cameraType:)`
+
+**Implementacja:**
+```swift
+@MainActor
+class UpdateFlowCameraViewModel: NSObject, ObservableObject {
+    @Published var captureSession: any Capturing
+    @Published var isCapturing = false
+    @Published var isInitialized = false
+
+    var imagePublisher: AnyPublisher<UIImage, Never> {
+        subject.eraseToAnyPublisher()
+    }
+
+    private var subject = PassthroughSubject<UIImage, Never>()
+
+    func onAppear() {
+        captureSession.initialize(configuration: .photoWithDefaults) {
+            self.isInitialized = true
+            self.startSession()
+        }
+    }
+
+    func onDisappear() {
+        stopSession()
+        captureSession.uninitialize()
+    }
+
+    func capture() {
+        captureSession.capture()
+    }
+
+    func update(cameraType: DeviceCameraType) {
+        captureSession.cameraConfig = .init(cameraType: cameraType)
+    }
+}
+```
+
+**⚠️ Ważne:**
+- Factory pattern: tworzony przez `UpdateFlowRootUseCase.makeCameraViewModel()`
+- Shared między `UpdateFlowCaptureFeature` i `UpdateFlowRecaptureFeature`
+- Publishers są subscribowane w TCA przez `.publisher { ... }`
+
+---
+
+### 5. UpdateFlowSummaryFeature
+
+**Odpowiedzialność:**
+- Wyświetlanie grid z captured thumbnails
+- Upload do serwera (background process)
+- Partial upload confirmation (jeśli nie wszystkie moduły)
+- Nawigacja do Review/Recapture
+- Progress tracking
+
+**State:**
+```swift
+struct State: Equatable {
+    var isUploading: Bool = false
+    var message: ToastMessage?
+    var isUploadConfirmationVisible: Bool = false
+    var modules: [ShelfScanModuleCapture] = []
+
+    let aisle: PersistedShelfScanAisle
+    let capturedAisle: ShelfScanAisleCapture
+
+    var numberOfColumns: Int {
+        switch completeModules.count {
+        case 1: 1
+        case 2 ... 5: 2
+        default: 3
+        }
+    }
+
+    var allModulesCompleted: Bool {
+        moduleCount == expectedModuleCount
+    }
+}
+```
+
+**Kluczowe Actions:**
+```swift
+case .onUpload(let confirmPartialUpload):
+    guard !state.isUploading else { return .none }
+
+    if !state.allModulesCompleted && confirmPartialUpload {
+        state.isUploadConfirmationVisible = true
+        return .none
+    }
+
+    return .send(.performUpload(state.completeModules))
+
+case .performUpload(let modules):
+    state.isUploading = true
+    return .run { send in
+        let results = await uploadService.upload(modules: modules)
+        await send(.uploadResults(results))
+    }
+
+case .uploadResults(let results):
+    state.isUploading = false
+    let hasFailures = results.contains { $0.error != nil }
+
+    if hasFailures {
+        return .send(.setMessage(.error(L10n.Svm.uploadFailed)))
+    } else {
+        return .merge(
+            .send(.delegate(.showUploadSuccessToast)),
+            .send(.delegate(.navigateAfterUpload))
+        )
+    }
+```
+
+**⚠️ Delegate Actions Pattern:**
+```swift
+enum Action {
+    case delegate(Delegate)
+    // ...
+
+    enum Delegate {
+        case showUploadSuccessToast
+        case navigateAfterUpload
+    }
+}
+```
+- Parent (UpdateFlowRootStore) obsługuje delegate actions
+- Feature nie ma bezpośredniego dostępu do navigation
+
+**Dependencies:**
+- `@Dependency(\.uploadService)` - background upload
+- `@Dependency(\.firebaseAnalytics)` - analytics
+- `@Dependency(\.captureSessionRepository)` - session access
+- `Navigation` - constructor dependency
+
+---
+
+### 6. UpdateFlowModuleReviewFeature
+
+**Odpowiedzialność:**
+- Full-screen preview pojedynczego modułu
+- Zoom in/out
+- Nawigacja do Recapture
+- Delete module option
+
+**State:**
+```swift
+struct State: Equatable {
+    let module: ShelfScanModuleCapture
+    var scale: CGFloat = 1.0
+    var lastScale: CGFloat = 1.0
+    var deleteConfirmation: ConfirmationDialogViewModel?
+}
+```
+
+**Kluczowe Actions:**
+```swift
+case .onRecaptureButtonTapped:
+    return .send(.navigateToRecapture)
+
+case .onDeleteButtonTapped:
+    state.deleteConfirmation = .init(
+        title: L10n.UpdateFlow.Review.deleteTitle,
+        message: L10n.UpdateFlow.Review.deleteMessage,
+        primaryButton: .destructive(L10n.Common.delete)
+    )
+
+case .onDeleteConfirmed:
+    captureSessionRepository.removeModule(module: state.module)
+    return .send(.navigateBack)
+```
+
+---
+
+### 7. UpdateFlowRecaptureFeature
+
+**Odpowiedzialność:**
+- Ponowne capture pojedynczego modułu
+- Używa tego samego `UpdateFlowCameraViewModel` co Capture
+- Replace existing module w session
+
+**State:**
+```swift
+struct State: Equatable {
+    let module: ShelfScanModuleCapture
+    let cameraViewModel: UpdateFlowCameraViewModel
+    let exportOptions: ShelfScanCaptureExportOptions
+
+    var isTakingPhoto: Bool = false
+    var captureError: Error?
+}
+```
+
+**Flow:**
+```swift
+case .onShutterButtonTapped:
+    state.isTakingPhoto = true
+    state.cameraViewModel.capture()
+
+case .handleCapturedImage(let image):
+    state.isTakingPhoto = false
+    let thumbnailImage = await exportOptions.thumbnail(from: image)
+    let imageData = await exportOptions.data(from: image)
+
+    captureSessionRepository.replaceModule(
+        module: state.module,
+        withImage: image,
+        thumbnail: thumbnailImage,
+        imageData: imageData
+    )
+
+    return .send(.navigateBackToSummary)
+```
+
+---
+
+## Współdzielone Komponenty
+
+### ModulePreviewHelper
+
+**Cel:** Async loading module preview images z timeout handling.
+
+```swift
+class ModulePreviewHelper {
+    func reloadPreview(
+        moduleId: Int?,
+        onStatusUpdated: @escaping (Refreshable<UIImage>) -> Void
+    ) async {
+        let (cached, loadingTask) = try await previewRepository.preview(forModuleId: moduleId)
+
+        if let cached {
+            onStatusUpdated(.refreshing(current: cached))
+            try onStatusUpdated(.success(await loadingTask.withTimeout(cacheUpdateTimeout).value))
+        } else {
+            onStatusUpdated(.loading)
+            try onStatusUpdated(.success(await loadingTask.withTimeout(fetchTimeout).value))
+        }
+    }
+}
+```
+
+**⚠️ Timeout Handling:**
+- `fetchTimeout: .seconds(5)` - gdy brak cache
+- `cacheUpdateTimeout: .seconds(2)` - gdy jest cache (faster timeout)
+- Na timeout: zwraca cached image lub `.failure`
+- `ignoreOfflineStatus: Bool` - czy ignorować network unavailable (używane w MappingFlow)
+
+### UpdateFlowViewfinderStateHandler
+
+**Cel:** State machine dla viewfinder animations podczas capture.
+
+```swift
+class UpdateFlowViewfinderStateHandler {
+    @Published var state: ViewfinderState = .idle
+
+    enum ViewfinderState {
+        case idle
+        case capturing(module: String)
+        case successfullyCaptured
+    }
+
+    func onCaptureStarted(
+        moduleName: String?,
+        showSuccessfullyCapturedMessage: Bool
+    ) {
+        if showSuccessfullyCapturedMessage {
+            state = .successfullyCaptured
+            Task { @MainActor in
+                try? await Task.sleep(for: successfullyCapturedDelay)
+                state = .capturing(module: moduleName ?? "")
+            }
+        } else {
+            state = .capturing(module: moduleName ?? "")
+        }
+    }
+}
+```
+
+**⚠️ Delays:**
+- Production: `captureStarted: .milliseconds(300)`, `successfullyCaptured: .milliseconds(800)`
+- Tests: shorter delays (50ms) dla szybkiego wykonania
+
+### CaptureSessionRepository
+
+**Cel:** Persistence captured modules w memory podczas session.
+
+```swift
+protocol CaptureSessionRepository {
+    func aisleCapture(forAisle aisleId: Int) -> ShelfScanAisleCapture?
+    func persist(module: ShelfScanModuleCapture, withImage: UIImage, thumbnail: UIImage, imageData: Data)
+    func replaceModule(module: ShelfScanModuleCapture, withImage: UIImage, thumbnail: UIImage, imageData: Data)
+    func removeModule(module: ShelfScanModuleCapture)
+    func clearAisleData(forAisle aisleId: Int)
+}
+```
+
+**⚠️ In-Memory Storage:**
+- Dane są trzymane w pamięci podczas całego flow
+- Czyszczone w `UpdateFlowRootUseCase.clearCachedAisleData()`
+- Nie zapisywane do DB przed uploadem
+
+---
+
+## Kluczowe Wzorce
+
+### 1. Factory Pattern - Camera ViewModel
+
+```swift
+// UpdateFlowRootUseCase
+func makeCameraViewModel() -> UpdateFlowCameraViewModel {
+    let captureSession = cameraRepository.makeCaptureSession()
+    return UpdateFlowCameraViewModel(captureSession: captureSession, captureView: nil)
+}
+
+// Usage w Root Store
+case .aislePreview(.navigateToModule(let model)):
+    state.capture = UpdateFlowCaptureFeature.State(
+        cameraViewModel: useCase.makeCameraViewModel(),  // Fresh instance
+        // ...
+    )
+```
+
+### 2. Publisher Subscription Pattern w TCA
+
+```swift
+case .subscribeToCamera:
+    let isCapturingPublisher = state.cameraViewModel.$isCapturing
+        .map { Action.updateCapturingState($0) }
+    let capturedImagePublisher = state.cameraViewModel.imagePublisher
+        .map { Action.handleCapturedImage($0) }
+
+    return .publisher {
+        isCapturingPublisher.merge(with: capturedImagePublisher)
+    }.cancellable(id: Cancel.camera)
+
+case .onDisappear:
+    return .cancel(id: Cancel.camera)  // ZAWSZE!
+```
+
+### 3. Delegate Actions Pattern
+
+```swift
+// Child Feature
+enum Action {
+    case delegate(Delegate)
+
+    enum Delegate {
+        case showUploadSuccessToast
+        case navigateAfterUpload
+    }
+}
+
+// Parent Feature
+case .summary(.delegate(.navigateAfterUpload)):
+    return .run { _ in
+        await navigation.pop(to: .updateFlowAisleList)
+    }
+```
+
+### 4. Async Image Processing
+
+```swift
+case .handleCapturedImage(let image):
+    return .run { send in
+        // Off main thread processing
+        let thumbnailImage = await exportOptions.thumbnail(from: image)
+        let imageData = await exportOptions.data(from: image)
+
+        await send(.persistCapture(
+            module: currentModule,
+            image: image,
+            thumbnailImage: thumbnailImage,
+            imageData: imageData
+        ))
+    }
+```
+
+### 5. Navigation Cleanup Pattern
+
+```swift
+case .capture(.onDisappear) where navigation.isPoppedFromStack(.updateFlowCaptureView):
+    state.capture = nil  // Clear when popped
+
+case .capture(.onAppear):
+    state.summary = nil  // Clear previous state
+```
+
+## Typowe Błędy i Pitfalls
+
+### ❌ NIE rób tego:
+
+```swift
+// 1. Forgetting to cancel camera publishers
+case .onDisappear:
+    return .none  // ❌ Camera continues running!
+
+// 2. Not clearing state when navigating back
+case .capture(.navigateToSummaryView):
+    // Push to summary
+    return .none  // ❌ capture state remains
+
+// 3. Accessing cameraViewModel in TaskGroup
+return .run { [state] in
+    withTaskGroup { group in
+        group.addTask {
+            state.cameraViewModel.capture()  // ❌ CRASH - accessing @Dependency-like object
+        }
+    }
+}
+
+// 4. Not handling isUploading guard
+case .onUpload:
+    return .send(.performUpload)  // ❌ Multiple taps → multiple uploads!
+```
+
+### ✅ Zrób to:
+
+```swift
+// 1. ZAWSZE cancel publishers
+case .onDisappear:
+    state.cameraViewModel.onDisappear()
+    return .cancel(id: Cancel.camera)
+
+// 2. Clear state appropriately
+case .capture(.onAppear):
+    state.summary = nil  // Clear previous
+
+case .capture(.onDisappear) where navigation.isPoppedFromStack(.updateFlowCaptureView):
+    state.capture = nil  // Clear when popped
+
+// 3. Capture przed TaskGroup
+let cameraViewModel = state.cameraViewModel
+withTaskGroup { group in
+    group.addTask {
+        await cameraViewModel.capture()  // ✅ Safe
+    }
+}
+
+// 4. Guard przed async operations
+case .onUpload where !state.isUploading:
+    state.isUploading = true
+    return .send(.performUpload)
+```
+
+## Testing Guidelines
+
+### Presentation Layer (TCA Features)
+- Mock wszystkie dependencies (camera, repositories, navigation)
+- Test navigation flow: aislePreview → capture → summary
+- Test publisher subscriptions i cleanup
+- Test module order logic (leftToRight vs rightToLeft)
+
+**Przykład:**
+```swift
+lazy var sut = TestStore(
+    initialState: UpdateFlowCaptureFeature.State(...),
+    reducer: { UpdateFlowCaptureFeature(navigation: mockNavigation) }
+) {
+    $0.captureSessionRepository = mockRepository
+    $0.firebaseAnalytics = mockAnalytics
+}
+
+func testCaptureFlow() async {
+    await sut.send(.onShutterButtonTapped) { state in
+        state.isTakingPhoto = true
+    }
+    await sut.receive(\.handleCapturedImage) { state in
+        state.isTakingPhoto = false
+    }
+    await sut.receive(\.persistCapture)
+}
+```
+
+### Business Layer (UpdateFlowCameraViewModel)
+- Test camera lifecycle: onAppear → onDisappear
+- Test publisher emissions: isCapturing, imagePublisher
+- Mock `Capturing` protocol
+- Test async state transitions z `UpdateFlowViewfinderStateHandlerTests` pattern (już udokumentowane)
+
+## Firebase Analytics Events
+
+```swift
+extension UpdateFlowFirebaseEvent {
+    static let aisleListScreen = make(screenName: "aisle_list")
+    static let aislePreviewScreen = make(screenName: "aisle_preview")
+    static let captureCameraScreen = make(screenName: "capture_camera")
+    static let summaryScreen = make(screenName: "summary")
+    static let reviewScreen = make(screenName: "review")
+    static let recaptureScreen = make(screenName: "recapture")
+
+    static let aisleSelection = make(optionName: "aisle")
+    static let directionSelection = make(optionName: "direction")
+    static let shutterButton = make(buttonName: "shutter")
+    static let uploadButton = make(buttonName: "upload")
+    static let recaptureButton = make(buttonName: "recapture")
+}
+```
+
+## Localization Keys
+
+**Convention:** `L10n.UpdateFlow.<Component>.<element>`
+
+```swift
+L10n.UpdateFlow.AislePreview.title              // "Aisle Preview"
+L10n.UpdateFlow.AislePreview.selectDirection    // "Select capture direction"
+L10n.UpdateFlow.Capture.capturing               // "Capturing..."
+L10n.UpdateFlow.Capture.moduleProgress          // "Module {current}/{total}"
+L10n.UpdateFlow.Summary.title                   // "Summary"
+L10n.UpdateFlow.Summary.uploadButton            // "Upload"
+L10n.UpdateFlow.Summary.partialUploadMessage    // "Upload {count} of {total} modules?"
+L10n.UpdateFlow.Review.title                    // "Module Review"
+L10n.UpdateFlow.Review.recaptureButton          // "Recapture"
+L10n.UpdateFlow.Review.deleteButton             // "Delete"
+```
+
+## Podsumowanie Zależności
+
+```
+UpdateFlowRootStore
+├── @Dependency(\.firebaseAnalytics)
+├── @Dependency(\.homeNavigation)
+├── UpdateFlowRootUseCase (constructor)
+└── ShelfScanCaptureExportOptions (constructor)
+
+UpdateFlowAislePreviewFeature
+├── @Dependency(\.networkStatusMonitorService)
+├── @Dependency(\.firebaseAnalytics)
+├── @Dependency(\.modulePreviewRepository)
+├── @Dependency(\.keyValueStorage)
+└── Navigation (constructor)
+
+UpdateFlowCaptureFeature
+├── @Dependency(\.firebaseAnalytics)
+├── @Dependency(\.userGuideDisplayHistory)
+├── @Dependency(\.modulePreviewRepository)
+├── @Dependency(\.captureSessionRepository)
+└── Navigation (constructor)
+
+UpdateFlowCameraViewModel (ObservableObject - NOT TCA!)
+└── Capturing (constructor - camera session)
+
+UpdateFlowSummaryFeature
+├── @Dependency(\.uploadService)
+├── @Dependency(\.firebaseAnalytics)
+├── @Dependency(\.captureSessionRepository)
+└── Navigation (constructor)
+
+UpdateFlowModuleReviewFeature
+├── @Dependency(\.firebaseAnalytics)
+├── @Dependency(\.captureSessionRepository)
+└── Navigation (constructor)
+
+UpdateFlowRecaptureFeature
+├── @Dependency(\.firebaseAnalytics)
+├── @Dependency(\.captureSessionRepository)
+└── Navigation (constructor)
+```
+
+## Podsumowanie Kluczowych Wzorców
+
+1. **Factory Pattern** - `UpdateFlowRootUseCase.makeCameraViewModel()`
+2. **ObservableObject + TCA** - `UpdateFlowCameraViewModel` z publishers subscribowanymi w TCA
+3. **Delegate Actions** - child features komunikują się z parent przez delegate actions
+4. **Navigation Cleanup** - clear state when popped from stack
+5. **Publisher Subscription** - `.publisher { ... }` dla `@Published` properties + ZAWSZE cancel
+6. **Async Image Processing** - thumbnail + data generation off main thread
+7. **Module Order Handling** - leftToRight vs rightToLeft z handedness preference
+8. **Timeout Pattern** - `ModulePreviewHelper` z configurable timeouts
+9. **State Machine** - `UpdateFlowViewfinderStateHandler` dla animations
+10. **In-Memory Session** - `CaptureSessionRepository` trzyma dane w pamięci podczas flow

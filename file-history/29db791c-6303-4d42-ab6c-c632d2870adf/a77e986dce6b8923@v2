@@ -1,0 +1,53 @@
+import { executePromise, clientError, clientValue, ClientResult } from "@/lib/error-handling"
+import { SurveyResultDTO, TallyWebhookPayload, TallyField } from "./survey-type"
+
+export async function processTallyWebhookUseCase(props: {
+  context: {
+    saveSurveyResult: (
+      webhookPayload: TallyWebhookPayload,
+      evaluationResult: "approved" | "rejected",
+    ) => Promise<SurveyResultDTO>
+    evaluateTallyResponse: (fields: TallyField[]) => Promise<"approved" | "rejected">
+  }
+  data: TallyWebhookPayload
+}): Promise<ClientResult<SurveyResultDTO>> {
+  // Walidacja danych webhook
+  if (!props.data.data || !props.data.data.fields) {
+    return clientError("Invalid webhook payload - missing fields data")
+  }
+
+  // Oceń odpowiedzi
+  const surveyResult = await props.context.evaluateTallyResponse(props.data.data.fields)
+
+  // Zapisz wynik do CMS
+  const saveResult = await executePromise(() =>
+    props.context.saveSurveyResult(props.data, surveyResult),
+  )
+
+  if (saveResult.isFailure) {
+    return clientError("Failed to save survey result")
+  }
+
+  return clientValue(saveResult.value)
+}
+
+export async function getSurveyResultUseCase(props: {
+  context: {
+    getSurveyResult: (id: string) => Promise<SurveyResultDTO | null>
+  }
+  data: {
+    id: string
+  }
+}): Promise<ClientResult<SurveyResultDTO>> {
+  const result = await executePromise(() => props.context.getSurveyResult(props.data.id))
+
+  if (result.isFailure) {
+    return clientError("Failed to fetch survey result")
+  }
+
+  if (!result.value) {
+    return clientError("Survey result not found")
+  }
+
+  return clientValue(result.value)
+}

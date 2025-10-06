@@ -1,0 +1,42 @@
+# Generate Tests for iOS + TCA
+
+Automatically generate comprehensive tests for TCA features and Use Cases:
+
+**TCA Feature Tests:**
+- TestStore setup with makeWithDeps pattern
+- State mutation assertions
+- Effect testing with async/await
+- Action flow validation (ViewAction → ResponseAction)
+- Mocked dependencies (@Dependency)
+- TestClock for debounced/timer effects
+- Navigation testing (@Presents)
+
+**Use Case/Service Tests:**
+- Business integration tests (real repositories, mocked external deps)
+- Publisher testing (reactive data streams)
+- Error handling scenarios
+- Edge cases coverage
+
+**Test Fixtures:**
+- Mock data generation
+- Dependency mocks with testValue
+- Test helpers and extensions
+
+**Follows Project Patterns:**
+- lazy var for TestStore initialization (NOT in setUp())
+- await store.receive(\.action) with keypaths
+- makeWithDeps factory pattern
+- No skipInFlightEffects() when unnecessary
+
+Generates complete, working tests ready to run.
+
+**Agent Used:** May invoke `tca-developer` for TCA testing patterns.
+
+## Usage
+```
+/test [file_path] [test_focus]
+```
+
+## Parameters
+- `file_path`: Path to the file to generate tests for (required)
+- `test_focus`: Optional specific test scenario (e.g., "happy path", "error handling", "edge cases")

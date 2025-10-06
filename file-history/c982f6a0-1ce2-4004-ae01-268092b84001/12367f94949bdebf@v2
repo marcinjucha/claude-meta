@@ -1,0 +1,59 @@
+// Copyright © 2024 Scandit. All rights reserved.
+
+import ComposableArchitecture
+import SwiftUI
+
+extension NavigationDestination {
+    static let mappingFlowRootView = Self(name: "MappingFlowRootView")
+}
+
+struct MappingFlowRootView: View {
+    let store: TCAStoreOf<MappingFlowStore>
+
+    @Dependency(\.homeNavigation)
+    var navigation
+
+    init(store: TCAStoreOf<MappingFlowStore>) {
+        self.store = store
+    }
+
+    var body: some View {
+        AisleListView(
+            store: store.scope(state: \.aisleList, action: \.aisleList)
+        )
+        .frame(maxWidth: .infinity)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
+        .scanditNavigationBar(title: L10n.MappingFlow.List.title)
+        .onAppear {
+            navigation.tagLast(destination: .mappingFlowRootView)
+        }
+        .navigationDestination(for: NavigationDestination.self) { destination in
+            switch destination {
+            case .aisleModuleListView:
+                store.optionalScope(
+                    state: \.moduleList,
+                    action: \.moduleList,
+                    view: MappingModuleListView.init
+                )
+                .scanditNavigationBar()
+            case .modulePreviewView:
+                store.optionalScope(
+                    state: \.modulePreview,
+                    action: \.modulePreview,
+                    view: MappingModeModulePreviewView.init
+                )
+            case .selectedModuleView:
+                store.optionalScope(
+                    state: \.capture,
+                    action: \.capture,
+                    view: MappingCaptureView.init
+                )
+                .scanditNavigationBar()
+            default:
+                EmptyView()
+            }
+        }
+        .toast(store.binding(keyPath: \.toastMessage, send: .dismissToast))
+    }
+}

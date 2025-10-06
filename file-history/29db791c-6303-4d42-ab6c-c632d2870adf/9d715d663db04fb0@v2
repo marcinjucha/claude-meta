@@ -1,0 +1,236 @@
+"use server"
+
+import {
+  SurveyResultDTO,
+  CreateSurveyResultDTO,
+  TallyField,
+  TallyWebhookPayload,
+  CreateSurveyResponse,
+  GetSurveyResponse,
+  SurveyInput,
+} from "./survey-type"
+import {
+  getFieldValue,
+  findExperienceField,
+  findTechField,
+  findSalaryField,
+  findRemoteField,
+  findRatingFields,
+  findPortfolioField,
+  debugField,
+  isNumberField,
+} from "./survey-field-utils"
+import client, { gql } from "@/lib/graph-ql/client"
+import { handleGraphQLMutation, handleGraphQLQuery } from "@/lib/graph-ql/graphql-utils"
+
+// GraphQL Mutations & Queries
+const CREATE_SURVEY_MUTATION = gql`
+  mutation CreateSurvey($data: SurveyInput!) {
+    createSurvey(data: $data) {
+      documentId
+      surveyID
+      surveyContent
+    }
+  }
+`
+
+const GET_SURVEY_QUERY = gql`
+  query GetSurvey($surveyID: String!) {
+    surveys(filters: { surveyID: { eq: $surveyID } }) {
+      documentId
+      surveyID
+      surveyContent
+    }
+  }
+`
+
+export async function saveSurveyResultRepository(
+  webhookPayload: TallyWebhookPayload,
+  evaluationResult: "approved" | "rejected",
+): Promise<SurveyResultDTO> {
+  // Przygotuj dane do zapisania w CMS
+  const surveyInput: SurveyInput = {
+    surveyID: webhookPayload.data.respondentId,
+    surveyContent: JSON.stringify({
+      ...webhookPayload,
+      evaluationResult,
+    }),
+  }
+
+  // Zapisz do CMS przez GraphQL mutation
+  const result = await client.mutate<CreateSurveyResponse>({
+    mutation: CREATE_SURVEY_MUTATION,
+    variables: { data: surveyInput },
+  })
+
+  const surveyData = handleGraphQLMutation(result).createSurvey
+
+  // Log dla debugowania
+  console.log("Survey saved to CMS:", surveyData)
+
+  // Mapuj response do DTO
+  const parsedContent = JSON.parse(surveyData.surveyContent)
+  return {
+    id: surveyData.documentId,
+    email: parsedContent.email,
+    result: parsedContent.evaluationResult,
+    submittedAt: webhookPayload.data.createdAt,
+    tallyResponseId: webhookPayload.data.responseId,
+  }
+}
+
+export async function getSurveyResultRepository(surveyID: string): Promise<SurveyResultDTO | null> {
+  try {
+    const result = await client.query<{ surveys: GetSurveyResponse["survey"][] }>({
+      query: GET_SURVEY_QUERY,
+      variables: { surveyID },
+    })
+
+    const surveys = handleGraphQLQuery(result).surveys
+
+    if (!surveys || surveys.length === 0) {
+      return null
+    }
+
+    const surveyData = surveys[0]
+    const parsedContent = JSON.parse(surveyData.surveyContent)
+
+    return {
+      id: surveyData.documentId,
+      email: parsedContent.email,
+      result: parsedContent.evaluationResult,
+      submittedAt: parsedContent.data.createdAt,
+      tallyResponseId: parsedContent.data.responseId,
+    }
+  } catch (error) {
+    console.error("Error fetching survey from CMS:", error)
+    return null
+  }
+}
+
+// Funkcja do oceny odpowiedzi z Tally - type-safe obsługa wszystkich typów pól
+export async function evaluateTallyResponse(
+  fields: TallyField[],
+): Promise<"approved" | "rejected"> {
+  console.log("Evaluating Tally response with type-safe approach")
+
+  let score = 0
+  const maxScore = 10 // Maksymalna liczba punktów
+
+  // Debug wszystkich pól (opcjonalnie)
+  if (process.env.NODE_ENV === "development") {
+    fields.forEach(debugField)
+  }
+
+  // 1. DOŚWIADCZENIE (0-3 punkty)
+  const experienceField = findExperienceField(fields)
+  if (experienceField) {
+    const experience = getFieldValue(experienceField).toString().toLowerCase()
+    console.log("Experience value:", experience)
+
+    if (
+      experience.includes("6+") ||
+      experience.includes("ponad 6") ||
+      experience.includes("senior")
+    ) {
+      score += 3
+    } else if (experience.includes("4-5") || experience.includes("4") || experience.includes("5")) {
+      score += 2
+    } else if (experience.includes("2-3") || experience.includes("2") || experience.includes("3")) {
+      score += 1
+    }
+  }
+
+  // 2. TECHNOLOGIE (0-2 punkty)
+  const techField = findTechField(fields)
+  if (techField) {
+    const tech = getFieldValue(techField).toString().toLowerCase()
+    console.log("Tech value:", tech)
+
+    const modernTech = [
+      "react",
+      "typescript",
+      "next.js",
+      "node.js",
+      "vue",
+      "angular",
+      "python",
+      "go",
+      "rust",
+    ]
+    const techCount = modernTech.filter(t => tech.includes(t)).length
+
+    if (techCount >= 3) {
+      score += 2
+    } else if (techCount >= 1) {
+      score += 1
+    }
+  }
+
+  // 3. OCZEKIWANIA FINANSOWE (0-2 punkty)
+  const salaryField = findSalaryField(fields)
+  if (salaryField) {
+    const salaryValue = getFieldValue(salaryField)
+    const salary = isNumberField(salaryField)
+      ? (salaryValue as number)
+      : parseInt(salaryValue.toString().replace(/\D/g, "")) || 0
+    console.log("Salary value:", salary)
+
+    if (salary > 0 && salary <= 12000) {
+      score += 2
+    } else if (salary > 0 && salary <= 18000) {
+      score += 1
+    }
+  }
+
+  // 4. PRACA ZDALNA (0-1 punkt)
+  const remoteField = findRemoteField(fields)
+  if (remoteField) {
+    const remote = getFieldValue(remoteField)
+    console.log("Remote value:", remote)
+
+    if (
+      remote === true ||
+      remote.toString().toLowerCase().includes("tak") ||
+      remote.toString().toLowerCase().includes("yes") ||
+      remote.toString().toLowerCase().includes("chcę")
+    ) {
+      score += 1
+    }
+  }
+
+  // 5. RATING/OCENA MOTYWACJI (0-1 punkt)
+  const ratingFields = findRatingFields(fields)
+  if (ratingFields.length > 0) {
+    // Weź najwyższą ocenę jeśli jest kilka pól rating
+    const ratings = ratingFields.map(field => getFieldValue(field) as number)
+    const maxRating = Math.max(...ratings)
+    console.log("Rating values:", ratings, "Max:", maxRating)
+
+    if (maxRating >= 4) {
+      score += 1
+    }
+  }
+
+  // 6. PORTFOLIO/PROJEKTY (0-1 punkt)
+  const portfolioField = findPortfolioField(fields)
+  if (portfolioField) {
+    const portfolio = getFieldValue(portfolioField)
+    console.log("Portfolio value:", portfolio)
+
+    // Sprawdź czy portfolio ma wartość (string, number, lub true dla file upload)
+    const hasPortfolio =
+      portfolio === true ||
+      (typeof portfolio === "string" && portfolio.length > 0) ||
+      (typeof portfolio === "number" && portfolio > 0)
+
+    if (hasPortfolio) {
+      score += 1
+    }
+  }
+
+  console.log(`Final score: ${score}/${maxScore}`)
+
+  // Próg akceptacji: 50% punktów (5/10)
+  return score >= 5 ? "approved" : "rejected"
+}

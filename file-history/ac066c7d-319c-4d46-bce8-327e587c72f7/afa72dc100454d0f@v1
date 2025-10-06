@@ -1,0 +1,12 @@
+# Debug Code Command
+
+Analyze this code for potential bugs, issues, and debugging strategies. Focus on: common error patterns, null/undefined checks, memory leaks, performance issues, race conditions, and provide specific debugging steps and suggestions.
+
+## Usage
+```
+/debug [file_path] [error_description]
+```
+
+## Parameters
+- `file_path`: Path to the file to debug
+- `error_description`: Optional description of the error or issue

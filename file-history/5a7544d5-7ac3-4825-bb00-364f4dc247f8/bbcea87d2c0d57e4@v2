@@ -1,0 +1,682 @@
+# Claude Commands - Przewodnik Użytkownika
+
+> Kompletny przewodnik po komendach Claude Code dla projektu Next.js z feature-based architecture
+
+## 📋 Spis Treści
+
+1. [Szybki Start](#szybki-start)
+2. [Komendy Deweloperskie](#komendy-deweloperskie)
+3. [Komendy Quality Assurance](#komendy-quality-assurance)
+4. [Komendy Generowania Kodu](#komendy-generowania-kodu)
+5. [Przykładowe Workflow](#przykładowe-workflow)
+6. [Integracja z Agentami](#integracja-z-agentami)
+
+---
+
+## Szybki Start
+
+Wszystkie komendy uruchamiasz w Claude Code przez prefiks `/`:
+
+```bash
+/feature product "CRUD for products"
+/lint features/product/
+/test features/product/logic/product-use-case.ts
+```
+
+---
+
+## Komendy Deweloperskie
+
+### `/debug` - Debugowanie Kodu
+
+**Opis**: Analizuje kod pod kątem błędów i proponuje strategie debugowania.
+
+**Składnia**:
+```bash
+/debug [ścieżka_do_pliku] [opcjonalny_opis_błędu]
+```
+
+#### Przykład 1: Błąd executePromise
+```bash
+/debug features/product/logic/product-use-case.ts "executePromise nie łapie błędów z GraphQL"
+```
+
+**Zwróci**:
+- Analizę przepływu błędów przez warstwy
+- Sprawdzenie czy `handleGraphQLMutation` rzuca błędy
+- Weryfikację wrapper `executePromise`
+- Konkretne miejsca do debugowania (breakpointy, console.log)
+
+#### Przykład 2: Server Action nie działa
+```bash
+/debug features/checkout/actions/checkout-actions.ts "Server Action zwraca undefined"
+```
+
+**Zwróci**:
+- Sprawdzenie dyrektywy `"use server"`
+- Weryfikację konwersji FormData
+- Sprawdzenie czy ClientResult jest zwracany
+- Debugging redirect issues
+
+#### Przykład 3: Komponent nie renderuje
+```bash
+/debug features/product/components/product-form.tsx "formularz nie wyświetla błędów walidacji"
+```
+
+**Zwróci**:
+- Sprawdzenie `"use client"` directive
+- React Hook Form setup
+- Zod schema validation
+- `setError("root")` usage
+
+#### Kiedy używać:
+- ✅ Gdy coś nie działa i nie wiesz dlaczego
+- ✅ Błędy w konsoli są niejasne
+- ✅ Server Actions nie wykonują się
+- ✅ GraphQL mutations failują
+- ✅ React Hook Form validation nie działa
+
+---
+
+### `/explain` - Wyjaśnienie Kodu
+
+**Opis**: Szczegółowe wyjaśnienie architektury i implementacji kodu.
+
+**Składnia**:
+```bash
+/explain [ścieżka_do_pliku]
+```
+
+#### Przykład 1: Wyjaśnienie Use Case
+```bash
+/explain features/order/logic/order-use-case.ts
+```
+
+**Zwróci**:
+- Identyfikację warstwy (Business Logic)
+- Wyjaśnienie przepływu danych
+- Analizę executePromise wrappera
+- Dependency injection context
+- Orchestration pattern
+- Business rules dokumentację
+
+#### Przykład 2: Wyjaśnienie Server Action
+```bash
+/explain features/checkout/actions/checkout-actions.ts
+```
+
+**Zwróci**:
+- Wyjaśnienie walidacji Zod
+- Dependency injection do Use Case
+- ClientResult handling
+- Redirect strategy
+- Error propagation
+
+#### Przykład 3: Wyjaśnienie Repository
+```bash
+/explain features/product/logic/product-repo.ts
+```
+
+**Zwróci**:
+- GraphQL mutations/queries
+- Fragment usage
+- Response → DTO mapping
+- makeAssetUrl usage
+- Error throwing strategy
+
+#### Kiedy używać:
+- ✅ Onboarding nowych członków zespołu
+- ✅ Code review - zrozumienie implementacji
+- ✅ Dokumentowanie decyzji architektonicznych
+- ✅ Nauka wzorców projektu
+
+---
+
+## Komendy Quality Assurance
+
+### `/lint` - Code Quality Check
+
+**Opis**: Kompleksowa analiza jakości kodu pod kątem architektury, wzorców i code smells.
+
+**Składnia**:
+```bash
+/lint [ścieżka_do_pliku_lub_folderu]
+```
+
+#### Przykład 1: Lint pojedynczego Use Case
+```bash
+/lint features/product/logic/product-use-case.ts
+```
+
+**Sprawdzi**:
+- ✅ Czy wszystkie external calls mają `executePromise`
+- ✅ Czy zwraca `ClientResult`
+- ✅ Czy dependency injection jest właściwy
+- ✅ Czy brak business logic w złej warstwie
+- ✅ Czy typy są poprawnie zorganizowane
+
+**Przykładowy output**:
+```
+⚠️ ISSUES FOUND:
+
+1. Missing executePromise wrapper (line 23)
+   Current: const result = await props.context.repository(data)
+   Should be: const result = await executePromise(() => props.context.repository(data))
+
+2. Wrong type organization (line 5)
+   ProductResponse should be internal in repository, not exported from product-type.ts
+```
+
+#### Przykład 2: Lint całego feature
+```bash
+/lint features/checkout/
+```
+
+**Sprawdzi**:
+- Architecture compliance (wszystkie warstwy)
+- Type organization
+- No layer skipping
+- Test coverage
+- Comment quality
+
+#### Przykład 3: Lint przed commitem
+```bash
+/lint features/order/
+```
+
+**Użyj przed**:
+- `git commit` - catch issues early
+- Code review request
+- Merge do main branch
+
+#### Kiedy używać:
+- ✅ Przed każdym commitem
+- ✅ Po implementacji nowej logiki
+- ✅ Code review preparation
+- ✅ Refactoring validation
+
+---
+
+### `/review-pr` - Pull Request Readiness
+
+**Opis**: Kompleksowy checklist przed utworzeniem Pull Requesta.
+
+**Składnia**:
+```bash
+/review-pr [ścieżka_do_feature_lub_folderu]
+```
+
+#### Przykład 1: Review całego feature przed PR
+```bash
+/review-pr features/product/
+```
+
+**Sprawdzi**:
+```
+✅ PASSED CHECKS:
+- Layer separation correct
+- executePromise used everywhere
+- Tests exist and pass
+- No commented code
+
+⚠️ ISSUES TO FIX:
+1. Missing test for product-use-case error handling
+2. TODO comment in product-actions.ts:45
+3. Console.log in product-form.tsx:67 (debug statement)
+
+❌ CRITICAL ISSUES:
+1. Component directly calls Repository (product-form.tsx:89)
+   Must go through Server Action → Use Case → Repository
+```
+
+#### Przykład 2: Quick check pojedynczego pliku
+```bash
+/review-pr features/checkout/actions/checkout-actions.ts
+```
+
+#### Przykład 3: Review przed merge
+```bash
+/review-pr features/
+```
+
+**Użyj przed**:
+- Utworzeniem PR
+- Mergem do production branch
+- Release deployment
+
+#### Kiedy używać:
+- ✅ Przed utworzeniem PR (zawsze!)
+- ✅ Po code review fixes
+- ✅ Przed mergem do main
+- ✅ Production readiness check
+
+---
+
+## Komendy Generowania Kodu
+
+### `/feature` - Generowanie Nowego Feature
+
+**Opis**: Tworzy kompletną strukturę nowego feature z wszystkimi plikami.
+
+**Składnia**:
+```bash
+/feature [nazwa_feature] [opcjonalny_opis]
+```
+
+#### Przykład 1: Proste CRUD feature
+```bash
+/feature product "Product management with CRUD operations"
+```
+
+**Wygeneruje**:
+```
+features/product/
+├── actions/
+│   └── product-actions.ts          # Server Actions + Zod
+├── components/
+│   └── product-form.tsx            # React Hook Form component
+├── logic/
+│   ├── product-use-case.ts         # Business logic
+│   ├── product-repo.ts             # GraphQL repository
+│   └── product-type.ts             # DTO types
+└── __tests__/
+    ├── product-actions.test.ts     # Actions tests
+    ├── product-use-case.test.ts    # Use Case tests
+    └── product-test-utils.ts       # Test fixtures
+```
+
+**Każdy plik zawiera**:
+- Proper layer patterns
+- executePromise + ClientResult
+- Dependency injection
+- GraphQL setup with fragments
+- Complete tests
+
+#### Przykład 2: Feature z image upload
+```bash
+/feature user-profile "User profile with avatar upload"
+```
+
+**Wygeneruje dodatkowo**:
+- File upload handling w repository
+- Multi-step Use Case (upload → update)
+- Form z file input
+
+#### Przykład 3: Feature z complex business logic
+```bash
+/feature order "Order processing with payment and inventory"
+```
+
+**Wygeneruje**:
+- Multi-step Use Case orchestration
+- Multiple repository dependencies
+- Complex error handling
+
+#### Po wygenerowaniu:
+1. **Review** wygenerowany kod
+2. **Dostosuj** business logic do potrzeb
+3. **Uruchom testy**: `npm test features/[feature]`
+4. **Lint**: `/lint features/[feature]/`
+
+#### Kiedy używać:
+- ✅ Tworzenie nowego feature od zera
+- ✅ Prototypowanie
+- ✅ Nauka wzorców projektu (użyj jako reference)
+- ✅ Szybki start z boilerplate
+
+---
+
+### `/test` - Generowanie Testów
+
+**Opis**: Generuje kompleksowe testy dla Actions i Use Cases.
+
+**Składnia**:
+```bash
+/test [ścieżka_do_pliku] [opcjonalny_fokus]
+```
+
+#### Przykład 1: Testy dla Use Case
+```bash
+/test features/product/logic/product-use-case.ts
+```
+
+**Wygeneruje**:
+```typescript
+// features/product/__tests__/product-use-case.test.ts
+
+describe("Product Use Case", () => {
+  it("should create product successfully", async () => {
+    // Mock GraphQL
+    vi.mocked(client.mutate).mockResolvedValue(
+      createMockProductGraphQLResponse({ title: "Test Product" })
+    )
+
+    const context = { repository: createProductRepository }
+    const result = await createProductUseCase({ context, data })
+
+    expect(result.isFailure).toBe(false)
+    expect(result.value.title).toBe("Test Product")
+  })
+
+  it("should handle GraphQL errors", async () => {
+    vi.mocked(client.mutate).mockRejectedValue(new Error("GraphQL failed"))
+    // ... test error handling
+  })
+
+  it("should handle validation errors", async () => {
+    // ... test validation
+  })
+
+  it("should handle missing data", async () => {
+    // ... test empty response
+  })
+})
+```
+
+#### Przykład 2: Testy dla Actions
+```bash
+/test features/product/actions/product-actions.ts
+```
+
+**Wygeneruje**:
+```typescript
+// Mock Use Case
+vi.mock("../logic/product-use-case", () => ({
+  createProductUseCase: vi.fn(),
+}))
+
+describe("Product Actions", () => {
+  it("should validate and call use case", async () => {
+    const mockResult = { isFailure: false, value: { id: "123" } }
+    vi.mocked(createProductUseCase).mockResolvedValue(mockResult)
+
+    const formData = new FormData()
+    formData.append("title", "Test Product")
+
+    await createProductAction(formData)
+
+    expect(createProductUseCase).toHaveBeenCalledWith({
+      context: expect.objectContaining({ repository: expect.any(Function) }),
+      data: expect.objectContaining({ title: "Test Product" }),
+    })
+  })
+  // ... more tests
+})
+```
+
+#### Przykład 3: Testy z fokusem na error handling
+```bash
+/test features/order/logic/order-use-case.ts "error-handling"
+```
+
+**Wygeneruje więcej testów dla**:
+- GraphQL errors
+- Validation errors
+- Missing data
+- Race conditions
+
+#### Przykład 4: Test utils generation
+```bash
+/test features/product/ "test-utils"
+```
+
+**Wygeneruje**:
+```typescript
+// features/product/__tests__/product-test-utils.ts
+
+export const createMockProductDTO = (override?: Partial<ProductDTO>): ProductDTO => ({
+  id: "test-id",
+  title: "Test Product",
+  price: 99.99,
+  ...override,
+})
+
+export const createMockProductGraphQLResponse = (data?: Partial<ProductResponse>) =>
+  createApolloResponse({
+    createProduct: createMockProductResponse(data),
+  })
+```
+
+#### Po wygenerowaniu:
+1. **Przejrzyj** wygenerowane testy
+2. **Dodaj** edge cases specyficzne dla biznesu
+3. **Uruchom**: `npm test features/[feature]`
+4. **Sprawdź coverage**: `npm run test:coverage`
+
+#### Kiedy używać:
+- ✅ Po napisaniu nowego Use Case lub Action
+- ✅ TDD - generuj testy przed implementacją
+- ✅ Zwiększanie test coverage
+- ✅ Refactoring - generuj testy najpierw
+
+---
+
+## Przykładowe Workflow
+
+### Workflow 1: Tworzenie Nowego Feature
+
+```bash
+# Krok 1: Wygeneruj strukturę feature
+/feature user-profile "User profile management"
+
+# Krok 2: Przejrzyj wygenerowany kod i dostosuj
+# ... edycja w IDE ...
+
+# Krok 3: Wygeneruj testy
+/test features/user-profile/logic/user-profile-use-case.ts
+/test features/user-profile/actions/user-profile-actions.ts
+
+# Krok 4: Uruchom testy
+npm test features/user-profile/
+
+# Krok 5: Lint przed commitem
+/lint features/user-profile/
+
+# Krok 6: Fix issues jeśli są
+# ... poprawki ...
+
+# Krok 7: Review readiness
+/review-pr features/user-profile/
+
+# Krok 8: Commit & Push
+git add features/user-profile/
+git commit -m "feat: add user profile management"
+git push
+```
+
+---
+
+### Workflow 2: Debugowanie Istniejącego Feature
+
+```bash
+# Problem: Server Action nie działa
+/debug features/checkout/actions/checkout-actions.ts "Action zwraca undefined"
+
+# Wyjaśnienie przepływu danych
+/explain features/checkout/actions/checkout-actions.ts
+
+# Sprawdzenie Use Case
+/debug features/checkout/logic/checkout-use-case.ts
+
+# Po naprawie: lint
+/lint features/checkout/
+
+# Upewnij się że testy przechodzą
+npm test features/checkout/
+```
+
+---
+
+### Workflow 3: Code Review Preparation
+
+```bash
+# Pre-review self-check
+/lint features/order/
+
+# Fix issues
+# ... poprawki ...
+
+# Comprehensive PR check
+/review-pr features/order/
+
+# Wygeneruj brakujące testy jeśli trzeba
+/test features/order/logic/order-use-case.ts
+
+# Final verification
+npm test
+npm run build
+
+# Create PR
+git push
+gh pr create --fill
+```
+
+---
+
+### Workflow 4: Refactoring
+
+```bash
+# Przed refactoringiem - wygeneruj testy
+/test features/product/logic/product-use-case.ts
+
+# Upewnij się że testy przechodzą
+npm test features/product/
+
+# Refactoring
+# ... zmiany w kodzie ...
+
+# Sprawdź architecture compliance
+/lint features/product/
+
+# Upewnij się że testy nadal przechodzą
+npm test features/product/
+
+# Review przed commit
+/review-pr features/product/
+```
+
+---
+
+## Integracja z Agentami
+
+Komendy automatycznie wykorzystują wyspecjalizowanych agentów:
+
+### `/debug` używa:
+- `architecture-validator-agent` - sprawdzanie warstw
+- `use-case-agent` - debugging business logic
+
+### `/explain` używa:
+- `architecture-validator-agent` - layer identification
+- `use-case-agent` - business logic explanation
+- `component-builder-agent` - React patterns
+
+### `/lint` używa:
+- `architecture-validator-agent` - comprehensive checks
+
+### `/test` używa:
+- `test-generator-agent` - test generation
+
+### `/review-pr` używa:
+- `architecture-validator-agent` - full validation
+
+### `/feature` używa:
+- `feature-architect-agent` - structure generation
+- `component-builder-agent` - React components
+- `use-case-agent` - business logic
+- `repo-mapper-agent` - GraphQL setup
+- `test-generator-agent` - tests
+
+---
+
+## Wskazówki i Best Practices
+
+### 💡 Pro Tips
+
+1. **Używaj `/lint` często** - przed każdym commitem
+2. **`/review-pr` to must-have** - zawsze przed PR
+3. **`/feature` jako template** - nawet jeśli nie użyjesz wszystkiego
+4. **`/explain` dla onboardingu** - nowi członkowie zespołu
+5. **`/test` w TDD** - generuj testy przed implementacją
+
+### ⚡ Szybkie Skróty
+
+```bash
+# Quick quality check przed commitem
+/lint features/[feature]/ && npm test
+
+# Full PR readiness
+/review-pr features/[feature]/ && npm run build
+
+# Debug + explain combo
+/debug [file] && /explain [file]
+```
+
+### 🚫 Częste Błędy
+
+**NIE używaj** `/feature` do modyfikacji istniejącego feature:
+```bash
+# ❌ ZŁE
+/feature product  # Nadpisze istniejący kod!
+
+# ✅ DOBRE
+# Używaj /explain i /lint dla istniejącego kodu
+```
+
+**NIE pomijaj** `/review-pr`:
+```bash
+# ❌ ZŁE workflow
+git add .
+git commit
+git push
+
+# ✅ DOBRE workflow
+/review-pr features/[feature]/
+# Fix issues
+git add .
+git commit
+git push
+```
+
+---
+
+## Dodatki
+
+### Dostępne Agenty (używane przez komendy)
+
+- `feature-architect-agent` - struktura features
+- `component-builder-agent` - React komponenty
+- `use-case-agent` - business logic
+- `repo-mapper-agent` - GraphQL repositories
+- `test-generator-agent` - testy
+- `architecture-validator-agent` - walidacja architektury
+
+### Referencje
+
+- **Architecture Rules**: `.cursor/rules/`
+- **Agent Definitions**: `.claude/agents/`
+- **Reference Implementation**: `features/checkout/`
+- **Coding Standards**: `.claude/agents/coding-standards.md`
+
+---
+
+## Pytania i Problemy
+
+**Komenda nie działa?**
+- Sprawdź czy jesteś w głównym folderze projektu
+- Sprawdź składnię komendy
+- Sprawdź czy plik/folder istnieje
+
+**Wygenerowany kod wymaga poprawek?**
+- To normalne! Komendy generują boilerplate
+- Zawsze review i dostosuj do potrzeb biznesowych
+- Użyj jako punkt startowy, nie końcowy
+
+**Chcesz dodać własną komendę?**
+- Stwórz plik `.claude/commands/[nazwa].md`
+- Użyj istniejących jako template
+- Możesz referencować agentów
+
+---
+
+**Ostatnia aktualizacja**: 2024-10-01
+**Wersja**: 1.0.0

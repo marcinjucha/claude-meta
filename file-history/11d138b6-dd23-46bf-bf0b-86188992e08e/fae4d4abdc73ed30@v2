@@ -1,0 +1,177 @@
+# Home Screen
+
+## Overview
+
+Main entry screen - store selection and scanning mode selection (Batch, Single Scan, ShelfScan, Routes, Mapping).
+
+## Architecture
+
+**Clean Architecture Layers:**
+- **Presentation:** `HomeStore.swift` (TCA), `HomeView.swift`, `HomeMenuView.swift`
+- **Business:** `HomeUseCase.swift`
+- **Data:** `HomeConfigurationRepository.swift`, `HomeModeService.swift`, `HomeFirebaseEvent.swift`
+
+## TCA Feature Structure
+
+### State
+```swift
+struct State {
+    var storeSelection: StoreSelectionFeature.State
+    var offlineAvailability: OfflineAvailabilityFeature.State?
+    var modes: Loadable<[ModeEntry]> = .idle
+    var activeStoreName: String?
+    var isRefreshing: Bool
+    var showFeedback: Bool
+    var loaded: Bool
+}
+```
+
+### Key Actions
+- `.initialize` → Load modes, subscribe to publishers, setup module previews
+- `.onStoreSelectionButtonTapped` → Navigate to store picker
+- `.onMakeOfflineAvailableButtonTapped` → Navigate to offline availability
+- `.onSendFeedbackButtonTapped` → Show feedback sheet
+- `.modesUpdated(Loadable<[ModeEntry]>)` → Update available modes
+- `.activeStoreNameUpdated(String?)` → Update active store name
+- `.storeSelection(StoreSelectionFeature.Action)` → Handle store selection child actions
+- `.offlineAvailability(OfflineAvailabilityFeature.Action)` → Handle offline child actions
+
+### Reducer Logic
+```swift
+var body: some ReducerOf<Self> {
+    BindingReducer()  // Always first
+
+    Scope(state: \.storeSelection, action: \.storeSelection) {
+        StoreSelectionFeature(useCase: storeSelectionUseCase)
+    }
+
+    Reduce { state, action in
+        // Main reducer logic
+    }
+
+    .ifLet(\.offlineAvailability, action: \.offlineAvailability) {
+        OfflineAvailabilityFeature()
+    }
+}
+```
+
+### Publishers Pattern
+```swift
+case .initialize:
+    return .merge(
+        .publisher { useCase.modesPublisher.map(Action.modesUpdated) }
+            .cancellable(id: CancelID.modesSubscription),
+        .publisher { useCase.activeStoreNamePublisher.map(Action.activeStoreNameUpdated) }
+            .cancellable(id: CancelID.activeStoreNameSubscription),
+        .publisher { useCase.isRefreshingPublisher.map(Action.isRefreshingUpdated) }
+            .cancellable(id: CancelID.isRefreshingSubscription),
+        .run { _ in
+            try await useCase.setupModulePreviews()
+        },
+        .send(.storeSelection(.setup)),
+        .send(.onLoad)
+    )
+```
+
+## Use Case Protocol
+
+```swift
+protocol AnyHomeUseCase {
+    var modesPublisher: AnyPublisher<Loadable<[ModeEntry]>, Never> { get }
+    var activeStoreNamePublisher: AnyPublisher<String?, Never> { get }
+    var isRefreshingPublisher: AnyPublisher<Bool, Never> { get }
+
+    func logScreenView()
+    func load()
+    func setupModulePreviews() async throws
+}
+```
+
+## Dependencies
+
+- `@Dependency(\.homeNavigation)` - Navigation to store selection / offline availability
+- `@Dependency(\.storeRepository)` - Active store access
+- Constructor-injected: `AnyHomeUseCase`, `AnyStoreSelectionUseCase`
+
+## Navigation
+
+**Destinations:**
+- `StoreSelectionNavigationDestination()` - Store picker
+- `OfflineAvailabilityNavigationDestination()` - Offline data download
+
+**Pattern:**
+```swift
+return .run { @MainActor _ in
+    navigation.push(OfflineAvailabilityNavigationDestination())
+}
+```
+
+## Mode Entry Model
+
+```swift
+struct ModeEntry: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let icon: String
+    let isEnabled: Bool
+    let view: AnyView
+}
+```
+
+**Available Modes:**
+- Batch Mode - Whole shelf capture
+- Single Scan Mode - Price verification
+- ShelfScan Mode - AR-based scanning
+- Routes Mode - Route-based scanning
+- Mapping Mode - Aisle mapping (NEW)
+
+## Child Features
+
+### StoreSelectionFeature
+- State: `State.storeSelection`
+- Action: `.storeSelection(StoreSelectionFeature.Action)`
+- Scope: Constructor-injected with `storeSelectionUseCase`
+
+### OfflineAvailabilityFeature
+- State: `State.offlineAvailability` (optional)
+- Action: `.offlineAvailability(OfflineAvailabilityFeature.Action)`
+- Initialized on demand when "Make Offline Available" tapped
+
+## Testing
+
+**Test Pattern:**
+```swift
+lazy var sut = HomeStore.makeWithDeps(
+    useCase: mockHomeUseCase,
+    storeSelectionUseCase: mockStoreSelectionUseCase,
+    navigation: mockNavigation
+)
+
+await sut.send(.initialize)
+await sut.receive(\.modesUpdated)
+```
+
+**makeWithDeps Factory:**
+```swift
+static func makeWithDeps(
+    useCase: any AnyHomeUseCase,
+    storeSelectionUseCase: any AnyStoreSelectionUseCase,
+    navigation: Navigation
+) -> HomeStore
+```
+
+## Key Patterns
+
+1. **Lazy Initialization:** `loaded` flag prevents double initialization
+2. **Publisher Subscriptions:** Use `.cancellable(id:)` with enum CancelIDs
+3. **Child State Management:** Optional `offlineAvailability` state created on demand
+4. **Analytics:** `useCase.logScreenView()` on initialize
+5. **Error Handling:** Module preview setup errors logged, don't block UI
+
+## Common Pitfalls
+
+- ❌ Don't forget to set `loaded = true` to prevent re-initialization
+- ❌ Don't access `@Dependency` inside TaskGroup (capture first)
+- ✅ Always use `.cancellable(id:)` for publishers
+- ✅ Initialize child state before navigation
+- ✅ Use `@MainActor` for navigation effects

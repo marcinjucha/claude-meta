@@ -1,0 +1,259 @@
+shelf_bundle_id = "com.scandit.shelf"
+shelf_target_id = "DigitalShelf"
+enterprise_app_id = "1:883143516:ios:cc411b03459ceaf0784799"
+
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Get started with the project"
+  lane :get_started do
+      cocoapods(use_bundle_exec: true)
+      download_sdk
+      certificates
+  end
+
+  desc "Download provisioning profiles and certificates. Pass `ci:true` when on CI to use custom keychain"
+  lane :certificates do |options|
+    customized_match(force_for_new_devices: false, ci: options[:ci])
+  end
+
+  desc "Download Scandit SDK"
+  lane :download_sdk do
+      sh "bash ./download_scandit_sdk.sh"
+  end
+
+  desc "Download packages from CocoaPods"
+  lane :pods do
+      cocoapods(use_bundle_exec: false)
+  end
+
+  desc "Run swiftlint."
+  lane :lint do |options|
+    swiftlint(config_file: "./.swiftlint.yml")
+  end
+
+  desc "Run unit tests."
+  lane :test do |options|
+    scan(
+    scheme: shelf_target_id,
+    reset_simulator: true,
+    code_coverage: true,
+    output_directory: "tests",
+    xcargs: "-skipMacroValidation",
+    output_types: "html,junit",
+    buildlog_path: "tests/logs"
+    )
+  end
+
+  desc "Run specific test with cache. Usage: fastlane test_cached test:DigitalShelfTests/MappingModeModulePreviewUseCaseTests"
+  lane :test_cached do |options|
+    test_name = options[:test]
+    UI.user_error!("Please provide test name using test:TestName") unless test_name
+
+    scan(
+      scheme: shelf_target_id,
+      only_testing: [test_name],
+      reset_simulator: false,
+      derived_data_path: "~/Library/Developer/Xcode/DerivedData",
+      code_coverage: true,
+      output_directory: "tests",
+      xcargs: "-skipMacroValidation",
+      output_types: "html,junit",
+      buildlog_path: "tests/logs"
+    )
+  end
+
+  desc "Build without archiving."
+  lane :build do |options|
+    build_without_archiving(target: shelf_target_id)
+  end
+
+  desc "Enterprise build"
+  lane :enterprise_build do |options|
+    new_build(
+      target: shelf_target_id,
+      configuration: "Enterprise",
+      export_method: "enterprise",
+      ci: options[:ci]
+    )
+  end
+
+  desc "Submit a new Scandit Digital Shelf beta build to TestFlight. Pass `ci:true` when on CI to use custom keychain."
+  lane :shelf_test_flight do |options|
+    test_flight(ci: options[:ci], target: shelf_target_id, bundle_id: shelf_bundle_id)
+    upload_symbols(target: shelf_target_id, bundle_id: shelf_bundle_id)
+  end
+
+  desc "Submit a new Scandit Digital Shelf Enterprise build to Firebase. Pass `ci:true` when on CI to use custom keychain."
+  lane :shelf_firebase do |options|
+    firebase_beta(ci: options[:ci], target: shelf_target_id, bundle_id: shelf_bundle_id)
+  end
+
+  desc "Submit a new Scandit Digital Shelf Enterprise build to AWS. Pass `ci:true` when on CI to use custom keychain."
+  lane :shelf_aws do |options|
+    aws_beta(ci: options[:ci], target: shelf_target_id, bundle_id: shelf_bundle_id)
+  end
+
+  desc "Build a target without archiving."
+  lane :build_without_archiving do |options|
+    clear_derived_data
+    xcodebuild(
+      workspace: "DigitalShelf.xcworkspace",
+      scheme: options[:target],
+      configuration: "Debug",
+      clean: true,
+      build: true,
+      destination: "generic/platform=iOS",
+      build_settings: {
+        "CODE_SIGNING_ALLOWED" => "NO",
+        "CODE_SIGNING_REQUIRED" => "NO",
+        "CODE_SIGN_IDENTITY" => ""
+      },
+      xcargs: "-resolvePackageDependencies -onlyUsePackageVersionsFromResolvedFile"
+    )
+  end
+
+
+  desc "Submit a new Beta build to TestFlight. Pass `ci:true` when on CI to use custom keychain."
+  private_lane :test_flight do |options|
+    new_build(
+      target: options[:target],
+      configuration: "Release",
+      export_method: "app-store",
+      ci: options[:ci]
+    )
+    pilot(
+      skip_waiting_for_build_processing: true,
+      app_identifier: options[:bundle_id]
+    )
+  end
+
+  desc "Deploy a new Enterprise build to AWS."
+  private_lane :aws_beta do |options|
+    build_number = options[:ci] ? ENV['CI_JOB_ID'] : prompt(text: "Enter build number")
+
+    # Define absolute paths
+    project_root = File.expand_path("..", File.dirname(__FILE__))
+    app_name = "Scandit #{options[:target]} Enterprise"
+    bundle_id = "#{options[:bundle_id]}.enterprise"
+
+    upload_script = File.join(project_root, "scripts", "upload_ios_app_to_s3.sh")
+    ipa_path = File.join(project_root, "build", "#{options[:target]}.ipa")
+    icon_path = File.join(project_root, "DigitalShelf", "Assets.xcassets", "AppIcon.appiconset", "app-icon-1024.png")
+
+    sh "#{upload_script} '#{ipa_path}' '#{icon_path}' '#{app_name}' #{build_number} #{bundle_id}"
+  end
+
+  desc "Deploy a new Enterprise build to Firebase."
+  private_lane :firebase_beta do |options|
+    # Define absolute paths
+    project_root = File.expand_path("..", File.dirname(__FILE__))
+    ipa_path = File.join(project_root, "build", "#{options[:target]}.ipa")
+
+    firebase_app_distribution(
+      app: enterprise_app_id,
+      release_notes: last_git_commit[:message],
+      ipa_path: ipa_path,
+      groups: "scandit-testers"
+    )
+  end
+
+  desc "Upload app symbols to Firebase Crashlytics"
+  lane :upload_symbols do |options|
+    puts "Uploading symbols for target: #{options[:target]}, bundle_id: #{options[:bundle_id]}"
+
+    upload_app_symbols(target: options[:target], bundle_id: options[:bundle_id])
+  end
+
+  desc "Upload app symbols to Firebase Crashlytics"
+  lane :upload_app_symbols do |options|
+    puts "Uploading app symbols for target: #{options[:target]}, bundle_id: #{options[:bundle_id]}"
+
+    # Define absolute paths
+    project_root = File.expand_path("..", File.dirname(__FILE__))
+    app_bundle_id = "#{options[:bundle_id]}.enterprise"
+    app_dsym_path = File.join(project_root, "build", "#{options[:target]}.app.dSYM.zip")
+    app_gsp_path = File.join(project_root, "DigitalShelf", "Services", "Firebase", "GoogleService-Info-#{app_bundle_id}.plist")
+    binary_path = File.join(project_root, "scripts", "upload-symbols")
+
+    # Check if app dSYM file exists before upload
+    if File.exist?(app_dsym_path)
+      puts "✅ Found app dSYM at: #{app_dsym_path}"
+      puts "📊 dSYM file size: #{File.size(app_dsym_path)} bytes"
+    else
+      puts "❌ App dSYM not found at: #{app_dsym_path}"
+      UI.user_error!("App dSYM not found at: #{app_dsym_path}")
+    end
+
+    # Check if app Google Service Info plist exists
+    if File.exist?(app_gsp_path)
+      puts "✅ Found app Google Service Info plist at: #{app_gsp_path}"
+    else
+      puts "❌ App Google Service Info plist not found at: #{app_gsp_path}"
+      UI.user_error!("App Google Service Info plist not found at: #{app_gsp_path}")
+    end
+
+    begin
+      upload_symbols_to_crashlytics(
+        dsym_path: app_dsym_path,
+        gsp_path: app_gsp_path,
+        binary_path: binary_path
+      )
+      puts "✅ Successfully uploaded app symbols to Firebase Crashlytics"
+    rescue => e
+      puts "❌ Failed to upload app symbols: #{e.message}"
+      raise e
+    end
+  end
+
+
+  desc "Archive a new build."
+  private_lane :new_build do |options|
+    build_number = options[:ci] ? ENV['CI_JOB_ID'] : prompt(text: "Enter build number")
+    set_build_number(
+      plist_path: "./DigitalShelf/#{options[:target]}-Info.plist",
+      build_number: build_number
+    )
+    gym(
+      scheme: options[:target],
+      configuration: options[:configuration],
+      export_method: options[:export_method],
+      include_bitcode: false,
+      include_symbols: true,
+      output_directory: "build/",
+      clean: true,
+      verbose: true,
+      xcargs: "-skipMacroValidation"
+    )
+    build_number
+  end
+
+  private_lane :customized_match do |options|
+    if options[:ci]
+      keychain_name = ENV['KEYCHAIN_PATH']
+      keychain_password = ENV['KEYCHAIN_PASSWORD']
+    else
+      keychain_name = nil
+      keychain_password = nil
+    end
+
+    # Always readonly, provisioning profiles are created in a centralized way.
+    match(
+      readonly: true,
+      keychain_name: keychain_name,
+      keychain_password: keychain_password,
+      force_for_new_devices: options[:force_for_new_devices]
+    )
+  end
+
+  desc "Sets build number value for a given plist"
+  private_lane :set_build_number do |options|
+    set_info_plist_value(
+      path: options[:plist_path],
+      key: "CFBundleVersion",
+      value: options[:build_number].to_s
+    )
+  end
+
+end

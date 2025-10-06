@@ -1,0 +1,337 @@
+---
+globs: DigitalShelf/Screens/ShelfScan/Routes/**
+---
+# Routes Module Architecture Rules
+
+## 🔑 Keywords & Usage
+
+**This rule automatically applies when working in `DigitalShelf/Screens/ShelfScan/Routes/**`, but you can use it when you write:**
+- "routes module", "route list", "route details"
+- "aisle", "module", "capture"
+- "upload", "sync", "badge"
+- "routes feature", "route history"
+- Working in Routes directory
+
+**Example prompts:**
+- "Add new field to route model"
+- "Modify route upload logic"
+- "Fix route badge calculation"
+- "Update routes list refresh"
+- "Debug route publisher timing"
+
+---
+
+## Component Responsibilities
+- **RouteListUseCase**: Simple orchestration between services (thin layer)
+- **RouteDetailsUseCase**: Manages route details, aisle selection, upload retries
+- **RouteWithHistoryService**: Data fusion (routes + upload history + network status)
+- **RouteRefreshService**: Store changes + periodic refresh + network fetching
+- **RouteDataRepository**: Local database operations (CRUD, publishers)
+- **RouteNetworkRepository**: API calls with TaskGroup pattern
+- **RouteSharedRepository**: Shared state (selected aisle, last captured route)
+
+## TCA Patterns
+
+### Root Store Structure
+- **Hierarchical State**: routeList + optional child features (routeDetails, aislePreview, capture, summary)
+- **Action Composition**: Each child feature has dedicated action case
+- **Reference**: `RouteRootStore.swift`
+
+### Initialize Pattern
+- **initialize**: Set `isLoaded = true` → trigger `reloadList`
+- **onAppear**: Merge 3 publishers (routes, store changes, network status) with single CancelID
+- **Reference**: `RouteListFeature.swift`
+
+## Dependencies
+
+### Service Pattern (Multiple Repositories)
+- **Rule**: RouteWithHistoryService combines 5 repositories for data fusion only
+- **Why**: Prevents repository cycles + centralizes complex data transformation logic
+- **Usage**: When combining 3+ repositories with complex algorithms (history processing, badge calculation)
+- **Gotchas**: Keep focused on data fusion; avoid adding unrelated responsibilities
+- **Reference**: `RouteWithHistoryService.swift`
+
+### Service Pattern (Single Responsibility)
+- **Rule**: RouteRefreshService handles store changes + periodic refresh + network operations
+- **Why**: Separates refresh concerns from data fusion; maintains Single Responsibility Principle
+- **Usage**: When need timer management + store monitoring + network coordination
+- **Gotchas**: Don't mix with data transformation logic; keep focused on refresh operations
+- **Reference**: `RouteRefreshService.swift`
+
+### Use Case Pattern (Thin Orchestration)
+- **Rule**: RouteListUseCase delegates to services without complex logic
+- **Why**: Keeps orchestration layer thin and testable
+- **Usage**: Simple coordination between services, no business algorithms
+- **Decision Criteria**: Use Case for delegation, Service for actual business logic
+- **Reference**: `RouteListUseCase.swift`
+
+## Navigation
+
+### Child View Pattern
+- **RouteRootView**: Uses `NavigationDestination.self` for module navigation
+- **Specific Types**: `OfflineAvailabilityNavigationDestination` for shared views
+- **Reference**: `RouteRootView.swift`
+
+### Navigation Flow
+- RouteList → RouteDetails → AislePreview → Capture → Summary → Review
+
+## Model Patterns
+
+### Hierarchical Models
+**Route → RouteAisle → RouteAisleModule**
+- Each level aggregates data from children (capturedAisles, capturedModules)
+- Upload status propagates up hierarchy
+- **Reference**: `Route.swift`, `RouteAisle.swift`, `RouteAisleModule.swift`
+
+### Badge System
+**RouteBadge** with priority order:
+- isLastCaptured, uploadPending, uploading(progress), failure
+- **Reference**: `RouteBadgeModel.swift`
+
+## TaskGroup Pattern
+
+### Network Repository Critical Rule
+```swift
+// ✅ CRITICAL: Capture dependencies before TaskGroup
+let httpService = self.httpService
+withThrowingTaskGroup { group in
+    // ✅ Use captured dependency, not self.httpService
+}
+```
+**Reference**: `RouteNetworkRepository.swift`
+
+## Business Logic Patterns
+
+### Upload History Processing
+- **Rule**: 15-second time window grouping per aisle
+- **Why**: Prevents duplicate processing of rapid successive uploads in same session
+- **Usage**: Apply when processing upload events that can occur in quick succession
+- **Gotchas**: Window too small misses related uploads; too large groups unrelated ones
+
+### Badge Priority System
+- **Rule**: uploadPending → uploading(progress) → failure → isLastCaptured priority order
+- **Why**: Failure state most critical for user action; progress shows current activity
+- **Usage**: Calculate from all nested module statuses with hierarchy aggregation
+- **Gotchas**: Network offline changes uploading to pending; handle state transitions carefully
+
+## Publisher Patterns
+
+### Multi-Repository Fusion
+- Combine 4 publishers: routes + history + shared state + network status
+- Complex data transformation with deduplication and filtering
+- **Reference**: `RouteWithHistoryService.swift`
+
+### Store Change Handling
+- Monitor `storeRepository.$activeStoreId` changes
+- Clear routes on store change, reload for new store
+- Use `Task.detached` with weak self for async operations
+
+## 🚨 Critical Pitfalls & Solutions
+
+### Publisher Timing & Race Conditions
+
+#### ❌ PITFALL: Publisher Cancellation During Navigation
+**Problem**: Store changes and network status lost when navigating away from RouteList.
+```swift
+// ❌ WRONG - All publishers cancelled on onDisappear
+case .onDisappear:
+    return .merge(.cancel(id: Cancel.list), .cancel(id: Cancel.store), .cancel(id: Cancel.network))
+
+// ✅ CORRECT - Only cancel view-specific publishers
+case .onDisappear:
+    return .cancel(id: Cancel.list) // Keep store & network persistent
+```
+**Solution**: Setup persistent publishers in `initialize`, view-specific publishers in `onAppear`.
+
+#### ❌ PITFALL: Race Condition in Store Change Detection
+**Problem**: `handleStoreChange()` reads stale `storeRepository.activeStoreId` instead of publisher value.
+```swift
+// ❌ WRONG - May read stale value
+func handleStoreChange() async {
+    let currentStoreId = storeRepository.activeStoreId // Stale!
+
+// ✅ CORRECT - Use value directly from publisher
+func handleStoreChange(newStoreId: Store.ID?) async {
+    // Use newStoreId from publisher - always current
+```
+**Root Cause**: Publisher emits new value but repository property may not be updated yet.
+
+### TCA State Management Pitfalls
+
+#### ❌ PITFALL: Incorrect reloadList Conditions
+**Problem**: Logic prevents reloading when needed.
+```swift
+// ❌ WRONG - Never reloads after initialize sets isLoaded = true
+if !state.isLoaded, state.routes.isEmpty, !state.showActivityIndicator
+
+// ✅ CORRECT - Focus on actual need for data
+if state.routes.isEmpty && !state.showActivityIndicator
+```
+**Why**: `isLoaded` becomes true after initialize, blocking subsequent reloads.
+
+#### ❌ PITFALL: Spinner Hidden by Empty Data
+**Problem**: Spinner disappears when clearing routes, not when loading completes.
+```swift
+// ❌ WRONG - Spinner hidden by empty routes from clearRoutes()
+case .updateRoutes(let routes):
+    state.showActivityIndicator = false // Always hides spinner
+
+// ✅ CORRECT - Check loading state before hiding spinner
+case .updateRoutes(let routes):
+    state.routes = routes
+    if !state.isStoreChangeInProgress {
+        state.showActivityIndicator = false
+    }
+
+case .storeChangeLoadingStateChanged(let isLoading):
+    state.isStoreChangeInProgress = isLoading
+    state.showActivityIndicator = isLoading
+```
+**Solution**: Track loading state separately and check it before hiding spinner in updateRoutes.
+
+### Publisher Architecture Patterns
+
+#### ✅ BEST PRACTICE: Persistent vs View-Specific Publishers
+```swift
+// In initialize() - Persistent publishers (never cancelled)
+.publisher { useCase.storeChangeLoadingState.map(Action.storeChangeLoadingStateChanged) }
+.publisher { useCase.networkStatus.map(Action.updateNetworkStatus) }
+
+// In onAppear() - View-specific publishers (cancelled on navigation)
+.publisher { useCase.routesPublisher.map(Action.updateRoutes) }
+```
+**Rule**: Store changes and network status should be persistent, data publishers can be view-specific.
+
+#### ✅ BEST PRACTICE: Loading State Publisher Pattern
+```swift
+// Service emits loading state
+private let storeChangeLoadingSubject = PassthroughSubject<Bool, Never>()
+
+// Start loading
+storeChangeLoadingSubject.send(true)
+// ... perform operations ...
+// End loading
+storeChangeLoadingSubject.send(false)
+```
+**Benefits**: Clean separation of loading state from data state, perfect spinner timing.
+
+### Debugging & Logging Best Practices
+
+#### ✅ BEST PRACTICE: Comprehensive Publisher Logging
+```swift
+.handleEvents(
+    receiveSubscription: { _ in Log.info("Subscription started") },
+    receiveOutput: { value in Log.info("Received: \(value)") },
+    receiveCompletion: { completion in Log.info("Completed: \(completion)") },
+    receiveCancel: { Log.info("Cancelled") }
+)
+```
+**When**: Essential for debugging publisher timing and race conditions.
+
+#### ✅ BEST PRACTICE: Action Flow Logging
+```swift
+var body: some ReducerOf<Self> {
+    Reduce { state, action in
+        Log.info("Processing action: \(action)") // Log every action
+        switch action {
+        // ... handle actions with specific logging
+```
+**Benefits**: Trace exact action flow and timing in complex scenarios.
+
+## 🎯 Key Architectural Lessons
+
+### 1. Publisher Lifecycle Management
+- **Persistent publishers** for global state (store changes, network)
+- **View publishers** for display data (routes, UI-specific data)
+- **Loading publishers** for UI state (spinners, loading indicators)
+
+### 2. Timing is Everything
+- Separate loading state from data state
+- Control spinner timing with dedicated publishers
+- Capture dependencies before TaskGroups
+
+### 3. Race Condition Prevention
+- Pass publisher values directly, don't re-read from source
+- Setup publishers in correct lifecycle methods
+- Use proper cancellation strategies
+
+### 4. State Management Clarity
+- Keep loading state separate from data state
+- Use boolean publishers for simple loading indicators
+- Avoid complex conditional logic in reloadList
+
+### 5. Debugging Strategy
+- Add comprehensive logging to publishers and actions
+- Log timing and sequence of events
+- Use logs to identify race conditions and timing issues
+
+### 6. Code Comments Best Practices
+- **Rule**: Comments should explain WHY, not WHAT
+- **Why**: Self-documenting code is more maintainable than commented code
+- **Usage**: Only add comments when business logic or architectural decisions need explanation
+- **Gotchas**: Remove obvious comments that duplicate what code already shows
+
+#### ❌ PITFALL: Obvious Comments
+```swift
+// ❌ WRONG - Comment states the obvious
+// Only hide spinner if store change is not in progress
+if !state.isStoreChangeInProgress {
+    state.showActivityIndicator = false
+}
+
+// ❌ WRONG - Comment duplicates variable name
+// Signal loading completed
+storeChangeLoadingSubject.send(false)
+
+// ✅ CORRECT - No comment needed, code is self-explanatory
+if !state.isStoreChangeInProgress {
+    state.showActivityIndicator = false
+}
+```
+
+#### ✅ GOOD COMMENTS: Complex Algorithms Only
+```swift
+// ✅ GOOD - Complex multi-step data processing (from RouteWithHistoryService)
+private lazy var processedHistoryPublisher: AnyPublisher<[UploadHistoryListItemModel], Never> = {
+    historyRepository.todayUploadHistoryPublisher
+        .map { historyItems in
+            // Group by aisle, then filter to 15-second windows to prevent duplicates
+            let groupedByAisle = Dictionary(grouping: historyItems) { $0.aisleName }
+
+            let filteredItems = groupedByAisle.compactMap { _, aisleItems -> [UploadHistoryListItemModel]? in
+                guard let mostRecentDate = aisleItems.map(\.date).max() else { return nil }
+                let timeWindowStart = mostRecentDate.addingTimeInterval(.seconds(-15))
+
+                // Keep only most recent upload per module within time window
+                let itemsInWindow = aisleItems.filter { $0.date >= timeWindowStart }
+                let groupedByModule = Dictionary(grouping: itemsInWindow) { $0.moduleName }
+
+                return groupedByModule.compactMap { _, items in
+                    items.max(by: { $0.date < $1.date })
+                }
+            }.flatMap { $0 }
+
+            return filteredItems.sorted(by: \.date, comparator: <)
+        }
+}
+
+// ✅ GOOD - Badge priority algorithm with network-dependent logic
+private func calculateBadge(for route: Route, networkStatus: NetworkStatus) -> RouteBadge? {
+    let allModuleStatuses = route.aisles.flatMap { $0.modules.compactMap(\.uploadStatus) }
+    guard !allModuleStatuses.isEmpty else { return checkIsLastCaptured(route: route) }
+
+    // Priority: all pending → uploading progress → failure → lastCaptured
+    if allModuleStatuses.allSatisfy({ $0 == .pending }) {
+        return .uploadPending
+    }
+
+    let finishedModules = allModuleStatuses.filter { $0 == .success || $0 == .failure }
+    if finishedModules.count < allModuleStatuses.count {
+        // Show pending instead of progress when offline
+        return networkStatus == .offline ? .uploadPending :
+               .uploading(progress: Int((Double(finishedModules.count) / Double(allModuleStatuses.count)) * 100))
+    }
+
+    return allModuleStatuses.contains(.failure) ? .failure : checkIsLastCaptured(route: route)
+}
+```

@@ -1,0 +1,12 @@
+# Optimize Code Command
+
+Analyze code for performance optimization opportunities focusing on: algorithmic complexity, memory usage, I/O operations, caching strategies, database queries, and provide specific optimization techniques with measurable improvements.
+
+## Usage
+```
+/optimize [file_path] [performance_target]
+```
+
+## Parameters
+- `file_path`: Path to the file to optimize
+- `performance_target`: Optional specific performance goal

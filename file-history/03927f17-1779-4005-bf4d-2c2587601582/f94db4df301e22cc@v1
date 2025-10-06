@@ -1,0 +1,35 @@
+# Explain iOS + TCA Code
+
+Analyze and explain iOS/TCA code focusing on:
+
+**TCA Components:**
+- State structure and data flow
+- Action organization (ViewAction, ResponseAction, DelegateAction)
+- Reducer logic and effect patterns
+- Dependencies (@Dependency, makeWithDeps)
+- Navigation patterns (@Presents, NavigationStack)
+
+**Clean Architecture:**
+- Layer identification (Presentation, Business, Data, Model)
+- Use Case vs Service pattern
+- Repository abstractions
+- Dependency flow
+
+**Implementation Details:**
+- SwiftUI view composition
+- Design system usage (Colors, L10n, .defaultFont())
+- Async/await patterns
+- Publisher subscriptions
+- Error handling
+
+Provides clear explanations suitable for code reviews, onboarding, and documentation.
+
+**Agent Used:** May invoke `tca-developer` or `ios-architect` depending on focus.
+
+## Usage
+```
+/explain [file_path]
+```
+
+## Parameters
+- `file_path`: Path to the file to analyze and explain (required)

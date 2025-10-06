@@ -1,0 +1,409 @@
+# Room of Code - Project Overview
+
+Next.js 15 aplikacja webowa z integracją CMS (Strapi), e-commerce features (PayU), ankietami (Tally.so) oraz zaawansowaną architekturą feature-based.
+
+## 🏗️ Architektura
+
+### Clean Architecture + Feature-Based
+Projekt wykorzystuje **Clean Architecture** z podziałem na feature moduły:
+- **Presentation Layer** → `app/`, `components/`
+- **Business Layer** → `features/*/logic/*-use-case.ts`
+- **Data Layer** → `features/*/logic/*-repo.ts`
+- **Shared** → `lib/`, `components/ui/`
+
+### Result Pattern
+Obsługa błędów przez własny **Result Pattern** (`ClientResult<T>`) eliminujący try/catch boilerplate.
+
+### Dependency Injection
+Use cases przyjmują zależności przez parametr `context` (ułatwia testowanie):
+```typescript
+async function someUseCase({ context, data }: {
+  context: { getProducts: GetProducts }
+  data: { id: string }
+})
+```
+
+## 📁 Struktura Projektu
+
+```
+/
+├── app/                    # Next.js App Router (strony, API routes, layout)
+├── features/               # Feature modules (business logic, components, tests)
+├── components/             # Shared UI components
+│   ├── ui/                # shadcn/ui components (Radix UI + Tailwind)
+│   └── controls/          # CMS-based components (Strapi)
+├── lib/                   # Utilities (error-handling, encryption, GraphQL)
+├── public/                # Static assets
+├── .storybook/            # Storybook configuration
+└── docs/                  # Documentation
+```
+
+**Szczegółowe opisy:**
+- [`app/CLAUDE.md`](./app/CLAUDE.md) - Next.js App Router, strony, API routes
+- [`features/CLAUDE.md`](./features/CLAUDE.md) - Feature modules, Clean Architecture
+- [`components/CLAUDE.md`](./components/CLAUDE.md) - UI components (shadcn/ui + CMS controls)
+- [`lib/CLAUDE.md`](./lib/CLAUDE.md) - Utility functions, error handling, encryption
+
+## 🛠️ Tech Stack
+
+### Core
+- **Next.js 15.2** - React framework (App Router, Server Components)
+- **React 19** - UI library
+- **TypeScript 5** - Type safety
+
+### Styling & UI
+- **Tailwind CSS 4** - Utility-first CSS
+- **shadcn/ui** - Component library (Radix UI primitives)
+- **Framer Motion** - Animations
+- **Lucide React** - Icons
+
+### State Management
+- **Zustand** - Client state (shopping cart)
+- **React Hook Form** - Form state
+- **Zod** - Schema validation
+
+### Data & APIs
+- **GraphQL** (@apollo/client) - CMS communication (Strapi)
+- **Strapi Blocks Renderer** - Rich text rendering
+- **PayU** - Payment gateway integration
+- **Tally.so** - Survey/form integration
+
+### Utilities
+- **class-variance-authority** - Component variants
+- **ts-pattern** - Pattern matching
+- **JSZip** - File compression
+- **Nodemailer** + **Resend** - Email sending
+- **React Email** - Email templates
+
+### Development
+- **Storybook 8** - Component documentation
+- **Vitest** - Unit testing
+- **Testing Library** - Component testing
+- **ESLint** + **Prettier** - Code quality
+- **Turbopack** - Fast bundler (dev mode)
+
+### Deployment
+- **Vercel** - Hosting & CI/CD
+- **Vercel Analytics** - Web analytics
+- **Plausible** + **Google Analytics** - Additional tracking
+
+## 🎯 Features
+
+### E-commerce
+- **Shopping Cart** (`features/bucket/`) - LocalStorage-based cart with Zustand
+- **Checkout** (`features/checkout/`) - Multi-step checkout form
+- **PayU Integration** - Payment processing
+- **Order Confirmation** (`features/confirmation/`) - Post-payment confirmation
+- **File Downloads** - Secure download links for digital products
+
+### Content Management
+- **Strapi CMS Integration** - Dynamic content from headless CMS
+- **Rich Text Rendering** - Strapi Blocks renderer
+- **SEO** (`features/seo/`) - Dynamic metadata from CMS
+- **Legal Pages** - Privacy policy, terms & conditions from CMS
+
+### Surveys & Forms
+- **Tally.so Integration** (`features/survey/`) - Embedded surveys
+- **Webhook Handling** - Server-side webhook processing
+- **Survey Results** - Approval/rejection flows
+
+### Layout & Navigation
+- **Responsive Navigation** (`features/layout/navigation/`) - Desktop + mobile menu
+- **Footer** (`features/layout/footer/`) - Multiple variants (minimal, full)
+- **Contact Section** (`features/layout/section-contact/`)
+- **Slider/Carousel** (`features/layout/slider/`) - Projects/references showcase
+
+### Analytics & Tracking
+- **Multi-platform Analytics** - Vercel, Plausible, Google Analytics
+- **Cookie Consent** (`features/consent-cookie/`) - GDPR/RODO compliant
+
+## 🚀 Scripts
+
+```bash
+# Development
+yarn dev              # Start dev server (Turbopack)
+yarn build            # Production build (with auto-format)
+yarn start            # Start production server
+
+# Code Quality
+yarn lint             # Run ESLint
+yarn format           # Format with Prettier
+
+# Testing
+yarn test             # Run tests with coverage
+yarn test:watch       # Watch mode
+
+# Storybook
+yarn storybook        # Start Storybook dev server
+yarn build-storybook  # Build Storybook
+
+# Email Development
+yarn email            # Preview email templates (port 3001)
+
+# Setup
+yarn setup            # Install dependencies (frozen lockfile)
+```
+
+## 🧪 Testing
+
+- **Framework**: Vitest + Testing Library
+- **Coverage**: V8 coverage provider
+- **Location**: `features/*/tests/` - każdy feature ma własne testy
+- **Test Utils**: `*-test-utils.ts` - helpery dla testów
+- **Patterns**: Testy dla actions, use cases, repositories
+
+## 📦 Key Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| next | 15.2.1 | Framework |
+| react | 19.0.0 | UI library |
+| typescript | ^5 | Type safety |
+| tailwindcss | ^4.0.11 | Styling |
+| @apollo/client | ^3.11.10 | GraphQL client |
+| zustand | ^5.0.3 | State management |
+| react-hook-form | ^7.54.2 | Forms |
+| zod | ^3.24.2 | Validation |
+| vitest | ^3.1.3 | Testing |
+| storybook | ^8.5.1 | Component docs |
+
+## 🗂️ Feature Modules
+
+### Core Business Features
+- **`analytics/`** - Google Analytics, Plausible integration
+- **`bucket/`** - Shopping cart (LocalStorage + Zustand)
+- **`checkout/`** - Checkout process, PayU integration
+- **`confirmation/`** - Order confirmation page
+- **`survey/`** - Tally.so surveys + webhook handling
+
+### Layout Features
+- **`layout/footer/`** - Footer component (variants)
+- **`layout/navigation/`** - Navigation (desktop + mobile)
+- **`layout/section-contact/`** - Contact section
+- **`layout/slider/`** - Content slider/carousel
+
+### Content Features
+- **`legal/`** - Legal documents renderer
+- **`privacy-policy/`** - Privacy policy page
+- **`terms-and-conditions/`** - Terms & conditions page
+- **`seo/`** - SEO metadata from CMS
+
+### Utilities
+- **`common/`** - Shared DTOs, repos, types, use cases
+- **`consent-cookie/`** - Cookie consent banner (GDPR)
+
+## 🎨 UI Components
+
+### shadcn/ui (`components/ui/`)
+Radix UI primitives + Tailwind CSS:
+- Forms: Button, Input, Textarea, Checkbox, Select, Label
+- Layout: Card, Table, Separator, Sheet, Skeleton
+- Overlays: Dialog, Alert Dialog, Hover Card, Alert
+- Navigation: Accordion, Carousel
+
+### CMS Controls (`components/controls/`)
+Custom components dla treści z Strapi:
+- Button, Image, Text, Rich Text, Section
+- Decimal Number, Style utilities
+
+### Complex Components
+- Article Card, Product Card, Image Card
+- Image Carousel, Image with Button
+- Rich Text Renderer
+
+## 🔐 Security
+
+### Encryption (`lib/encryption.ts`)
+- **AES-256-CTR** - Szyfrowanie sensitive data
+- **MD5** - Hashing (non-cryptographic)
+- **Environment Variables** - Klucze w `.env.local`
+  - `ENCRYPT_SECRET_KEY` (64-char hex)
+  - `ENCRYPT_IV` (32-char hex)
+
+⚠️ **Uwaga**: MD5 nie jest kryptograficznie bezpieczny - użyj tylko dla non-security hashing.
+
+## 🌐 API Routes
+
+### Checkout
+- `GET /api/checkout/download` - Download purchased files
+- `POST /api/checkout/continue` - Continue checkout process
+
+### Survey
+- `POST /api/survey/webhook` - Tally.so webhook receiver
+- `GET /api/survey/webhook?id={respondentId}` - Retrieve stored webhook data
+
+## 📄 Pages
+
+### Public Pages
+- `/` - Homepage (hero, services, survey CTA)
+- `/survey` - Embedded Tally survey
+- `/survey/thank-you` - Survey submission confirmation
+- `/survey/approved` - Survey approval page
+- `/survey/rejected` - Survey rejection page
+- `/polityka-prywatnosci` - Privacy policy
+- `/regulamin` - Terms & conditions
+
+## 🎭 Storybook
+
+Component documentation accessible at `http://localhost:6006`:
+- UI Components (`components/ui/*.stories.tsx`)
+- CMS Controls (`components/controls/*.stories.tsx`)
+- Complex Components (`components/*.stories.tsx`)
+- Feature Components (`features/*/components/*.stories.tsx`)
+
+## 🧰 Utilities (`lib/`)
+
+### Error Handling (`error-handling.ts`)
+Result Pattern implementation:
+- `ClientResult<T>` - Type-safe error handling
+- `execute()` / `executePromise()` - Safe code execution
+- `clientValue()` / `clientError()` - Result constructors
+
+### Utils (`utils.ts`)
+- `cn()` - Class name utility (clsx + tailwind-merge)
+- `clone()` - Deep clone objects
+- `unwrapData()` - Safe unwrapping with error
+- `isServer` / `isClient` - Environment checks
+
+### GraphQL (`graph-ql/`)
+- Apollo Client configuration
+- GraphQL utilities dla Strapi CMS
+
+### Email (`emails/`)
+- React Email templates
+- Tailwind config dla email (inline styles)
+
+## 🔧 Configuration Files
+
+- **`next.config.js`** - Next.js configuration
+- **`tailwind.config.js`** - Tailwind CSS setup (v4)
+- **`postcss.config.js`** - PostCSS configuration
+- **`tsconfig.json`** - TypeScript configuration (strict mode, path aliases)
+- **`components.json`** - shadcn/ui configuration
+- **`.eslintrc.json`** - ESLint rules
+- **`.prettierrc`** - Prettier formatting
+- **`.storybook/`** - Storybook configuration
+- **`middleware.ts`** - Next.js middleware (currently pass-through)
+
+## 🌍 Environment Variables
+
+Required in `.env.local`:
+```bash
+# Encryption
+ENCRYPT_SECRET_KEY=your-64-char-hex-string
+ENCRYPT_IV=your-32-char-hex-string
+
+# Strapi CMS
+NEXT_PUBLIC_STRAPI_URL=https://your-strapi-instance.com
+STRAPI_API_TOKEN=your-api-token
+
+# PayU
+PAYU_CLIENT_ID=your-payu-client-id
+PAYU_CLIENT_SECRET=your-payu-secret
+
+# Analytics (optional)
+NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+NEXT_PUBLIC_PLAUSIBLE_DOMAIN=yourdomain.com
+
+# Tally.so
+TALLY_FORM_ID=your-form-id
+```
+
+## 📚 Code Conventions
+
+### File Naming
+- **Components**: `PascalCase.tsx` (e.g., `CheckoutForm.tsx`)
+- **Files**: `kebab-case.ts` (e.g., `checkout-use-case.ts`)
+- **Types**: `*-type.ts` (e.g., `checkout-type.ts`)
+- **Tests**: `*.test.ts` (e.g., `checkout-use-case.test.ts`)
+- **Stories**: `*.stories.tsx` (e.g., `button.stories.tsx`)
+
+### Import Aliases
+```typescript
+@/*       // Project root (e.g., @/features, @/lib, @/components)
+```
+
+### TypeScript Patterns
+- **DTOs**: PascalCase + `DTO` suffix (e.g., `CheckoutDTO`)
+- **Use Cases**: camelCase + `UseCase` suffix (e.g., `payuPaymentUseCase`)
+- **Repos**: camelCase + action verb (e.g., `fetchProducts`, `createOrder`)
+
+## 🚢 Deployment
+
+- **Platform**: Vercel
+- **Build Command**: `yarn build`
+- **Output Directory**: `.next`
+- **Node Version**: 18.x+
+- **Environment**: Production environment variables set in Vercel dashboard
+
+## 📖 Documentation
+
+- **Main docs**: `docs/` folder
+- **Feature docs**: `features/*/CLAUDE.md` (per-feature documentation)
+- **Component docs**: Storybook stories (`.stories.tsx`)
+- **API docs**: Inline JSDoc comments
+
+## 🎯 Development Workflow
+
+1. **Feature Development**: Create feature module in `features/`
+2. **Component Development**: Add to `components/` or feature-specific `components/`
+3. **Testing**: Add tests in `__tests__/` folder
+4. **Documentation**: Create Storybook story
+5. **Integration**: Import in `app/` pages or layouts
+
+## 🔄 Data Flow
+
+```
+User → Page (app/)
+  → Server Action (features/*/actions/)
+    → Use Case (features/*/logic/*-use-case.ts)
+      → Repository (features/*/logic/*-repo.ts)
+        → External API/CMS/LocalStorage
+```
+
+## 📊 Project Stats
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS v4
+- **State**: Zustand (client), Server Components (server)
+- **Testing**: Vitest + Testing Library
+- **Package Manager**: Yarn
+- **Node Version**: 18.x+
+
+## 🆘 Common Tasks
+
+### Add a new feature
+1. Create folder in `features/{feature-name}/`
+2. Add subfolders: `actions/`, `components/`, `logic/`, `__tests__/`
+3. Implement use cases, repos, types
+4. Create Server Actions in `actions/`
+5. Add tests in `__tests__/`
+
+### Add a new UI component
+```bash
+# For shadcn/ui component (add from library)
+npx shadcn@latest add [component-name]
+
+# For custom component
+# Create in components/ with .tsx + .stories.tsx
+```
+
+### Run tests for specific feature
+```bash
+yarn test features/bucket
+```
+
+### Preview emails locally
+```bash
+yarn email
+# Opens http://localhost:3001
+```
+
+---
+
+**Projekt**: Room of Code Website
+**Wersja**: 0.1.0
+**Stack**: Next.js 15 + TypeScript + Tailwind CSS
+**Architektura**: Clean Architecture + Feature-Based Modules
+**Deployment**: Vercel

@@ -1,0 +1,47 @@
+// Copyright © 2024 Scandit. All rights reserved.
+
+import ComposableArchitecture
+
+@Reducer
+struct MappingModeModulePreviewFeature {
+    @ObservableState
+    struct State: Equatable {
+        let module: ShelfScanModule
+        let aisle: PersistedShelfScanAisle
+        let isRetaking: Bool
+
+        var title: String {
+            "Module \(aisle.name) - \(module.moduleReference)"
+        }
+
+        var moduleGroupName: String {
+            aisle.name
+        }
+    }
+
+    enum Action {
+        case onAppear
+        case onContinueButtonTapped
+        case viewDisappeared
+    }
+
+    @Dependency(\.firebaseAnalytics)
+    var analytics
+
+    @MainActor
+    var body: some Reducer<State, Action> {
+        Reduce { state, action in
+            switch action {
+            case .onAppear:
+                analytics.logMappingFlow(event: .modulePreviewScreen)
+                return .none
+
+            case .onContinueButtonTapped:
+                return .none
+
+            case .viewDisappeared:
+                return .none
+            }
+        }
+    }
+}

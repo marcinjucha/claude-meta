@@ -1,0 +1,738 @@
+# Cursor AI & Claude Code: Context-Driven AI Development
+
+**Duration:** ~75 minutes
+**Target Audience:** Developers (iOS, Python, ML, all stacks)
+**Focus:** Hands-on, practical, platform-agnostic
+**Core Message:** Everything is about building sensible context for AI
+
+---
+
+## Opening Statement (2 min)
+
+> "Today we'll explore one core concept: **Building Context for AI**. Every tool we discuss - CLAUDE.md, Agents, Rules, Commands - serves one purpose: giving AI the right context to understand your project and help you effectively."
+
+---
+
+## 1. The Core Concept: Context in AI Coding (8 min)
+
+### What is Context?
+
+**Without Context:**
+```
+User: "Fix this code"
+AI: "What code? What's wrong? What framework? What's the architecture?"
+→ Generic, unhelpful response
+```
+
+**With Context:**
+```
+User: "Fix this code"
+AI knows:
+- Project: iOS app with TCA architecture
+- File: Routes/RouteListFeature.swift
+- Patterns: Clean Architecture, 4-layer system
+- Rules: Publishers not TaskGroups, @Dependency capture
+→ Intelligent, project-aware response
+```
+
+### Context Layers - How AI Understands Your Project
+
+```
+User Request: "Review my route list changes"
+         ↓
+┌────────────────────────────────────────┐
+│ Layer 1: TASK CONTEXT (Command)       │
+│ /review-pr → "This is code review"    │
+└────────────┬───────────────────────────┘
+             ↓
+┌────────────────────────────────────────┐
+│ Layer 2: SPECIALIST (Agent/Rule)      │
+│ ios-architect + routes-module.mdc     │
+└────────────┬───────────────────────────┘
+             ↓
+┌────────────────────────────────────────┐
+│ Layer 3: STRUCTURE (Folder/File)      │
+│ Routes/ files + related components    │
+└────────────┬───────────────────────────┘
+             ↓
+┌────────────────────────────────────────┐
+│ Layer 4: GUIDELINES (CLAUDE.md/Rules) │
+│ Architecture + TCA + Project rules    │
+└────────────┬───────────────────────────┘
+             ↓
+┌────────────────────────────────────────┐
+│  🎯 FULL CONTEXT                       │
+│  AI performs intelligent review       │
+└────────────────────────────────────────┘
+```
+
+**Key Insight:** Each tool adds a layer of context. Together, they create a complete picture.
+
+---
+
+## 2. CLAUDE.md Files - Foundation Context (10 min)
+
+### Two Levels of Context
+
+#### Global CLAUDE.md (`~/.claude/CLAUDE.md`)
+- Personal preferences across ALL projects
+- Example: "Don't run tests automatically, I'll do it in Xcode"
+- Language preferences
+- Work style preferences
+
+#### Project CLAUDE.md (`project-root/CLAUDE.md`)
+- Project-specific context and guidelines
+- Architecture overview (Clean Architecture, 4-layer system)
+- Tech stack (SwiftUI, TCA, GRDB)
+- Critical patterns (Publishers not TaskGroups, @Dependency capture rules)
+- Common commands (fastlane, testing, build)
+- Project structure
+
+### Why This Matters
+- Claude reads these files automatically
+- Provides **Layer 4: Guidelines Context** without repeating yourself
+- Ensures consistent guidance across sessions
+- Team knowledge in one place
+
+### Example from iOS Project
+```markdown
+## Architecture
+4-Layer Clean Architecture:
+- Presentation (SwiftUI + TCA)
+- Business (Use Cases + Services)
+- Data (Repositories)
+- Models
+
+## Critical Rules
+- NEVER access @Dependency inside TaskGroup (crashes!)
+- Use Publishers pattern in TCA (NOT TaskGroups)
+- Repository NEVER calls another Repository (create Service)
+```
+
+### Cursor AI Equivalent
+- `.cursor/rules/*.mdc` files serve similar purpose
+- Can be organized in folders with globs for module-specific context
+- Example:
+```
+.cursor/rules/
+├── tca-essentials.mdc          # globs: **/*.swift
+├── routes/
+│   └── routes-module.mdc        # globs: **/Routes/**
+└── testing/
+    └── testing-rules.mdc        # globs: **/*Tests.swift
+```
+
+---
+
+## 3. Agents & Rules - Specialist Context Pattern (15 min)
+
+### The Core Pattern: Specialist Context
+
+**Key Insight:** Agents (Claude Code) and Rules (Cursor AI) are the **same pattern** with different activation mechanisms.
+
+| Aspect | Claude Code Agents | Cursor AI Rules |
+|--------|-------------------|-----------------|
+| **Purpose** | Specialist context | Specialist context |
+| **Trigger** | Manual (`@agent-name`) | Automatic (globs + semantic match) |
+| **Location** | `~/.claude/agents/` | `.cursor/rules/` |
+| **Example** | `ios-tca-developer` | `tca-essentials.mdc` |
+| **Context Layer** | Layer 2: Specialist | Layer 2: Specialist |
+
+Both provide **specialized knowledge** for specific areas of your codebase.
+
+### Natural Language = Better AI Selection
+
+**❌ Technical/Documentation Style:**
+```markdown
+description: Use this agent when implementing TCA features
+with State, Action, and Reducer patterns
+```
+
+**✅ Natural, Context-Aware Style:**
+```markdown
+description: Use this agent when:
+- "I built a new screen, can you check if it's working right?"
+- "This view isn't updating when state changes"
+- "Need to add loading spinner while data loads"
+```
+
+### Why Natural Language Helps AI
+
+**1. Semantic Matching**
+```
+User: "This route list view isn't refreshing"
+
+❌ Technical: "TCA features with State, Action, Reducer"
+→ Low similarity score (different vocabulary)
+
+✅ Natural: "View isn't updating when state changes"
+→ High similarity score (semantic match!)
+```
+
+**2. Context-Aware = Efficient Selection**
+```
+Team knows: iOS + TCA + Clean Architecture
+
+❌ Generic: "implementing TCA features"
+→ AI must guess: TCA? routing? testing?
+
+✅ Specific: "I built a new screen, can you check it?"
+→ AI knows: screen = presentation = TCA feature
+```
+
+**3. Better Automatic Activation (Cursor Rules)**
+
+Cursor activates rules based on:
+- **Globs** (file path): `globs: **/Routes/**`
+- **Semantic match** (description similarity with user query)
+
+Example:
+```markdown
+---
+description: Code organization, where to put logic,
+separating responsibilities, structuring features
+globs: # Can be empty - activation through semantic match
+---
+```
+
+When user asks: **"Where should this route sorting logic go?"**
+- AI semantic match with description → **automatically activates rule!**
+
+### Agent Examples
+
+**iOS Project:**
+- `ios-tca-developer` - Screen logic, state management
+- `ios-swiftui-designer` - UI styling, layout, design system
+- `ios-architect` - Code organization, where logic belongs
+- `ios-testing-specialist` - Writing and fixing tests
+
+**Python/ML Project (examples):**
+- `ml-model-reviewer` - Model architecture and training
+- `data-pipeline-specialist` - ETL and data processing
+- `api-developer` - FastAPI/Flask endpoints
+- `testing-specialist` - pytest and integration tests
+
+**Platform-Agnostic Pattern:**
+- Use natural language your team uses
+- Reference project-specific terms
+- Include common problem descriptions
+
+---
+
+## 4. Commands - Task Context Layer (8 min)
+
+### What Are Commands?
+
+Reusable workflows triggered with `/command-name`
+
+**Important:** Commands work in **BOTH** Claude Code and Cursor AI!
+
+### Context Layer Role
+
+Commands provide **Layer 1: Task Context**
+- AI knows: "This is a code review" (not feature development)
+- AI knows: "This is debugging" (not refactoring)
+- AI knows: "This is testing" (not implementation)
+
+### Structure
+```markdown
+# Command Title
+
+Description of what it does
+
+**Checklist items or steps**
+
+**Agent Used:** May invoke `agent-name`
+
+## Usage
+/command [parameter1] [parameter2]
+
+## Parameters
+- `parameter1`: Description (required/optional)
+```
+
+### Examples from iOS Project
+
+**/review-pr** - Pre-PR validation
+- Code quality checks
+- Architecture compliance
+- Design system usage
+- Test coverage
+
+**/test** - Generate comprehensive tests
+- Screen tests
+- Business logic tests
+- Mock setup
+
+**/debug** - Analyze and fix issues
+- View not updating
+- Memory leaks
+- Crashes
+
+### Platform-Agnostic Examples
+
+**Python/ML:**
+```markdown
+# /review-model
+
+Check ML model implementation:
+
+**Model Architecture:**
+- Layer structure appropriate
+- Activation functions correct
+- Dropout/regularization present
+
+**Training:**
+- Loss function appropriate
+- Optimizer configuration
+- Learning rate schedule
+
+**Agent Used:** May invoke `ml-model-reviewer`
+```
+
+---
+
+## 5. Workshop: Building Agents/Rules (30 min)
+
+### The 3-Step Process
+
+---
+
+#### **Step 1: Build Documentation from Resources** (10 min)
+
+**Goal:** Gather materials that will become your Agent/Rule content
+
+**What to Collect:**
+- Existing code examples (good patterns)
+- Architecture patterns from your project
+- Common problems/mistakes
+- Best practices
+- Project conventions
+
+**Live Example:** Let's gather resources for a "route badge calculation" specialist
+
+```
+Resources to gather:
+✓ RouteWithHistoryService.swift (badge logic)
+✓ RouteBadgeModel.swift (badge types)
+✓ routes-module-architecture.mdc (existing rules)
+✓ Common mistakes (badge priority bugs)
+✓ CLAUDE.md (architecture context)
+```
+
+**Prompt for AI:**
+```
+"I want to create an agent/rule for route badge calculation logic.
+Help me organize these resources into structured documentation."
+
+[Paste gathered code/patterns]
+```
+
+---
+
+#### **Step 2A: Create Agent (Claude Code)** (5 min)
+
+**Using Claude Code command:**
+```bash
+# In Claude Code CLI
+/create-agent route-badge-specialist
+
+# Or use chat to build agent structure
+"Create an agent for route badge calculation with natural language triggers"
+```
+
+**Agent Structure:**
+```markdown
+---
+name: route-badge-specialist
+description: Use this agent when:
+- "Badge not showing correct status"
+- "Need to calculate route upload progress"
+- "Badge priority seems wrong"
+model: sonnet
+---
+
+You are an expert in route badge calculation...
+
+[Content from Step 1 documentation]
+```
+
+**Save to:** `~/.claude/agents/route-badge-specialist.md`
+
+---
+
+#### **Step 2B: Create Rule (Cursor AI)** (5 min)
+
+**Using Cursor command:**
+```
+Ctrl+Shift+P → "Cursor: Create Rule"
+```
+
+**Rule Structure:**
+```markdown
+---
+description: Route badge calculation logic, upload status priority,
+progress tracking
+globs: **/Routes/**
+---
+
+# Route Badge Calculation
+
+## When to use this guide
+
+**Keywords that trigger this:**
+- badge, status, priority
+- upload progress, route status
+
+**Natural examples:**
+- "badge not showing right status"
+- "need to calculate upload progress"
+- "badge priority logic"
+
+[Content from Step 1 documentation]
+```
+
+**Save to:** `.cursor/rules/routes/badge-calculation.mdc`
+
+---
+
+#### **Step 3: Iterate - AI Best Practices Check** (10 min)
+
+**Prompt for AI:**
+```
+"Review this agent/rule and check best practices:
+- Natural language > clarity > actionable > concise
+- Avoid redundancy with CLAUDE.md
+- Context-aware descriptions
+
+Explain WHY each suggestion matters."
+```
+
+**Example Iteration:**
+
+##### ❌ BEFORE:
+```markdown
+description: Use this agent when implementing TCA features
+with State, Action, and Reducer patterns
+```
+
+##### ✅ AFTER (AI suggestion):
+```markdown
+description: Use this agent when:
+- "I built a new screen, can you check if it's working right?"
+- "This view isn't updating when state changes"
+- "Need to add loading spinner while data loads"
+```
+
+##### 🎯 WHY This Matters (AI explains):
+
+**1. Semantic Matching:**
+```
+User prompt: "This route list view isn't refreshing"
+
+Technical description: "TCA features with State, Action, Reducer"
+→ Similarity score: LOW (different vocabulary)
+
+Natural description: "View isn't updating when state changes"
+→ Similarity score: HIGH (semantic match!)
+```
+
+**2. Better Automatic Selection:**
+
+**For Agents (Claude Code):**
+- User types request
+- AI suggests agent based on description similarity
+- Natural language → better suggestions
+
+**For Rules (Cursor AI):**
+- User works in file OR asks question
+- Cursor activates rules based on:
+  - Globs (file path match)
+  - **Description semantic match with user query**
+- Natural language → better automatic activation!
+
+**3. Context-Aware = Efficient:**
+```
+Team knows: iOS + TCA + Clean Architecture
+
+❌ "implementing TCA features"
+→ Generic, AI must guess context
+
+✅ "I built a new screen"
+→ Specific, AI knows: screen = presentation = TCA
+```
+
+**Live Demo:**
+1. Show technical description → weak semantic matching
+2. Change to natural description → strong matching
+3. Ask AI: "Why did you choose this agent/rule?"
+4. AI explains: "High semantic similarity with your request"
+
+---
+
+## 6. Context Layers - How It All Works Together (10 min)
+
+### Practical Example: Full Context Assembly
+
+**Scenario:** You want to review PR for Routes module
+
+---
+
+#### **Layer 1: TASK CONTEXT (Command)**
+```bash
+/review-pr
+```
+
+**What AI learns:**
+- This is code review (not feature development)
+- Check architecture, tests, patterns
+- Validate compliance
+
+**Context added:** Clear task intent
+
+---
+
+#### **Layer 2: SPECIALIST CONTEXT (Agent/Rule)**
+
+**Claude Code:**
+```
+Command triggers agents:
+→ @ios-architect (code organization)
+→ @ios-testing-specialist (test coverage)
+```
+
+**Cursor AI:**
+```
+Semantic match + globs activate rules:
+→ architecture-essentials.mdc ("where to put logic")
+→ routes-module-architecture.mdc (globs: **/Routes/**)
+→ tca-testing-best-practices.mdc ("how to write tests")
+```
+
+**Context added:** Specialist knowledge for code review
+
+---
+
+#### **Layer 3: STRUCTURE CONTEXT (Folder/File)**
+
+```
+Routes/
+├── RouteListFeature.swift       ← AI reads main file
+├── RouteDetailsFeature.swift    ← AI reads folder context
+├── Repository/
+│   └── RouteDataRepository.swift ← AI understands structure
+└── Use Case/
+    └── RouteListUseCase.swift
+```
+
+**Context added:**
+- Project structure
+- Naming conventions
+- Related files
+- Architecture layers visible
+
+---
+
+#### **Layer 4: GUIDELINES CONTEXT (CLAUDE.md + Rules)**
+
+**CLAUDE.md:**
+```markdown
+## Architecture
+4-Layer Clean Architecture:
+- Presentation (TCA)
+- Business (Use Cases + Services)
+- Data (Repositories)
+- Models
+
+## Critical Rules
+- NEVER @Dependency inside TaskGroup
+- Repository NEVER calls another Repository
+- Use Publishers pattern in TCA
+```
+
+**Active Rules:**
+```
+.cursor/rules/
+├── architecture-essentials.mdc    ← "Service vs UseCase?"
+├── routes-module-architecture.mdc ← "Badge calculation logic"
+├── tca-essentials.mdc            ← "Publisher patterns"
+└── tca-testing-best-practices.mdc ← "TestStore setup"
+```
+
+**Context added:**
+- Architecture rules
+- Module-specific patterns
+- Project conventions
+- Critical pitfalls
+
+---
+
+#### **Result: FULL CONTEXT ASSEMBLED**
+
+```
+✅ AI now has complete understanding:
+- Task: Code review (Command)
+- Specialist: Architecture + Testing (Agent/Rule)
+- Structure: Routes module organization (Folder)
+- Guidelines: Architecture + Routes patterns (CLAUDE.md + Rules)
+
+→ AI performs intelligent review like senior developer
+```
+
+### Visual Summary
+
+```
+Context Building = Layer Composition
+
+Command       → Task Intent       → "What am I doing?"
+Agent/Rule    → Specialist        → "Who should help?"
+Folder/File   → Code Structure    → "What code am I working with?"
+CLAUDE.md     → Project Guidelines → "What are the rules?"
+═══════════════════════════════════════════════════════
+FULL CONTEXT  → Intelligent AI    → "I understand completely"
+```
+
+---
+
+## 7. Best Practices (5 min)
+
+### 1. Natural Language = Better Selection
+
+**Use language your team uses in daily conversation**
+
+❌ "Implement TCA Reducer with BindingReducer composition"
+✅ "Build screen with proper state management"
+
+❌ "Create Repository following Clean Architecture Data Layer patterns"
+✅ "Add data access for fetching user info"
+
+**Why:** Better semantic matching → Better automatic Agent/Rule selection
+
+---
+
+### 2. Context-Aware Descriptions
+
+**Assume project knowledge**
+
+Your team knows:
+- The tech stack (iOS/Python/ML)
+- The architecture (Clean/Microservices/Monolith)
+- Common patterns (TCA/Redux/MVC)
+
+So descriptions can be shorter and more natural.
+
+---
+
+### 3. Project-Specific Terminology
+
+**Use YOUR domain language**
+
+- iOS Project: routes, aisles, stores, mapping, capture
+- E-commerce: products, orders, inventory, checkout
+- ML Project: models, datasets, training, inference
+
+---
+
+### 4. Avoid Redundancy
+
+- Each agent should have clear, distinct responsibility
+- Commands should compose agents, not duplicate them
+- Rules should complement CLAUDE.md, not repeat it
+- Check for overlap with existing context
+
+---
+
+### 5. Maintenance
+
+- Review quarterly
+- Update when patterns change
+- Remove outdated content
+- Keep examples realistic
+- Test semantic matching effectiveness
+
+---
+
+## 8. Key Takeaways (5 min)
+
+### Core Insight
+
+> **Everything is About Building Sensible Context**
+>
+> When AI doesn't understand you, don't blame the AI.
+> Ask: **"Which context layer am I missing?"**
+
+### Decision Tree
+
+```
+Need context?
+├─ Always active for entire project?
+│  ├─ Claude Code: Project CLAUDE.md
+│  └─ Cursor: rule with glob: **/*
+│
+├─ Specific module/folder?
+│  ├─ Claude Code: Agent (manual trigger)
+│  └─ Cursor: rule with glob: **/Module/**
+│     + semantic match activation
+│
+└─ Reusable workflow?
+   └─ Command (works in BOTH tools!)
+```
+
+### The 6 Essential Practices
+
+1. **CLAUDE.md files** provide automatic foundation context
+2. **Write descriptions naturally** - like you talk to teammates
+3. **Be context-aware** - assume project knowledge
+4. **Agents/Rules are specialists** - one clear responsibility
+5. **Commands are workflows** - add task intent layer
+6. **Layer your context** - each tool adds understanding
+
+### Remember
+
+**Layer your context well, and AI becomes your senior developer teammate who truly understands your project.**
+
+---
+
+## 9. Q&A & Discussion (10 min)
+
+### Common Questions
+
+**Q: How do I know which agent will be triggered?**
+A: Claude analyzes semantic similarity between your request and agent descriptions. Natural language = better matching.
+
+**Q: Can Rules be activated without globs?**
+A: Yes! Cursor can activate rules through semantic match with description, even without file path match.
+
+**Q: Do Commands work in both tools?**
+A: Yes! Commands are in `~/.claude/commands/` and work in both Claude Code and Cursor AI.
+
+**Q: How often should I update CLAUDE.md?**
+A: Update when architecture changes, new patterns emerge, or critical rules are added.
+
+**Q: Do commands replace agents?**
+A: No, commands *use* agents. Commands add task context layer, agents provide specialist knowledge.
+
+**Q: What if Rules overlap with CLAUDE.md?**
+A: Rules should be more specific (module/feature patterns). CLAUDE.md is general project foundation.
+
+---
+
+## Next Steps
+
+1. **Try it:** Create one agent/rule for your most common task using 3-step process
+2. **Document:** Add/update your project's CLAUDE.md with architecture and critical rules
+3. **Share:** Collaborate on team agents and commands
+4. **Iterate:** Use AI to review and refine your context (natural language check)
+5. **Test:** Ask AI "Why did you choose this agent/rule?" to verify semantic matching
+
+---
+
+## Resources
+
+- **Anthropic Best Practices:** https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+- Agent examples: `~/.claude/agents/`
+- Command examples: `~/.claude/commands/`
+- Cursor rules: `.cursor/rules/`
+- Project context: `CLAUDE.md`
+
+**Questions? Let's discuss!**

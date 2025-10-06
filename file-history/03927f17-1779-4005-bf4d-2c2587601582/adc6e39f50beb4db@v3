@@ -1,0 +1,39 @@
+# Debug iOS + TCA Code
+
+Analyze iOS/TCA code for bugs and debugging strategies. Focus on:
+
+**View Logic Issues:**
+- View not updating when state changes
+- Actions not triggering or completing
+- Crashes related to dependencies
+- Memory leaks from uncanceled subscriptions
+- Navigation not working properly
+
+**iOS Issues:**
+- View rendering problems (not updating, layout breaks)
+- Memory leaks (retain cycles, subscriptions)
+- Crashes (nil values, threading issues)
+- Performance issues (slow updates, lag)
+
+**General Issues:**
+- Null/optional handling
+- Race conditions in async code
+- Error handling gaps
+
+Provides specific debugging steps, breakpoint suggestions, and fixes.
+
+**Agent Used:** This command may invoke `tca-developer` agent for TCA debugging.
+
+**Relevant Cursor Rules:**
+- `critical-patterns.mdc` - Common crash patterns (TaskGroup, memory leaks, navigation)
+- `debugging-logging.mdc` - Debugging strategies and logging patterns
+- `error-handling.mdc` - Error handling patterns and troubleshooting
+
+## Usage
+```
+/debug [file_path] [error_description]
+```
+
+## Parameters
+- `file_path`: Path to the file to debug (required)
+- `error_description`: Optional description of the error or issue

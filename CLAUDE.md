@@ -1,0 +1,1 @@
+- Don't run tests automatically, I'll do it in Xcode

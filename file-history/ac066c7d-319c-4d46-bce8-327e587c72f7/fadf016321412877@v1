@@ -1,0 +1,12 @@
+# Refactor Code Command
+
+Analyze code for refactoring opportunities focusing on: code duplication, complex functions, architectural improvements, design patterns, separation of concerns, and provide specific refactoring steps with before/after examples.
+
+## Usage
+```
+/refactor [file_path] [refactor_goal]
+```
+
+## Parameters
+- `file_path`: Path to the file to refactor
+- `refactor_goal`: Optional specific refactoring objective

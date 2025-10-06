@@ -1,0 +1,521 @@
+---
+description: Error handling patterns, error types hierarchy, retry strategies, and error propagation across architecture layers
+---
+# Error Handling Patterns - Digital Shelf iOS
+
+## 🔑 Keywords & Usage
+
+**Use this rule when you write:**
+- "error", "failure", "something went wrong"
+- "retry", "try again", "fallback"
+- "network failed", "API error", "database error"
+- "show error", "error message", "user message"
+- "handle error", "catch error", "error propagation"
+- "alert", "banner", "toast", "error UI"
+
+**Example prompts:**
+- "Handle network errors in this repository"
+- "Add retry logic for API calls"
+- "Show error message to user"
+- "What to do when API fails?"
+- "Handle database errors gracefully"
+- "Show retry button on error"
+
+---
+
+## 🎯 Error Handling Philosophy
+
+**Key Principles:**
+1. **Fail Fast**: Detect errors early, close to the source
+2. **Graceful Degradation**: App remains usable despite errors
+3. **User-Friendly**: Technical errors → User-understandable messages
+4. **Recoverable**: Provide retry/fallback options when possible
+5. **Logged**: All errors logged with context for debugging
+
+---
+
+## 🏗️ Error Type Hierarchy
+
+### Domain-Specific Errors
+
+```swift
+// Network Layer
+enum NetworkError: Error {
+    case noConnection
+    case timeout
+    case unauthorized
+    case notFound
+    case serverError(statusCode: Int)
+    case invalidResponse
+    case decodingFailed(Error)
+
+    var isRetryable: Bool {
+        switch self {
+        case .noConnection, .timeout, .serverError(500...599):
+            return true
+        case .unauthorized, .notFound, .invalidResponse, .decodingFailed:
+            return false
+        case .serverError(let code):
+            return code >= 500
+        }
+    }
+}
+
+// Database Layer
+enum DatabaseError: Error {
+    case notFound
+    case saveFailed(Error)
+    case queryFailed(Error)
+    case migrationFailed(Error)
+
+    var isRecoverable: Bool {
+        switch self {
+        case .notFound:
+            return true  // Can handle with defaults
+        case .saveFailed, .queryFailed, .migrationFailed:
+            return false  // Requires intervention
+        }
+    }
+}
+
+// Business Logic
+enum ValidationError: Error {
+    case emptyField(fieldName: String)
+    case invalidFormat(fieldName: String)
+    case duplicateEntry
+
+    var userMessage: String {
+        switch self {
+        case .emptyField(let field):
+            return L10n.Validation.emptyField(field)
+        case .invalidFormat(let field):
+            return L10n.Validation.invalidFormat(field)
+        case .duplicateEntry:
+            return L10n.Validation.duplicateEntry
+        }
+    }
+}
+```
+
+### Generic App Error (Wrapper)
+
+```swift
+enum AppError: Error {
+    case network(NetworkError)
+    case database(DatabaseError)
+    case validation(ValidationError)
+    case unknown(Error)
+
+    // Convert any error to AppError
+    init(from error: Error) {
+        if let networkError = error as? NetworkError {
+            self = .network(networkError)
+        } else if let dbError = error as? DatabaseError {
+            self = .database(dbError)
+        } else if let validationError = error as? ValidationError {
+            self = .validation(validationError)
+        } else {
+            self = .unknown(error)
+        }
+    }
+
+    var userMessage: String {
+        switch self {
+        case .network(let error):
+            return error.userMessage
+        case .database(let error):
+            return error.userMessage
+        case .validation(let error):
+            return error.userMessage
+        case .unknown:
+            return L10n.Error.generic
+        }
+    }
+
+    var isRetryable: Bool {
+        switch self {
+        case .network(let error):
+            return error.isRetryable
+        case .database(let error):
+            return error.isRecoverable
+        case .validation, .unknown:
+            return false
+        }
+    }
+}
+```
+
+---
+
+## 📐 Error Propagation Through Layers
+
+### How to Propagate Errors (Step-by-Step)
+
+**In Repository:**
+1. Throw specific error (`DatabaseError.notFound`)
+2. Add context to caught errors
+3. Log at debug level
+
+**In Service:**
+1. Catch repository errors
+2. Add business context
+3. Convert to `AppError`
+4. Implement fallback if possible
+5. Log at info/warning level
+
+**In Use Case:**
+1. Catch service errors
+2. Convert to `Result<T, AppError>` or safe publisher
+3. Never let errors crash publishers
+4. Log with user action context
+
+**In TCA Feature:**
+1. Handle `Result` in action
+2. Convert error to user message (`error.userMessage`)
+3. Set `canRetry` based on `error.isRetryable`
+4. Show appropriate UI (alert/banner/toast)
+
+### Pattern: Specific → Context → Generic
+
+```swift
+// Repository - Throws specific errors
+final class RouteDataRepository {
+    func fetchRoute(id: Route.ID) throws -> Route {
+        do {
+            guard let route = try database.reader.read({ db in
+                try Route.fetchOne(db, key: id)
+            }) else {
+                throw DatabaseError.notFound
+            }
+            return route
+        } catch {
+            throw DatabaseError.queryFailed(error)
+        }
+    }
+}
+
+// Service - Adds business context, handles fallbacks
+final class RouteService {
+    @Dependency(\.routeDataRepository) var dataRepository
+    @Dependency(\.routeNetworkRepository) var networkRepository
+
+    func getRoute(id: Route.ID) async throws -> Route {
+        // Try local first
+        do {
+            return try dataRepository.fetchRoute(id: id)
+        } catch DatabaseError.notFound {
+            // Fallback to network
+            do {
+                let route = try await networkRepository.fetchRoute(id: id)
+                try dataRepository.save(route)
+                return route
+            } catch let networkError as NetworkError {
+                throw AppError.network(networkError)
+            }
+        } catch {
+            throw AppError.database(.queryFailed(error))
+        }
+    }
+}
+
+// Use Case - Converts to Result or safe publisher
+final class RouteListUseCase {
+    @Dependency(\.routeService) var routeService
+
+    // Publisher - never fails, returns empty on error
+    var routesPublisher: AnyPublisher<[Route], Never> {
+        routeService.routesPublisher
+            .catch { error -> AnyPublisher<[Route], Never> in
+                Log.error("Failed to load routes: \(error)")
+                return Just([]).eraseToAnyPublisher()
+            }
+            .eraseToAnyPublisher()
+    }
+
+    // Manual refresh - returns Result
+    func refreshRoutes() async -> Result<[Route], AppError> {
+        do {
+            let routes = try await routeService.fetchRoutes()
+            return .success(routes)
+        } catch {
+            let appError = AppError(from: error)
+            Log.error("Refresh failed: \(appError)")
+            return .failure(appError)
+        }
+    }
+}
+
+// TCA Feature - Converts to user-facing state
+@Reducer
+struct RouteListFeature {
+    @ObservableState
+    struct State: Equatable {
+        var routes: [Route] = []
+        var errorMessage: String?
+        var canRetry = false
+    }
+
+    enum Action {
+        case loadRoutes
+        case routesLoaded(Result<[Route], AppError>)
+        case retryTapped
+    }
+
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .loadRoutes:
+                return .run { send in
+                    let result = await useCase.refreshRoutes()
+                    await send(.routesLoaded(result))
+                }
+
+            case .routesLoaded(.success(let routes)):
+                state.routes = routes
+                state.errorMessage = nil
+                return .none
+
+            case .routesLoaded(.failure(let error)):
+                state.errorMessage = error.userMessage
+                state.canRetry = error.isRetryable
+                return .none
+
+            case .retryTapped:
+                return .send(.loadRoutes)
+            }
+        }
+    }
+}
+```
+
+---
+
+## 🔄 Retry Strategies
+
+### Exponential Backoff
+
+```swift
+func withExponentialBackoff<T>(
+    maxAttempts: Int = 3,
+    initialDelay: Duration = .seconds(1),
+    maxDelay: Duration = .seconds(30),
+    operation: () async throws -> T
+) async throws -> T {
+    var currentDelay = initialDelay
+    var lastError: Error?
+
+    for attempt in 1...maxAttempts {
+        do {
+            return try await operation()
+        } catch let error as NetworkError where error.isRetryable {
+            lastError = error
+
+            if attempt < maxAttempts {
+                Log.info("Retry \(attempt)/\(maxAttempts) after \(currentDelay)")
+                try await Task.sleep(for: currentDelay)
+                currentDelay = min(currentDelay * 2, maxDelay)
+            }
+        } catch {
+            throw error  // Non-retryable - fail immediately
+        }
+    }
+
+    throw lastError ?? NetworkError.serverError(statusCode: 500)
+}
+```
+
+### Retry with Jitter (Prevents Thundering Herd)
+
+```swift
+func withJitteredRetry<T>(
+    maxAttempts: Int = 3,
+    baseDelay: Duration = .seconds(1),
+    operation: () async throws -> T
+) async throws -> T {
+    for attempt in 1...maxAttempts {
+        do {
+            return try await operation()
+        } catch let error as NetworkError where error.isRetryable {
+            if attempt < maxAttempts {
+                // Random jitter: 0.5x to 1.5x of base delay
+                let jitter = Double.random(in: 0.5...1.5)
+                let delay = baseDelay * attempt * jitter
+                try await Task.sleep(for: delay)
+            } else {
+                throw error
+            }
+        } catch {
+            throw error
+        }
+    }
+
+    throw NetworkError.serverError(statusCode: 500)
+}
+```
+
+### Circuit Breaker Pattern
+
+```swift
+actor CircuitBreaker {
+    enum State {
+        case closed      // Normal operation
+        case open        // Too many failures, blocking
+        case halfOpen    // Testing recovery
+    }
+
+    private var state: State = .closed
+    private var failureCount = 0
+    private let failureThreshold: Int
+    private let timeout: Duration
+    private var lastFailureTime: Date?
+
+    init(failureThreshold: Int = 5, timeout: Duration = .seconds(60)) {
+        self.failureThreshold = failureThreshold
+        self.timeout = timeout
+    }
+
+    func execute<T>(_ operation: () async throws -> T) async throws -> T {
+        // Check if should attempt
+        switch state {
+        case .open:
+            if let lastFailure = lastFailureTime,
+               Date().timeIntervalSince(lastFailure) > timeout.seconds {
+                state = .halfOpen
+                failureCount = 0
+            } else {
+                throw NetworkError.serverError(statusCode: 503)
+            }
+        case .halfOpen, .closed:
+            break
+        }
+
+        // Execute operation
+        do {
+            let result = try await operation()
+
+            // Success - reset
+            if state == .halfOpen {
+                state = .closed
+            }
+            failureCount = 0
+
+            return result
+        } catch {
+            failureCount += 1
+            lastFailureTime = Date()
+
+            if failureCount >= failureThreshold {
+                state = .open
+            }
+
+            throw error
+        }
+    }
+}
+```
+
+---
+
+## 🎨 UI Error Presentation
+
+### Alert for Critical Errors
+
+```swift
+// In TCA State
+@Presents var alert: AlertState<Action.Alert>?
+
+// In reducer
+case .routesLoaded(.failure(let error)):
+    state.alert = AlertState {
+        TextState(L10n.Error.title)
+    } actions: {
+        if error.isRetryable {
+            ButtonState(action: .retry) {
+                TextState(L10n.Button.retry)
+            }
+        }
+        ButtonState(role: .cancel, action: .dismiss) {
+            TextState(L10n.Button.ok)
+        }
+    } message: {
+        TextState(error.userMessage)
+    }
+    return .none
+```
+
+### Inline Banner for Non-Critical
+
+```swift
+// In State
+var errorBanner: ErrorBanner?
+
+struct ErrorBanner: Equatable {
+    let message: String
+    let canRetry: Bool
+}
+
+// In View
+if let error = store.errorBanner {
+    ErrorBannerView(
+        message: error.message,
+        canRetry: error.canRetry,
+        onRetry: { store.send(.retryTapped) },
+        onDismiss: { store.send(.dismissError) }
+    )
+}
+```
+
+### Toast for Info/Success
+
+```swift
+// Auto-dismiss after duration
+case .showToast(let message, let type):
+    state.toast = Toast(message: message, type: type)
+
+    return .run { send in
+        try await Task.sleep(for: .seconds(3))
+        await send(.dismissToast)
+    }
+    .cancellable(id: CancelID.toast)
+```
+
+---
+
+## 📋 Error Handling Checklist
+
+### Repository Layer
+- [ ] Throw specific error types (DatabaseError, NetworkError)
+- [ ] Include context (operation, parameters)
+- [ ] Log errors with appropriate level
+- [ ] Don't catch unless adding context
+
+### Service Layer
+- [ ] Convert repository errors to AppError
+- [ ] Implement retry for retryable operations
+- [ ] Provide fallback strategies
+- [ ] Log with business context
+
+### Use Case Layer
+- [ ] Convert errors to Result or safe publisher
+- [ ] Never crash publisher chains
+- [ ] Provide default values for non-critical
+- [ ] Log with user action context
+
+### Presentation Layer (TCA)
+- [ ] Convert to user-friendly messages
+- [ ] Show retry for retryable errors
+- [ ] Maintain usable UI despite errors
+- [ ] Provide visual feedback
+- [ ] Log user-triggered errors
+
+---
+
+## 🎯 Quick Reference
+
+**Error Types**: NetworkError, DatabaseError, ValidationError → AppError
+**Propagation**: Throw specific → Catch & add context → Convert to Result
+**Retry**: Exponential backoff with jitter for network errors
+**UI**: Alerts (critical), Banners (important), Toasts (info)
+**Logging**: All errors logged with context
+
+**Remember: Errors are opportunities for better UX through graceful handling.**

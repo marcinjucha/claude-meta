@@ -1,0 +1,255 @@
+# Root Screen
+
+## Overview
+
+App root coordinator - handles authentication state, tab navigation, global alerts (crash reports, feedback), and shared environment objects (Toast, ConfirmationDialog).
+
+## Architecture
+
+**NOT TCA-based** - Uses traditional MVVM with `RootViewModel`.
+
+**Files:**
+- **View:** `RootView.swift`
+- **ViewModel:** `RootViewModel.swift`
+- **Navigation:** `NavigationBase.swift`, `NavigationStore.swift`
+
+## View Structure
+
+```swift
+struct RootView: View {
+    @ObservedObject var viewModel: RootViewModel
+    @StateObject var toastEnvironment = ToastEnvironment()
+    @StateObject var confirmationDialogEnvironment = ConfirmationDialogEnvironment()
+
+    var body: some View {
+        contentView
+            .environmentObject(toastEnvironment)
+            .environmentObject(confirmationDialogEnvironment)
+            .toast($toastEnvironment.message)
+            .confirmationDialog(model: $confirmationDialogEnvironment.model)
+            .sheet(isPresented: $viewModel.showFeedbackView) { FeedbackView() }
+            .alert(item: $viewModel.error) { Alert(title: Text($0.title)) }
+            .alert(L10n.Feedback.Alert.title, isPresented: $viewModel.showCrashDialog) { ... }
+    }
+}
+```
+
+## Content View - Authentication Routing
+
+```swift
+@ViewBuilder
+private var contentView: some View {
+    if viewModel.isLoggedIn {
+        TabView {
+            HomeView(store: viewModel.homeStore)
+                .tabItem { Images.Tabs.home.swiftui; Text(L10n.Home.tabTitle) }
+
+            RouteRootView(store: viewModel.routeStore)
+                .tabItem { Images.Tabs.routes.swiftui; Text(L10n.Routes.tabTitle) }
+
+            UploadHistoryView(model: viewModel.uploadHistoryViewModel)
+                .tabItem { Images.Tabs.history.swiftui; Text(L10n.UploadHistory.tabTitle) }
+
+            SettingsView(viewModel: viewModel.settingsViewModel)
+                .tabItem { Images.Tabs.settings.swiftui; Text(L10n.settings) }
+        }
+        .accentColor(Color(Colors.interactive.name))
+    } else {
+        LoginView(viewModel: viewModel.loginViewModel)
+    }
+}
+```
+
+## Tab Structure
+
+**4 Tabs:**
+1. **Home** - Store selection + mode picker (TCA: `HomeStore`)
+2. **Routes** - Route-based scanning (TCA: `RouteStore`)
+3. **Upload History** - Processed modules from server (MVVM: `UploadHistoryViewModel`)
+4. **Settings** - App settings, logout (MVVM: `SettingsViewModel`)
+
+## Global Environment Objects
+
+### ToastEnvironment
+- Shared toast message system
+- Used by all child screens for non-blocking notifications
+- Supports `.success`, `.error`, `.info`, `.warn` types
+- Auto-dismiss after configurable seconds
+
+```swift
+@StateObject var toastEnvironment = ToastEnvironment()
+.environmentObject(toastEnvironment)
+.toast($toastEnvironment.message, dismissAfterSeconds: toastEnvironment.dismissAfterSeconds)
+```
+
+### ConfirmationDialogEnvironment
+- Shared confirmation dialog system
+- Used for destructive actions (delete, logout, etc.)
+- Supports primary/secondary buttons with custom styles
+
+```swift
+@StateObject var confirmationDialogEnvironment = ConfirmationDialogEnvironment()
+.environmentObject(confirmationDialogEnvironment)
+.confirmationDialog(model: $confirmationDialogEnvironment.model)
+```
+
+## RootViewModel Responsibilities
+
+```swift
+class RootViewModel: ObservableObject {
+    @Published var isLoggedIn: Bool
+    @Published var error: ErrorAlert?
+    @Published var showFeedbackView: Bool
+    @Published var showCrashDialog: Bool
+
+    let homeStore: HomeStore
+    let routeStore: RouteStore
+    let uploadHistoryViewModel: UploadHistoryViewModel
+    let settingsViewModel: SettingsViewModel
+    let loginViewModel: LoginViewModel
+
+    func onCrashAlertSendButtonTapped()
+}
+```
+
+**Key Responsibilities:**
+1. **Authentication State:** Toggle between Login / TabView based on `isLoggedIn`
+2. **Child View Models:** Initialize and hold references to all tab VMs/Stores
+3. **Crash Reporting:** Detect crash on launch → show feedback prompt
+4. **Global Alerts:** Error handling, feedback sheet
+5. **Lifecycle:** Coordinate app startup, logout flow
+
+## Navigation System
+
+### NavigationStore (Singleton)
+```swift
+class NavigationStore: ObservableObject {
+    static let shared = NavigationStore()
+    static let route = NavigationStore()  // Separate for Routes module
+
+    @Published var path = NavigationPath()
+
+    func push<T: Hashable>(_ destination: T)
+    func pop()
+    func pop(to: PopDestination)
+}
+```
+
+**Two Instances:**
+- `NavigationStore.shared` - Main app navigation (Home, Store Selection, Offline)
+- `NavigationStore.route` - Routes-specific navigation (Route List, Route Details, Aisle Preview)
+
+### NavigationBase Protocol
+```swift
+protocol NavigationBase {
+    var path: NavigationPath { get set }
+    func push<T: Hashable>(_ destination: T)
+    func pop()
+    func pop(to: PopDestination)
+}
+```
+
+## Crash Detection & Feedback
+
+**Flow:**
+1. App launches
+2. RootViewModel checks if previous session crashed
+3. If crashed → `showCrashDialog = true`
+4. Alert asks: "App crashed. Send feedback?"
+5. User taps "Send" → `viewModel.onCrashAlertSendButtonTapped()`
+6. Opens `FeedbackView` with pre-filled crash info
+
+```swift
+.alert(L10n.Feedback.Alert.title, isPresented: $viewModel.showCrashDialog) {
+    Button(L10n.Feedback.Alert.Button.cancel, role: .cancel) {}
+    Button(L10n.Feedback.Alert.Button.send) {
+        viewModel.onCrashAlertSendButtonTapped()
+    }
+} message: {
+    Text(L10n.Feedback.Alert.description)
+}
+```
+
+## Localization
+
+**L10n Keys:**
+- `L10n.Home.tabTitle` - "Home"
+- `L10n.Routes.tabTitle` - "Routes"
+- `L10n.UploadHistory.tabTitle` - "History"
+- `L10n.settings` - "Settings"
+- `L10n.Feedback.Alert.title/description` - Crash alert
+- `L10n.Feedback.Alert.Button.send/cancel` - Crash alert buttons
+
+## Design System Usage
+
+- **Tab Icons:** `Images.Tabs.home/routes/history/settings.swiftui`
+- **Accent Color:** `Color(Colors.interactive.name)`
+- **Toast:** Custom `.toast()` view modifier
+- **ConfirmationDialog:** Custom `.confirmationDialog()` view modifier
+
+## Initialization Flow
+
+```swift
+// 1. App starts
+// 2. SceneDelegate creates RootViewModel
+let rootViewModel = RootViewModel(
+    accountStorage: accountStorage,
+    // ... other dependencies
+)
+
+// 3. RootViewModel initializes child stores/VMs
+homeStore = HomeStore(useCase: homeUseCase, ...)
+routeStore = RouteStore(useCase: routeUseCase, ...)
+// ...
+
+// 4. Check authentication
+isLoggedIn = accountStorage.isLoggedIn
+
+// 5. Check crash status
+showCrashDialog = crashDetector.didCrashLastSession
+```
+
+## Logout Flow
+
+1. User taps logout in Settings
+2. `settingsViewModel.logout()` called
+3. Clears `AccountStorage` session
+4. Updates `rootViewModel.isLoggedIn = false`
+5. RootView automatically shows LoginView
+
+## Common Pitfalls
+
+- ❌ Don't access child store state directly - use bindings
+- ❌ Don't create multiple `ToastEnvironment` instances - use shared one
+- ✅ Always use `NavigationStore.shared` for main navigation
+- ✅ Use `NavigationStore.route` for Routes-specific navigation
+- ✅ Inject environment objects at root level only
+
+## Testing
+
+**Root-level testing is complex** - prefer testing child components individually:
+- Test `HomeStore` in isolation
+- Test `RouteStore` in isolation
+- Test `SettingsViewModel` in isolation
+- Integration tests at RootView level are brittle
+
+## Implementation Notes
+
+**Mixed Architecture:**
+- Root uses MVVM (legacy)
+- Home + Routes use TCA (modern)
+- Settings + Login use MVVM (legacy, simple flows)
+
+**Why Not TCA for Root?**
+- Root is coordinator/shell - minimal logic
+- Authentication state is simple boolean
+- TabView doesn't require complex state management
+- Legacy code pre-dating full TCA adoption
+
+## Key Patterns
+
+1. **Environment Object Injection:** Toast + Dialog environments injected at root
+2. **Authentication Routing:** Conditional `if isLoggedIn` toggles entire view hierarchy
+3. **Dual Navigation:** Separate `NavigationStore` instances for isolated navigation stacks
+4. **Crash Recovery:** Proactive feedback prompt on crash detection
+5. **Global Error Handling:** Root-level error alert for unhandled errors

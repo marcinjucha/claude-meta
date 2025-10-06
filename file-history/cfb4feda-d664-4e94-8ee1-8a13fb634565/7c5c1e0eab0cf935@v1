@@ -1,0 +1,73 @@
+// Copyright © 2024 Scandit. All rights reserved.
+
+import ComposableArchitecture
+import SwiftUI
+
+struct MappingModeModulePreviewView: View {
+    let store: TCAStoreOf<MappingModeModulePreviewFeature>
+
+#if DEBUG
+    @ObserveInjection private var forceRedraw
+#endif
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Module Image
+                    VStack(spacing: 16) {
+                        Text(L10n.MappingFlow.ModulePreview.moduleImage)
+                            .defaultFont(size: 16, weight: .semibold)
+                            .foregroundStyle(Colors.gray90)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        ImageLoaderView(
+                            image: store.moduleImage,
+                            refresh: { store.send(.refreshImage) }
+                        )
+                        .frame(maxWidth: .infinity)
+                        .aspectRatio(3 / 4, contentMode: .fit)
+                        .cornerRadius(12)
+                    }
+
+                    // Module Group
+                    VStack(spacing: 8) {
+                        Text(L10n.MappingFlow.ModulePreview.moduleGroup)
+                            .defaultFont(size: 16, weight: .semibold)
+                            .foregroundStyle(Colors.gray90)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Text(store.moduleGroupName)
+                            .defaultFont(size: 16, weight: .regular)
+                            .foregroundStyle(Colors.gray70)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(Colors.gray20)
+                            .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 24)
+            }
+
+            // Continue Button
+            Button {
+                store.send(.onContinueButtonTapped)
+            } label: {
+                Text(L10n.MappingFlow.ModulePreview.continueButton)
+                    .frame(maxWidth: .infinity)
+            }
+            .scanditButtonStyle()
+        }
+        .scanditNavigationBar(title: store.title)
+        .toolbar(.hidden, for: .tabBar)
+        .onAppear {
+            store.send(.onAppear)
+        }
+        .onDisappear {
+            store.send(.viewDisappeared)
+        }
+        .enableInjection()
+    }
+}

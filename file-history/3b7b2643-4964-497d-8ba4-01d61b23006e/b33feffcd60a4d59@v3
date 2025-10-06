@@ -1,0 +1,501 @@
+# Claude Code Custom Commands - Usage Examples
+
+This document provides practical examples for using custom Claude Code commands in the Scandit ShelfView iOS project.
+
+## Available Commands
+
+### Core Commands
+- `/debug` - Debug iOS + TCA code issues
+- `/explain` - Explain iOS + TCA architecture
+- `/lint` - Code quality analysis
+- `/optimize` - Performance optimization
+- `/refactor` - Architecture refactoring
+
+### Advanced Commands
+- `/test` - Generate comprehensive tests (TCA + Use Cases)
+- `/review-pr` - Pull request readiness check
+- `/migration` - Migrate legacy code to TCA + Clean Architecture
+- `/trace` - Trace data flow through layers
+
+---
+
+## `/debug` - Debugging Konkretnych Problemów
+
+### Example A: State Not Updating
+```bash
+/debug DigitalShelf/Screens/Login/LoginFeature.swift State nie aktualizuje się po zmianie email
+```
+**What it checks:**
+- `@ObservableState` on State
+- `BindingReducer()` in body
+- View uses `@Bindable var store`
+- TextField uses `$store.email`
+
+### Example B: Crash During Async Operation
+```bash
+/debug Modules/Sources/Features/RouteList/RouteListFeature.swift App crashuje przy ładowaniu routes
+```
+**What it checks:**
+- `@Dependency` not used in TaskGroup
+- Effect has proper cancellation
+- No force unwraps (!)
+- Proper error handling
+
+### Example C: Navigation Not Working
+```bash
+/debug DigitalShelf/Screens/Settings/SettingsFeature.swift Sheet się nie pokazuje po kliknięciu logout
+```
+**What it checks:**
+- `@Presents var destination` exists
+- `PresentationAction` in Action enum
+- `.ifLet(\.$destination, action: \.destination)` present
+- View uses `.sheet($store.scope(...))`
+
+---
+
+## `/explain` - Understanding Existing Code
+
+### Example A: Onboarding New Developer
+```bash
+/explain DigitalShelf/Screens/ShelfScan/MappingFlow/MappingFlowRootView.swift
+```
+**What you get:**
+- State structure and data flow explanation
+- How navigation works (@Presents, NavigationStack)
+- Which Use Cases are used and why
+- Lifecycle explanation (onAppear, onDisappear)
+
+### Example B: Understanding Use Case
+```bash
+/explain Modules/Sources/Core/UseCases/RouteListUseCase.swift
+```
+**What you get:**
+- Use Case responsibilities
+- Which Services/Repositories it uses
+- How Publisher pattern works
+- Why it's a Use Case vs Service
+
+### Example C: Code Review - Understanding PR
+```bash
+/explain DigitalShelf/Screens/ShelfScan/MappingFlow/ModulePreview/MappingModeModulePreviewFeature.swift
+```
+**What you get:**
+- Complete architecture breakdown
+- Explanation of each action and reducer
+- How async loading works with Refreshable enum
+- Integration with parent feature
+
+---
+
+## `/lint` - Quality Check Before Commit
+
+### Example A: Pre-Commit Check Entire Feature
+```bash
+/lint DigitalShelf/Screens/ShelfScan/MappingFlow/MappingFlowStore.swift
+```
+**What it checks:**
+- TCA patterns (ViewAction, BindingReducer, cancellation)
+- Design system compliance (Colors, L10n)
+- Architecture (no layer skipping)
+- Code smells (duplication, complexity, hardcoded values)
+
+### Example B: Review SwiftUI View
+```bash
+/lint DigitalShelf/Screens/Home/HomeView.swift
+```
+**What it checks:**
+- Uses Colors enum instead of `.blue`, `.red`
+- Uses `.defaultFont()` instead of `.system(size:)`
+- Uses L10n instead of hardcoded strings
+- Has accessibility labels
+- Has InjectionIII support
+
+### Example C: Review Use Case
+```bash
+/lint Modules/Sources/Core/UseCases/RouteListUseCase.swift
+```
+**What it checks:**
+- Is in Business layer (not Data, not Presentation)
+- Has `makeWithDeps` factory
+- Uses proper dependency injection
+- No UI logic
+
+---
+
+## `/optimize` - Performance Issues
+
+### Example A: Scrolling Is Laggy
+```bash
+/optimize DigitalShelf/Screens/ScanHistory/ScanHistoryView.swift fix scrolling jank
+```
+**What it suggests:**
+- LazyVStack instead of VStack
+- IdentifiedArrayOf for list
+- Minimize view body executions
+- Proper image caching
+
+### Example B: Long Startup Time
+```bash
+/optimize DigitalShelf/AppDelegate.swift reduce startup time
+```
+**What it suggests:**
+- Defer heavy initialization
+- Async loading of non-critical resources
+- Database migration optimization
+- Remove synchronous network calls
+
+### Example C: Memory Usage Growing
+```bash
+/optimize Modules/Sources/Features/ShelfScan/ShelfScanFeature.swift reduce memory usage
+```
+**What it suggests:**
+- Uncanceled effects (memory leaks)
+- Retain cycles in publishers (use weakSink)
+- State too large (move to Use Case)
+- Image caching strategy
+
+### Example D: Slow GRDB Query
+```bash
+/optimize Modules/Sources/Persistence/Repositories/RouteRepository.swift optimize route query
+```
+**What it suggests:**
+- Add database indexes
+- Batch operations instead of individual
+- Use joins instead of N+1 queries
+- Cache frequently accessed data
+
+---
+
+## `/refactor` - Architectural Improvements
+
+### Example A: Massive Reducer - Split It
+```bash
+/refactor DigitalShelf/Screens/Settings/SettingsFeature.swift split reducer
+```
+**What it suggests:**
+- Extract child features (Account, Preferences, About)
+- ViewAction/ResponseAction/DelegateAction pattern
+- Scope child features in body
+- Navigation with @Presents
+
+### Example B: Store Calls Repository - Broken Architecture
+```bash
+/refactor DigitalShelf/Screens/Home/HomeFeature.swift extract use case
+```
+**What it does:**
+1. Creates `HomeUseCase` in Business layer
+2. Moves business logic from Store to Use Case
+3. Updates Store to use Use Case
+4. Adds `makeWithDeps` factory
+
+### Example C: Repository Calls Repository - Dependency Cycle
+```bash
+/refactor Modules/Sources/Persistence/Repositories/RouteRepository.swift create service
+```
+**What it does:**
+1. Creates `RouteWithModulesService` in Business layer
+2. Service combines RouteRepository + ModuleRepository
+3. Use Case uses Service instead of Repository
+4. Removes cycle
+
+### Example D: Hardcoded Strings and Colors
+```bash
+/refactor DigitalShelf/Screens/Login/LoginView.swift apply design system
+```
+**What it does:**
+1. Replace hardcoded strings → L10n constants
+2. Replace Color.blue → Colors.blue60
+3. Replace .system(size:) → .defaultFont(size:, weight:)
+4. Add accessibility labels
+
+### Example E: Complex View - Extract Components
+```bash
+/refactor DigitalShelf/Screens/ShelfScan/CaptureView.swift extract components
+```
+**What it suggests:**
+- Extract reusable views (CaptureButton, StatusBar)
+- Break down massive body
+- @ViewBuilder computed properties
+- Move to CustomUI/ if reusable
+
+---
+
+## `/test` - Automated Test Generation
+
+### Example A: Generate Tests for New Feature
+```bash
+/test DigitalShelf/Screens/Login/LoginFeature.swift
+```
+**What it generates:**
+- Complete TestStore setup with `lazy var`
+- State mutation tests
+- Effect tests with async/await
+- Action flow validation (ViewAction → ResponseAction)
+- Mocked dependencies using `makeWithDeps`
+
+### Example B: Focus on Error Handling
+```bash
+/test Modules/Sources/Core/UseCases/RouteListUseCase.swift error handling
+```
+**What it generates:**
+- Tests for failure scenarios
+- Network error handling
+- Database error handling
+- Proper error propagation
+
+### Example C: Test Navigation Flow
+```bash
+/test DigitalShelf/Screens/Settings/SettingsFeature.swift navigation
+```
+**What it generates:**
+- @Presents destination tests
+- PresentationAction handling
+- Sheet/Alert presentation tests
+- Navigation cancellation tests
+
+---
+
+## `/review-pr` - Pull Request Readiness Check
+
+### Example A: Review Entire Feature Before PR
+```bash
+/review-pr DigitalShelf/Screens/ShelfScan/MappingFlow/
+```
+**What it checks:**
+- All TCA patterns correct
+- Architecture layering proper
+- Design system compliance
+- Tests pass
+- No hardcoded strings/colors
+- No TODO/FIXME comments
+
+### Example B: Quick File Check
+```bash
+/review-pr DigitalShelf/Screens/Login/LoginFeature.swift
+```
+**What it checks:**
+- SwiftFormat applied
+- SwiftLint clean
+- TCA best practices
+- Proper dependency injection
+- Test coverage exists
+
+### Example C: Pre-Commit Validation
+```bash
+/review-pr Modules/Sources/Core/UseCases/RouteListUseCase.swift
+```
+**What it checks:**
+- Business layer patterns
+- No UI logic in Use Case
+- makeWithDeps factory present
+- Integration tests exist
+
+---
+
+## `/migration` - Migrate Legacy Code
+
+### Example A: Convert ViewModel to TCA Store
+```bash
+/migration DigitalShelf/Screens/OldFeature/OldViewModel.swift ViewModel to TCA
+```
+**What it does:**
+1. Creates @Reducer with State/Action/body
+2. Converts @Published properties to State
+3. Converts methods to Actions
+4. Migrates Combine to TCA Effects
+5. Adds @Dependency injection
+6. Generates TestStore tests
+
+### Example B: Extract Use Case from Store
+```bash
+/migration DigitalShelf/Screens/Home/HomeFeature.swift extract Use Case
+```
+**What it does:**
+1. Identifies business logic in Store
+2. Creates HomeUseCase in Business layer
+3. Moves validation/orchestration to Use Case
+4. Updates Store to use Use Case
+5. Adds makeWithDeps factory
+
+### Example C: Create Repository from Direct API Calls
+```bash
+/migration Modules/Sources/Networking/APIClient.swift add Repository
+```
+**What it does:**
+1. Creates Repository protocol
+2. Implements Repository with GRDB/Network
+3. Abstracts data access
+4. Returns Publishers for reactive data
+5. Updates Use Cases to use Repository
+
+---
+
+## `/trace` - Data Flow Analysis
+
+### Example A: Understand Feature Data Flow
+```bash
+/trace DigitalShelf/Screens/RouteList/RouteListView.swift
+```
+**What it shows:**
+```
+RouteListView
+  ↓ @Bindable var store
+RouteListFeature (TCA Store)
+  ↓ @Dependency(\.routeListUseCase)
+RouteListUseCase (Business Layer)
+  ↓ @Dependency(\.routeService)
+RouteWithHistoryService (Business Layer)
+  ↓ Combines:
+    - RouteRepository (Data Layer)
+    - HistoryRepository (Data Layer)
+    - ModuleRepository (Data Layer)
+  ↓
+GRDB Database + Network API
+```
+
+### Example B: Debug Data Not Updating
+```bash
+/trace DigitalShelf/Screens/ShelfScan/MappingFlow/MappingFlowRootView.swift route data
+```
+**What it analyzes:**
+- Publisher chain from Database to View
+- Where data transformations happen
+- Potential bottlenecks
+- Missing subscriptions
+
+### Example C: Architecture Review
+```bash
+/trace DigitalShelf/Screens/Settings/SettingsFeature.swift
+```
+**What it checks:**
+- No layer skipping (Presentation → Data)
+- No dependency cycles
+- Proper Use Case/Service usage
+- Repository single responsibility
+
+---
+
+## Command Combinations - Power User Workflows
+
+### Workflow 1: Implementing New Feature (Complete Cycle)
+```bash
+# 1. Implement feature
+# ...
+
+# 2. Generate tests
+/test DigitalShelf/Screens/MyFeature/MyFeatureStore.swift
+
+# 3. Lint before commit
+/lint DigitalShelf/Screens/MyFeature/MyFeatureStore.swift
+
+# 4. Fix issues
+# ...
+
+# 5. Review PR readiness
+/review-pr DigitalShelf/Screens/MyFeature/
+
+# 6. Create PR
+```
+
+### Workflow 2: Debugging Production Issue
+```bash
+# 1. Debug specific error
+/debug DigitalShelf/Screens/Checkout/CheckoutFeature.swift Payment fails with timeout error
+
+# 2. If slow, optimize
+/optimize DigitalShelf/Screens/Checkout/CheckoutFeature.swift reduce payment timeout
+
+# 3. Explain to understand context
+/explain Modules/Sources/Core/Services/PaymentService.swift
+```
+
+### Workflow 3: Code Review
+```bash
+# 1. Explain what changed
+/explain path/to/changed/file.swift
+
+# 2. Lint for quality
+/lint path/to/changed/file.swift
+
+# 3. Check if refactoring needed
+/refactor path/to/changed/file.swift improve architecture
+```
+
+### Workflow 4: Performance Investigation
+```bash
+# 1. Trace data flow to find bottleneck
+/trace DigitalShelf/Screens/RouteList/RouteListView.swift
+
+# 2. Profile slow screen
+/optimize DigitalShelf/Screens/RouteList/RouteListView.swift fix slow rendering
+
+# 3. Debug if crashes
+/debug DigitalShelf/Screens/RouteList/RouteListFeature.swift Crashes when loading 100+ routes
+
+# 4. Refactor if architecture issue
+/refactor Modules/Sources/Persistence/Repositories/RouteRepository.swift optimize query
+```
+
+### Workflow 5: Migrating Legacy Feature
+```bash
+# 1. Understand current implementation
+/explain DigitalShelf/Screens/OldFeature/OldViewModel.swift
+
+# 2. Trace data dependencies
+/trace DigitalShelf/Screens/OldFeature/OldView.swift
+
+# 3. Migrate to TCA + Clean Architecture
+/migration DigitalShelf/Screens/OldFeature/OldViewModel.swift ViewModel to TCA
+
+# 4. Generate tests
+/test DigitalShelf/Screens/OldFeature/OldFeature.swift
+
+# 5. Review before PR
+/review-pr DigitalShelf/Screens/OldFeature/
+```
+
+---
+
+## Best Practices
+
+### ✅ DO:
+- **Be specific** in error_description: `"State nie aktualizuje się po kliknięciu"` instead of `"nie działa"`
+- **Provide context** in refactor_goal: `"extract use case"` instead of `"improve"`
+- **Use full paths**: `/debug DigitalShelf/...` instead of relative path
+- **One concern at a time**: `/lint` for quality, `/optimize` for performance (don't mix)
+
+### ❌ DON'T:
+- **Generic requests**: `/debug file.swift` (what's not working?)
+- **Multiple concerns**: `/refactor file.swift fix everything` (too broad)
+- **Wrong command**: `/optimize` for architectural issues (use `/refactor`)
+- **Missing context**: `/debug` without error_description (if you know the problem)
+
+---
+
+## Quick Reference Table
+
+| Need | Use Command | Example |
+|------|-------------|---------|
+| 🐛 **Fix crash** | `/debug [file] [error]` | `/debug LoginFeature.swift App crashes on login` |
+| 📖 **Understand code** | `/explain [file]` | `/explain RouteListUseCase.swift` |
+| ✅ **Pre-commit check** | `/lint [file]` | `/lint HomeFeature.swift` |
+| 🚀 **Fix performance** | `/optimize [file] [goal]` | `/optimize RouteListView.swift fix scrolling lag` |
+| 🏗️ **Improve architecture** | `/refactor [file] [goal]` | `/refactor SettingsFeature.swift extract use case` |
+| 🧪 **Generate tests** | `/test [file] [focus]` | `/test LoginFeature.swift error handling` |
+| ✔️ **PR readiness** | `/review-pr [path]` | `/review-pr DigitalShelf/Screens/Login/` |
+| 🔄 **Migrate legacy** | `/migration [file] [type]` | `/migration OldViewModel.swift ViewModel to TCA` |
+| 🔍 **Trace data flow** | `/trace [file] [focus]` | `/trace RouteListView.swift route data` |
+
+---
+
+## Related Documentation
+
+- See `CLAUDE.md` for project architecture patterns and TCA best practices
+- See `.claude/agents/` for specialized agent descriptions:
+  - `tca-developer.md` - TCA patterns (State, Action, Reducer, Effects)
+  - `ios-architect.md` - Clean Architecture (Use Cases, Services, Repositories)
+  - `ios-swiftui-designer.md` - Design system (Colors, L10n, accessibility)
+
+---
+
+**Pro Tip:** Commands work best when you provide specific context. The more details you give about what you're trying to achieve, the better the analysis and suggestions will be!

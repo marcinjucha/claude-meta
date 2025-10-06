@@ -1,0 +1,180 @@
+// Copyright © 2024 Scandit. All rights reserved.
+
+import ComposableArchitecture
+import SwiftUI
+
+struct MappingCaptureView: View {
+    let bottomActionsHeight: CGFloat = 120
+    let moduleProgressHeight: CGFloat = 35
+
+    let store: TCAStoreOf<MappingCaptureFeature>
+
+    var body: some View {
+        WithPerceptionTracking {
+            ZStack {
+                Color.black
+                content
+            }
+            .ignoresSafeArea(.container, edges: .bottom)
+            .navigationBarBackButtonHidden(true)
+            .navigationBarItems(
+                leading: Button {
+                    store.send(.onBackButtonTapped)
+                } label: {
+                    Image(systemName: "chevron.backward")
+                }
+            )
+            .onAppear {
+                store.send(.onAppear)
+            }
+            .onDisappear {
+                store.send(.onDisappear)
+            }
+            .scanditNavigationBar(title: store.title)
+            .toolbar(.hidden, for: .tabBar)
+            .sheet(item: store.binding(keyPath: \.preview)) { _ in
+                store.optionalScope(
+                    state: \.preview,
+                    action: \.preview,
+                    view: MappingPreviewView.init
+                )
+            }
+            .loadingSpinner(store.loadingSpinner)
+            .userGuide(
+                isPresented: store.binding(
+                    keyPath: \.isShowingGuidance,
+                    send: { _ in .dismissGuidance }
+                ),
+                content: [MappingFlowUserGuide()],
+                detents: [.fraction(0.7)]
+            )
+        }
+    }
+
+    var content: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .center) {
+                Color.black
+                // Check if the device has enough vertical space with 3:4 aspect ratio
+                // preview.
+                let aspectRatio: CGFloat = .defaultAspectRatio
+                let previewHeight = geometry.size.width / aspectRatio
+                let totalAvailableHeight = geometry.size.height
+
+                if previewHeight + bottomActionsHeight + moduleProgressHeight <=
+                    totalAvailableHeight {
+                    let remainingHeight = totalAvailableHeight - previewHeight -
+                        bottomActionsHeight - moduleProgressHeight
+                    let topSpace: CGFloat = min(remainingHeight, bottomActionsHeight)
+                    let bottomSpace: CGFloat = bottomActionsHeight
+
+                    contentVertical(
+                        width: geometry.size.width,
+                        bottomSpace: bottomSpace
+                    )
+                } else {
+                    contentStacked
+                }
+            }
+        }
+    }
+
+    func contentVertical(
+        width: CGFloat,
+        bottomSpace: CGFloat
+    ) -> some View {
+        VStack(spacing: 0) {
+            captureView
+                .frame(width: width)
+                .overlay(alignment: .bottom) {
+                    cameraPicker
+                        .padding(.bottom, 16)
+                }
+
+            bottomActions
+                .frame(height: bottomSpace)
+        }
+        .background(.black)
+    }
+
+    var contentStacked: some View {
+        VStack {
+            ZStack(alignment: .bottom) {
+                captureView
+
+                VStack(spacing: 0) {
+                    cameraPicker
+                    bottomActions
+                }
+            }
+
+            Spacer()
+        }
+        .background(.black)
+    }
+
+    var captureView: some View {
+        UpdateFlowCameraView(model: store.cameraViewModel)
+    }
+
+    @ViewBuilder
+    var cameraPicker: some View {
+        if store.hasAlternativeCamerasAvailable {
+            SegmentedPicker(
+                items: store.availableCameraTypes,
+                selection: store.binding(
+                    keyPath: \.selectedCameraType,
+                    send: { .onCameraTypeTapped($0) },
+                    defaultValue: store.selectedCameraType
+                )
+            )
+        }
+    }
+
+    var bottomActions: some View {
+        HStack {
+            Spacer()
+            helpButton
+            Spacer()
+            shutterButton
+                .frame(height: bottomActionsHeight, alignment: .center)
+            Spacer()
+            Spacer()
+                .frame(width: 40, height: 40)
+            Spacer()
+        }
+    }
+
+    var shutterButton: some View {
+        Button {
+            store.send(.onShutterButtonTapped)
+        } label: {
+            Image(asset: Images.Svm.shutter)
+                .renderingMode(.template)
+                .alignmentGuide(.bottomActionsAlignmentGuide) { context in
+                    context[VerticalAlignment.center]
+                }
+        }
+        .disabled(!store.isCapturing)
+        .accentColor(.white)
+    }
+
+    var helpButton: some View {
+        Button {
+            store.send(.showGuidance)
+        } label: {
+            VStack(spacing: 4) {
+                Images.UserGuide.helpButton.swiftui
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 40, height: 40)
+                    .alignmentGuide(.bottomActionsAlignmentGuide) { context in
+                        context[VerticalAlignment.center]
+                    }
+                Text(L10n.UpdateFlow.CaptureActions.help)
+                    .font(Constants.Fonts.bottomCta)
+            }
+        }
+        .accentColor(.white)
+    }
+}

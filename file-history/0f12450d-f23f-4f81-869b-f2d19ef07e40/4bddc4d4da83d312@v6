@@ -1,0 +1,279 @@
+// Copyright © 2024 Scandit. All rights reserved.
+
+import ComposableArchitecture
+import OSLog
+
+enum MappingCaptureFeatureError: Error {
+    case missingToken
+    case invalidImageData
+    case createModuleFailed(AisleServiceError)
+    case uploadFailed(APIRequestError)
+    case unexpectedResponse(APIResponseError)
+    case unhandledError(Error)
+
+    var apiError: APIResponseError? {
+        switch self {
+        case let .unexpectedResponse(error): error
+        case let .createModuleFailed(error): error.apiError
+        default: nil
+        }
+    }
+}
+
+@Reducer
+struct MappingCaptureFeature {
+    @ObservableState
+    struct State: Equatable {
+        var preview: MappingPreviewFeature.State?
+
+        var module: ShelfScanModule
+        var allModules: [ShelfScanModule]
+        var currentModuleIndex: Int
+        var isCapturing = false
+        var loadingSpinner: LoadingSpinnerModel?
+
+        var title: String {
+            "Module \(module.moduleReference)"
+        }
+
+        let cameraViewModel: UpdateFlowCameraViewModel
+        let aisle: PersistedShelfScanAisle
+        let isRetaking: Bool
+        var isShowingGuidance: Bool = false
+        var isUploadingModule: Bool = false
+
+        var selectedCameraType: DeviceCameraType = .ultraWideCamera
+
+        @MainActor
+        var hasAlternativeCamerasAvailable: Bool {
+            cameraViewModel.hasAlternativeCamerasAvailable
+        }
+
+        @MainActor
+        var availableCameraTypes: [DeviceCameraType] {
+            cameraViewModel.availableCameraTypes
+        }
+    }
+
+    @CasePathable
+    enum Action {
+        case preview(MappingPreviewFeature.Action)
+
+        case onAppear
+        case onDisappear
+        case viewDisappeared
+        case onBackButtonTapped
+        case onShutterButtonTapped
+        case onCameraTypeTapped(_ cameraType: DeviceCameraType)
+
+        case subscribeToCamera
+        case updateCaptureState(_ isCapturing: Bool)
+        case handleCapturedImage(_ image: UIImage)
+        case finalizeModule
+        case moduleUpdateFailed(_ error: MappingCaptureFeatureError)
+        case uploadingFinished
+        case moveToNextModule
+        case createNextModule
+
+        case showGuidance
+        case dismissGuidance
+    }
+
+    @Dependency(\.homeNavigation)
+    var navigation
+
+    @Dependency(\.uploadService)
+    var uploadService
+
+    @Dependency(\.httpService)
+    var httpService
+
+    @Dependency(\.firebaseAnalytics)
+    var analytics
+
+    @Dependency(\.userGuideDisplayHistory)
+    var userGuideDisplayHistory
+
+    @Dependency(\.aisleService)
+    var aisleService
+
+    @Dependency(\.apiTokenProvider)
+    var apiTokenProvider
+
+    let exportOptions: ShelfScanCaptureExportOptions
+
+    private enum Cancel: Hashable { case camera }
+
+    @MainActor
+    var body: some Reducer<State, Action> {
+        Reduce { state, action in
+            switch action {
+            case .onAppear:
+                analytics.logMappingFlow(event: .captureCameraScreen)
+                if userGuideDisplayHistory.shouldDisplay(for: .mappingFlowCapture) {
+                    state.isShowingGuidance = true
+                    userGuideDisplayHistory.markAsDisplayed(for: .mappingFlowCapture)
+                }
+
+                state.cameraViewModel.update(cameraType: state.selectedCameraType)
+
+                return .run { send in
+                    await send(.subscribeToCamera)
+                }
+            case .onDisappear:
+                return .send(.viewDisappeared)
+            case .viewDisappeared:
+                return .cancel(id: Cancel.camera)
+            case .subscribeToCamera:
+                let isCapturingPublisher = state.cameraViewModel.$isCapturing
+                    .map { Action.updateCaptureState($0) }
+                let capturedImagePublisher = state.cameraViewModel.imagePublisher
+                    .map { Action.handleCapturedImage($0) }
+
+                return .publisher {
+                    isCapturingPublisher
+                        .merge(with: capturedImagePublisher)
+                }
+                .cancellable(id: Cancel.camera)
+            case let .updateCaptureState(isCapturing):
+                state.isCapturing = isCapturing
+                return .none
+            case .onBackButtonTapped:
+                navigation.pop()
+                return .none
+            case .onShutterButtonTapped:
+                analytics.logMappingFlow(event: .shutterButton)
+                state.loadingSpinner = .init(text: L10n.MappingFlow.Capture.capturing)
+                state.cameraViewModel.capture()
+
+                return .none
+            case let .handleCapturedImage(image):
+                analytics.logMappingFlow(event: .uploadScreen)
+                state.loadingSpinner = nil
+                state.preview = .init(title: state.title, image: image)
+                return .none
+            case .preview(.onApproveButtonTapped) where !state.isUploadingModule:
+                analytics.logMappingFlow(event: .approveButton)
+
+                guard let image = state.preview?.image else { return .none }
+
+                state.isUploadingModule = true
+
+                state.preview?.loadingSpinner = .init(
+                    text: L10n.MappingFlow.Capture.updatingModule
+                )
+                let module = state.module
+
+                return .run { send in
+                    do {
+                        guard let data = exportOptions.data(from: image) else {
+                            Log.general.error(
+                                "Image data could not be created from image"
+                            )
+                            throw MappingCaptureFeatureError.invalidImageData
+                        }
+
+                        let newModule = try await aisleService.persist(module: module)
+
+                        guard let apiToken = apiTokenProvider.apiToken else {
+                            Log.general.error("No token, bailing out")
+                            throw MappingCaptureFeatureError.missingToken
+                        }
+
+                        Log.general.info(
+                            "Sending a mapping image for module '\(newModule.reference)'"
+                        )
+                        try await httpService.upload(
+                            endpoint: UploadModuleImageEndpoint(
+                                apiToken: apiToken,
+                                moduleId: newModule.id,
+                                image: data
+                            )
+                        )
+
+                        await send(.finalizeModule)
+                    } catch let error as MappingCaptureFeatureError {
+                        await send(.moduleUpdateFailed(error))
+                    } catch let error as AisleServiceError {
+                        await send(.moduleUpdateFailed(.createModuleFailed(error)))
+                    } catch let error as APIRequestError {
+                        await send(.moduleUpdateFailed(.uploadFailed(error)))
+                    } catch let error as APIResponseError {
+                        await send(.moduleUpdateFailed(.unexpectedResponse(error)))
+                    } catch {
+                        await send(.moduleUpdateFailed(.unhandledError(error)))
+                    }
+
+                    await send(.uploadingFinished)
+                }
+            case .uploadingFinished:
+                state.isUploadingModule = false
+                return .none
+            case .finalizeModule:
+                // Check if there are more modules to capture
+                let nextIndex = state.currentModuleIndex + 1
+                if nextIndex < state.allModules.count {
+                    // Move to next module (sequential capture)
+                    state.currentModuleIndex = nextIndex
+                    state.module = state.allModules[nextIndex]
+                    state.preview = nil
+                    return .send(.moveToNextModule)
+                } else {
+                    // All modules captured, return to module list
+                    navigation.pop(to: .aisleModuleListView)
+                    return .none
+                }
+            case .moveToNextModule:
+                analytics.logMappingFlow(event: .captureCameraScreen)
+                return .none
+            case .moduleUpdateFailed(let error):
+                Log.general.error(error, "Sending a mapping image failed")
+                var message = ToastMessage.warn("Error: \(error.localizedDescription)")
+
+                if let apiError = error.apiError, let errorMessage = apiError.genericError?.errorMessage {
+                    message = .error("Error \(apiError.statusCode): \(errorMessage)")
+                }
+
+                return .send(.preview(.showToast(message)))
+            case .preview(.onRetakeButtonTapped):
+                analytics.logMappingFlow(event: .retakeButton)
+                state.preview = nil
+                return .none
+            case .showGuidance:
+                state.isShowingGuidance = true
+                return .none
+            case .dismissGuidance:
+                state.isShowingGuidance = false
+                return .none
+            case .preview:
+                return .none
+            case let .onCameraTypeTapped(type):
+                state.cameraViewModel.update(cameraType: type)
+                state.selectedCameraType = type
+                return .none
+            }
+        }
+        .ifLet(\.preview, action: \.preview) {
+            MappingPreviewFeature()
+        }
+    }
+}
+
+extension MappingCaptureFeatureError {
+    var localizedDescription: String {
+        switch self {
+        case .missingToken:
+            "Configuration error: no token"
+        case .invalidImageData:
+            "Invalid image data"
+        case let .createModuleFailed(error):
+            "Adding the module failed: \(error.localizedDescription)"
+        case let .uploadFailed(error):
+            "Image upload failed: \(error.localizedDescription)"
+        case let .unexpectedResponse(error):
+            "Network connection failed: \(error.localizedDescription)"
+        case let .unhandledError(error):
+            "Capture failed: \(error.localizedDescription)"
+        }
+    }
+}

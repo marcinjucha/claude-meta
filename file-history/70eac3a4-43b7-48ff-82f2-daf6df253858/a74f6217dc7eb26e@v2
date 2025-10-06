@@ -1,0 +1,632 @@
+// Copyright © 2020 Scandit. All rights reserved.
+
+"action.cancel" = "Cancel";
+"action.copy" = "Copy";
+"action.accept" = "Accept";
+"action.login" = "Log in";
+"action.logout" = "Log out";
+"action.logout.confirmation" = "Are you sure you want to logout?";
+"action.confirm" = "Confirm";
+"action.continueScanning" = "Continue scanning";
+"action.completeMapping" = "Complete mapping";
+"action.ok" = "OK";
+"action.report" = "Report";
+"action.dismiss" = "Dismiss";
+"action.selectStore" = "Select a store";
+"action.inputText" = "Input manually";
+"action.done" = "Done";
+"action.send" = "Send";
+"action.resolve" = "Resolve";
+"action.sendItems" = "Send items";
+"action.clearAllItems" = "Clear all items";
+"alert.moduleUploadSuccess" = "%@ successfully uploaded!";
+"alert.wrongPrice" = "Wrong Price Detected";
+"alert.outOfStock" = "Product out of stock";
+"alert.noInternet" = "No Internet connection.\nMake sure that WiFi or mobile data is on.";
+"alert.incorrectLogin" = "Incorrect email or password.";
+"alert.serverError" = "Server is temporarily unavailable. Please try again later.";
+"alert.unknownError" = "Unknown issue. Please contact with support.";
+"alert.customEnvironmentError" = "Invalid custom environment URL. Expected format - <host - scandit.shelf.com>/api/";
+"alert.deprecatedApi" = "This app version will expire soon. Please update.";
+"alert.unsupportedApi" = "This app version is no longer supported. Please update.";
+"alert.invalidConfiguration" = "This store configuration is invalid.";
+"alert.fetchingConfigFailed" = "This store configuration could not be downloaded.\nPlease check your internet connection.";
+"alert.productCatalogUpdateFailed" = "The product catalog could not be updated.";
+"alert.fetchingStoresFailed" = "Your user profile does not have the required permissions. Please contact Scandit for help.";
+"alert.itemsAdded" = "%d items were added to the list.";
+"field.email.title" = "Email Address";
+"field.email.placeholder" = "e.g. example@mail.com";
+"field.password.title" = "Password";
+"field.password.placeholder" = "e.g. 123sC%";
+"field.module.title" = "Shelf Module Code";
+"field.module.placeholder" = "Enter module identifier";
+"field.environment" = "Environment";
+"field.environment.title" = "Environment";
+"field.environment.placeholder" = "e.g shelf-1061-stagin-dvfwu5.scandit.com/api/";
+"modeCategory.creating" = "Creating aisles";
+"modeCategory.maintaining" = "Maintaining aisles";
+"mode.singleScan" = "Price Check";
+"mode.singleScan.description" = "Check price correctness";
+"mode.framesave" = "Data Capture";
+"mode.framesave.description" = "Data collection from a short video";
+"mode.updateFlow" = "Update";
+"mode.updateFlow.description" = "Update the photos of an aisle";
+"mode.onboardingFlow" = "Onboarding";
+"mode.onboardingFlow.description" = "Scan the barcodes of an aisle";
+"mode.mappingFlow" = "Mapping";
+"mode.mappingFlow.description" = "Create aisles with photo capture";
+"mode.videoUpdateFlow" = "Video";
+"mode.videoUpdateFlow.description" = "Perform aisle capture via video";
+"none" = "None";
+"noConfig" = "no config";
+"activeStore" = "Active store:";
+"about" = "About";
+"environment" = "Environment";
+"appVersion" = "App Version";
+"sdkVersion" = "DC SDK Version";
+"ppleSDKVersion" = "PPLE SDK Version";
+"sdkEngineVersion" = "Engine version";
+"account" = "Account";
+"userName" = "User Name";
+"email" = "Email";
+"store" = "Store";
+"settings" = "Settings";
+"acknowledgment" = "Acknowledgment";
+"appSettings" = "App Settings";
+"appSettings.upload" = "Upload";
+"appSettings.upload.removeFile" = "Remove file after minutes";
+"appSettings.upload.removeRecords" = "Remove database records after minutes";
+"appSettings.upload.maxConcurrentUploads" = "Max concurrent uploads";
+"appSettings.upload.failOnFirstAttempt" = "Fail upload on first attempt";
+"appSettings.download" = "Download functionality";
+"appSettings.download.outdatedPeriod" = "Outdated data after minutes";
+"appSettings.download.expirationPeriod" = "Expiration data after minues";
+"appSettings.videoModeCamera.ultraWide" = "Video Mode Ultra Wide Camera";
+"appSettings.videoModeCamera.ultraWide.exposureDuration" = "Exposure Duration";
+"appSettings.videoModeCamera.ultraWide.iso" = "ISO";
+"appSettings.database.size" = "Database Size";
+"appSettings.checkmarkCompletion" = "Checkmark Completion";
+"appSettings.checkmarkCompletion.onboardingPeriod" = "Onboarding Flow Period (minutes)";
+"appSettings.checkmarkCompletion.updatePeriod" = "Update Flow Period (minutes)";
+"appSettings.checkmarkCompletion.updatePeriod.description" = "Leave empty to use 'today' check";
+"appSettings.checkmarkCompletion.updatePeriod.placeholder" = "Empty = today check";
+"appSettings.checkmarkCompletion.defaultPeriod" = "Default Period (minutes)";
+"appSettings.resetTutorials" = "Reset Tutorials";
+"appSettings.resetTutorials.confirmation.title" = "Reset All Tutorials";
+"appSettings.resetTutorials.confirmation.message" = "This will reset all tutorial and user guide completion history. You will see all tutorials again from the beginning.";
+"appSettings.resetTutorials.confirmation.reset" = "Reset";
+"appSettings.resetTutorials.confirmation.cancel" = "Cancel";
+"hint.fiveTileOverview" = "If you can't fit the entire shelf on the screen, switch to 5 tile capture";
+"hint.shelfOverview" = "Please capture the center of the shelf";
+"hint.deviceOrientation" = "Keep the camera parallel to the shelf";
+"hint.viewfinderLocation" = "Toggle for Shelf label above or below the product";
+"hint.shelfModule" = "Scan the shelf module barcode.";
+"mode.batchScan.module" = "Scan or input module reference code";
+"mode.batchScan.overview" = "Capture shelf overview";
+"mode.batchScan.overviewConfirmation" = "Verify captured overview";
+"mode.batchScan.sku" = "Scan all product codes on the shelf";
+"mode.singleScan.sku" = "Scan SKUs on a shelf";
+"module" = "Module %@";
+"overviewImagesCaptured" = "%d overview images captured";
+"secondaryOverviewCaptured" = "Secondary overview captured";
+"skuItemsScanned" = "%d items scanned";
+"sku" = "SKU:";
+"name" = "Name:";
+"labelPrice" = "Label price:";
+"cataloguePrice" = "Catalogue price:";
+"storeSelection" = "Select a store";
+"snapshotSelection" = "Select a snapshot";
+"notification.captureSessionUploaded" = "Capture session uploaded";
+"environment.production" = "Production";
+"environment.staging" = "Staging";
+"environment.customStaging" = "Custom staging";
+"login.header" = "Welcome to ShelfView";
+"home.tabTitle" = "Home";
+"home.header" = "Welcome!";
+"home.noStore" = "Please select the store you are located in";
+"home.emptyStore" = "Selected store is empty";
+"home.menu.makeOfflineAvailable" = "Make offline available";
+"home.menu.sendFeedback" = "Send Feedback";
+"home.menu.changeStore" = "Change Store";
+"moduleDetails.header" = "Module Details";
+"moduleDetails.snapshot" = "Snapshot";
+"itemCount" = "Items (%d)";
+"scannedItems" = "Scanned Items";
+
+"dialog.button.cancel" = "Cancel";
+
+// MARK: Upload History Tab
+"uploadHistory.navigationTitle" = "Upload History";
+"uploadHistory.filter.title" = "Today:";
+"uploadHistory.filter.pending" = "Pending";
+"uploadHistory.filter.uploaded" = "Uploaded";
+"uploadHistory.filter.empty" = "No uploads";
+"uploadHistory.emptyTitle" = "No captures have been uploaded yet";
+"uploadHistory.noPending" = "No pending captures today";
+"uploadHistory.noUploaded" = "No uploaded captures today";
+"uploadHistory.uploaded.emptyTitle" = "Currently No Successful Uploads";
+"uploadHistory.uploaded.emptyDescription" = "Successful uploads will appear here and remain visible for 7 days.";
+"uploadHistory.item.aisleName" = "Aisle: %@";
+"uploadHistory.item.moduleName" = "Module: %@";
+"uploadHistory.item.retry" = "Upload failed. Tap to retry.";
+"uploadHistory.tabTitle" = "History";
+
+"uploadHistory.captureType.plv" = "price checked";
+"uploadHistory.captureType.batch" = "batch scanned";
+"uploadHistory.captureType.onboardingFlow" = "onboarded";
+"uploadHistory.captureType.updateFlow" = "updated";
+"uploadHistory.captureType.videoFlow" = "updated";
+"uploadHistory.header.items.uploaded" = "%d uploaded";
+"uploadHistory.header.items.pending" = "%d pending";
+"uploadHistory.header.items.failed" = "%d failed";
+
+// MARK: App Settings
+"settings.feedback.title" = "Report a problem";
+"settings.feedback.description" = "Help us improve the ShelfView app by giving us your feedback on any problems you encounter. If you need immediate assistance, please contact our consultants.";
+"settings.feedback.problemDescription" = "* Problem description";
+"settings.feedback.button.sendReport" = "Send Report";
+
+"feedback.alert.title" = "Oops, Something Went Wrong";
+"feedback.alert.description" = "Our app just hit a snag. Send a crash report to help us diagnose the issue and improve your experience.";
+"feedback.alert.button.cancel" = "Cancel";
+"feedback.alert.button.send" = "Send";
+
+// MARK: Price check
+"priceCheck.correntPriceMessage" = "Price up to date";
+"priceCheck.wrongPriceMessage" = "Wrong price";
+"priceCheck.unknownProductMessage" = "Product not found";
+"priceCheck.toolbar.scanList" = "Tap here to see more details";
+"priceCheck.toolbar.shutter" = "Tap Shutter to see prices";
+
+// MARK: Price Check Settings
+
+"priceCheck.settings.navigationTitle" = "Settings";
+"priceCheck.settings.scanHeader" = "Scan settings";
+
+"priceCheck.settings.scanModeSection" = "Scan mode settings";
+"priceCheck.settings.scanModeSectionDescription" = "Batch scan is in beta mode and performance is not guaranteed.";
+"priceCheck.settings.scanModeSectionRowText" = "Enable Batch Scan";
+
+"priceCheck.settings.informationDisplay" = "AR Information Display";
+"priceCheck.settings.informationDisplayDescription" = "Choose between displaying price information or scanned items for either batch and single scanning mode.";
+
+"priceCheck.settings.catalogSettings" = "Catalog settings";
+"priceCheck.settings.catalogSettingsDescription" = "Clearing Catalog will delete stored SKUs and items";
+"priceCheck.settings.batchScanRow" = "Batch Scan AR Displays";
+"priceCheck.settings.singleScanRow" = "Single Scan AR Displays";
+
+"priceCheck.settings.batchScanHeader" = "Batch Scan AR Settings";
+"priceCheck.settings.batchScanPriceOption" = "Prices AR overlays";
+"priceCheck.settings.batchScanScanOption" = "Scans AR overlays";
+"priceCheck.settings.playPause" = "Pause/Play";
+"priceCheck.settings.playPauseDescription" = "Enable pause and play camera UI, to enable frozen screens after tapping shutter.";
+
+"priceCheck.settings.singleScanHeader" = "Single scan price display";
+"priceCheck.settings.singleScanTextDisplays" = "Singe Scan Price text displays";
+"priceCheck.settings.singleScanTextDisplaysDescription" = "Prices AR overlays will show correct or incorrect price labels. ";
+"priceCheck.settings.singleScanCorrectPriceOption" = "Price for correct items";
+"priceCheck.settings.singleScanWrongPriceOption" = "Price for incorrect items";
+"priceCheck.settings.singleScanUnknownProductOption" = "Price for product not found";
+
+"priceCheck.settings.deleteAlert" = "Clear All Items?\nAll items on local catalog will e deleted.";
+"priceCheck.settings.deleteAlertItem" = "Clear Items";
+"priceCheck.settings.batchModeAlert" = "Enable experimental batch mode?";
+"priceCheck.settings.batchModeAlertItem" = "Confirm";
+
+
+"priceCheck.settings.scanningSubheader" = "Able to turn on one the “display AR overlay” options at a time.";
+"priceCheck.settings.showPriceInfoOption" = "Display AR Overlays-show price info";
+"priceCheck.settings.scannedItemsOption" = "Display AR Overlays-scanned items";
+"priceCheck.settings.enablePausePlayOption" = "Enable Pause/Play";
+"priceCheck.settings.catalogSettingsOption" = "Local Catalog";
+"priceCheck.settings.catalogSettingsOptionItems" = "(%d items)";
+"priceCheck.settings.catalogSettingsClearButton" = "Clear All Items";
+"priceCheck.settings.resetSettingsButton" = "RESET SETTINGS";
+"priceCheck.settings.switchOn" = "On";
+"priceCheck.settings.switchOff" = "Off";
+
+// MARK: Notifications
+
+"priceCheck.notification.scannedItems" = "Successfully scanned label";
+"priceCheck.notification.correctPrice" = "Price Correct";
+"priceCheck.notification.wrongPrice" = "Price Incorrect";
+"priceCheck.notification.unknownProduct" = "Product Not Found";
+
+// MARK: Scan List
+
+"priceCheck.scanList.analytics.header" = "Price Compliance";
+"priceCheck.scanList.analytics.totalProgressCorrectLabels" = "correct labels";
+"priceCheck.scanList.analytics.outOfScans" = "Out of %d scans";
+"priceCheck.scanList.analytics.correctCardHeader" = "Correct Price Labels";
+"priceCheck.scanList.analytics.correctCardText" = "%d Total Correct Prices";
+"priceCheck.scanList.analytics.wrongCardHeader" = "Incorrect Price Labels";
+"priceCheck.scanList.analytics.wrongCardText" = "%d Total Incorrect Prices";
+"priceCheck.scanList.analytics.wrongCardPricesGreaterHeader" = "Prices greater than catalog price";
+"priceCheck.scanList.analytics.wrongCardPricesGreaterText" = "%d Total Incorrect Prices greater";
+"priceCheck.scanList.analytics.wrongCardPricesLowerHeader" = "Prices lower than catalog price";
+"priceCheck.scanList.analytics.wrongCardPricesLowerText" = "%d Total Incorrect Prices lower";
+"priceCheck.scanList.analytics.unknownProductCardHeader" = "Product Not Found";
+"priceCheck.scanList.analytics.unknownProductCardText" = "%d Total Unknown Products Scan";
+
+// MARK: SVM Common
+
+"svm.module" = "Module %@";
+"svm.uploadInProgress" = "Image upload in progress.";
+"svm.captureError" = "Error: %@";
+
+"svm.camera.wide" = "1×";
+"svm.camera.ultraWide" = ".5×";
+
+"svm.updateFlow.imageMissing" = "Image missing";
+
+// MARK: SVM Notifications
+
+"svm.notification.moduleRecaptured" = "Module %@ photo retaken.";
+"svm.notification.recaptureGuide" = "Please go to Module %@ and retake photo.";
+"svm.notification.allCaptured" = "You have captured %d of %d modules. Please upload or review photos.";
+"svm.notification.resumingCapture" = "Resuming capture session";
+
+// MARK: SVM Aisle List
+
+"svm.aisleList.title" = "Aisle List";
+"svm.aisleList.aisleCount.plural" = "%d aisle total";
+"svm.aisleList.aisleCount.single" = "%d aisles total";
+"svm.aisleList.loading" = "Loading...";
+"svm.aisleList.loadingFailed" = "Failed to load the aisles";
+"svm.aisleList.onboardingNeeded" = "Please contact Scandit to help with ShelfView onboarding.";
+"svm.aisleList.item.lastCaptured" = "Last Captured:";
+"svm.aisleList.item.lastCaptured.noValue" = "-";
+"svm.aisleList.addAisle" = "Add new aisle";
+"svm.aisleList.addAisle.dialogTitle" = "Input new aisle name";
+"svm.aisleList.addAisle.nameField" = "Aisle name";
+"svm.aisleList.search.placeholder" = "Search Aisle Name";
+
+// MARK: SVM Aisle Details
+
+"svm.aisleDetails.loadingFailed" = "Failed to load the modules";
+"svm.aisleDetails.addModule" = "Add new module";
+"svm.aisleDetails.addModule.dialogTitle" = "Input new module reference";
+"svm.aisleDetails.addModule.nameField" = "Module reference";
+
+// MARK: Onboarding flow
+
+
+"svm.onboardingFlow.list.title" = "Onboarding Flow";
+"svm.onboardingFlow.modulePreview.preparing" = "Preparing module to capture...";
+"svm.onboardingFlow.capture.invalidTracking" = "Invalid camera tracking state: %@";
+"svm.onboardingFlow.capture.raycastError" = "Recalibrating position...";
+"svm.onboardingFlow.capture.uploadFailed" = "Upload failed: %@";
+"svm.onboardingFlow.capture.uploadFailed.unknown" = "Unknown error";
+"svm.onboardingFlow.capture.uploadFailed.cancel" = "Cancel";
+"svm.onboardingFlow.capture.actions.help" = "Help";
+"svm.onboardingFlow.capture.actions.scaning.done" = "Done";
+"svm.onboardingFlow.capture.codes" = "Barcodes scanned";
+"svm.onboardingFlow.capture.navigation.back.capturePhase" = "Back";
+"svm.onboardingFlow.capture.navigation.back.scanPhase" = "Exit";
+"svm.onboardingFlow.capture.navigation.title.scanPhase" = "Barcode Scanning";
+
+"svm.onboardingFlow.capture.instructToRotateDevice" = "Rotate";
+"svm.onboardingFlow.capture.multiImageInstructons.initial" = "Start capture at top or bottom";
+"svm.onboardingFlow.capture.multiImageInstructons.subsequent" = "Shift camera and proceed captures";
+"svm.onboardingFlow.capture.instructions.scanPhase" = "Scan all barcodes of the module";
+
+"svm.onboardingFlow.capture.confirmExit" = "Do you really want to quit the current capture session? Some data may be lost.";
+"svm.onboardingFlow.capture.confirmExit.confirm" = "Quit Session";
+"svm.onboardingFlow.capture.confirmExit.cancel" = "Continue Session";
+"svm.onboardingFlow.capture.error" = "Error: %@";
+
+"svm.onboardingFlow.confirmation.resolution" = "Resolution: %dx%d";
+"svm.onboardingFlow.confirmation.barcodeImages" = "Captured barcodes: %d";
+"svm.onboardingFlow.confirmation.recapture" = "Retake";
+"svm.onboardingFlow.confirmation.approve" = "Approve";
+"svm.onboardingFlow.confirmation.showWideAngle" = "Show wide angle image";
+
+// MARK: SVM settings
+
+"svm.settings.title" = "Settings";
+"svm.settings.enableAllSymbologies" = "Enable All";
+"svm.settings.disableAllSymbologies" = "Disable All";
+"svm.settings.restoreDefaults" = "Restore Defaults";
+
+"svm.settings.videoFormat" = "Video format";
+"svm.settings.enabledSymbologies" = "Enabled symbologies";
+"svm.settings.code128Specific" = "Code 128 specific settings";
+
+"svm.settings.resolution" = "%dx%d";
+"svm.settings.facing" = "%@ facing";
+"svm.settings.fps" = "%d FPS";
+
+"svm.devicePosition.back" = "Back";
+"svm.devicePosition.front" = "Front";
+"svm.devicePosition.unspecified" = "Unspecified";
+"svm.devicePosition.unknown" = "Unknown";
+
+"svm.distanceTolerance.max" = "Disabled";
+"svm.distanceTolerance.short" = "%.0f p";
+"svm.distanceTolerance.long" = "%.0f points";
+
+// MARK: Offline
+"offline.offlineReady" = "Offline ready";
+"offline.outdated" = "Outdated";
+"offline.outdated.noConnectionToast.text" = "Connect to the internet and try again";
+"offline.outdated.errorToast.text" = "Error: couldn't download data.";
+"offline.outdated.errorToast.retry" = "Retry";
+"offline.status.text" = "You are offline";
+"offline.status.description" = "You can download the store data for offline use when you are online again.";
+"offline.pendingUploads.text" = "Connect to the internet to upload";
+
+"offline.dialog.title" = "Update store data?";
+"offline.dialog.description" = "Do you want to update the offline availability of the store %@?";
+"offline.dialog.cta" = "Update";
+
+// MARK: Offline Availability
+"offline.availability.title" = "Offline store data";
+"offline.availability.description" = "To see module previews offline, download the store data below. You must be connected to the internet to download.";
+"offline.availability.download" = "Download store data";
+"offline.availability.cancel" = "Cancel download";
+"offline.availability.refresh" = "Refresh store data";
+"offline.availability.update" = "Update available";
+"offline.availability.cancelUpdate" = "Cancel update";
+
+// MARK: Update flow
+
+"updateFlow.title" = "Update Flow";
+
+"updateFlow.navigationBar.exit" = "Exit";
+
+"updateFlow.moduleInfo.progress" = "%d/%d";
+"updateFlow.moduleInfo.module" = "Module: %@";
+"updateFlow.moduleInfo.moduleCompact" = "Module";
+
+"updateFlow.tooltip.review" = "Tap here to review images";
+
+"updateFlow.capture.title" = "Capture Module %@";
+"updateFlow.capture.subtitle" = "Aisle %@ (%d/%d)";
+"updateFlow.recapture.subtitle" = "Aisle %@";
+
+"updateFlow.captureActions.help" = "Help";
+"updateFlow.captureActions.undo" = "Undo";
+"updateFlow.captureActions.review" = "Review";
+
+"updateFlow.aislePreview.title" = "Choose a module to start";
+"updateFlow.aislePreview.body1" = "Select a module to start capturing from.
+Below shows either ends of the shelf.";
+"updateFlow.aislePreview.body2" = "Tap either one of the end modules to start capturing.";
+"updateFlow.aislePreview.cta" = "START CAPTURE";
+
+"updateFlow.aislePreview.toast.noNetworkConnection" = "No internet connection";
+"updateFlow.aislePreview.toast.noNetworkConnectionButton" = "Help";
+
+"updateFlow.aislePreview.noNetworkConnectionDialog.title" = "Offline store data";
+"updateFlow.aislePreview.noNetworkConnectionDialog.description" = "You can download the module previews to make them available for offline use.";
+"updateFlow.aislePreview.noNetworkConnectionDialog.downloadButton" = "Go to download";
+
+"updateFlow.modulePreview.headline" = "Are you at module %@?";
+"updateFlow.modulePreview.subheadline" = "Make sure the image below matches the shelf to capture. If not, go back and select again.";
+"updateFlow.modulePreview.guideText" = "Pinch to zoom in or out";
+
+"updateFlow.preview.headline" = "Module %@ preview";
+"updateFlow.preview.imageText" = "Image could not be loaded";
+"updateFlow.preview.imageReloadText" = "Try to reload the preview image";
+"updateFlow.preview.button" = "Reload Preview";
+
+"updateFlow.resume.headline" = "Resume at module %@";
+"updateFlow.resume.description" = "Make sure the module you are facing matches the image below:";
+"updateFlow.resume.button" = "I'm at module %@";
+
+"updateFlow.allDone.headline" = "All done!";
+"updateFlow.allDone.description" = "You have captured all modules in aisle %@. Good job!";
+"updateFlow.allDone.button" = "Review Captures";
+
+"updateFlow.gallery.uploadButton" = "Upload";
+"updateFlow.gallery.resumeButton" = "Resume";
+"updateFlow.gallery.uploadAllButton" = "Upload all";
+
+"updateFlow.summary.subtext" = "Check to make sure entire shelf is in the image. Tap on photo to retake photo.";
+
+"updateFlow.retake.retakeButton" = "Retake photo";
+
+"updateFlow.viewfinder.captureShelf" = "Capture the entire module %@";
+"updateFlow.viewfinder.successfullyCaptured" = "Successfully captured";
+"updateFlow.viewfinder.finished" = "Review your captures";
+"updateFlow.viewfinder.undo" = "Capture undone";
+
+"updateFlow.summary.total.single" = "%d of %d image total";
+"updateFlow.summary.total.plural" = "%d of %d images total";
+"updateFlow.summary.info" = "Check to make sure entire shelf is in the image. Tap on photo to retake photo.";
+
+"updateFlow.summary.confirmUpload.title" = "Only %d of %d modules captured.";
+"updateFlow.summary.confirmUpload.message" = "Would you still like to upload photos?";
+"updateFlow.summary.confirmUpload.upload" = "Upload";
+"updateFlow.summary.uploadingOverlay.text" = "Uploading...";
+
+"updateFlow.exitConfirmation.title" = "Exit Flow";
+"updateFlow.exitConfirmation.description" = "Are you sure you want to exit? By exiting you will discard taken images.";
+"updateFlow.exitConfirmation.button.discard" = "Discard Images";
+"updateFlow.exitConfirmation.button.cancel" = "Cancel";
+
+"updateFlow.exitConfirmation.alert.discard" = "Images discarded";
+
+"updateFlow.undoConfirmation.title" = "Undo last capture?";
+"updateFlow.undoConfirmation.description" = "Are you sure you want to undo and retake the capture for module %@?";
+"updateFlow.undoConfirmation.button.undoRetake" = "Undo & Retake";
+"updateFlow.undoConfirmation.button.cancel" = "Cancel";
+
+// MARK: Update Flow Aisle Preview
+
+"updateFlow.aislePreview.handedness.title" = "Which hand do you use to capture?";
+"updateFlow.aislePreview.handedness.rightHand" = "Right hand";
+"updateFlow.aislePreview.handedness.leftHand" = "Left hand";
+"updateFlow.aislePreview.startModule.title" = "Choose a start module";
+"updateFlow.aislePreview.startModule.description" = "Select a module to start capturing from. Below shows either ends of the shelf.";
+"updateFlow.aislePreview.startModule.cta" = "Press module to start";
+"updateFlow.aislePreview.module.recommended" = "RECOMMENDED";
+"updateFlow.aislePreview.module.alternative" = "alternative";
+
+// MARK: Video (update) flow
+
+"videoFlow.title" = "Video Flow";
+"videoFlow.preview.title" = "How to video capture entire aisle";
+"videoFlow.preview.body" = "Start from one end of the aisle to the other and please fit the entire shelf within the video camera frame.";
+"videoFlow.cta.preview" = "Start capture";
+"videoFlow.cta.finish" = "Finish";
+
+// MARK: Mapping flow
+"mappingFlow.list.title" = "Mapping Flow";
+"mappingFlow.list.aisleCreationError" = "Error: Could not create a new aisle";
+
+"mappingFlow.modulePreview.moduleImage" = "Module Image";
+"mappingFlow.modulePreview.moduleGroup" = "Module Group";
+"mappingFlow.modulePreview.continueButton" = "Continue";
+
+"mappingFlow.capture.title" = "Module %@";
+"mappingFlow.capture.updatingModule" = "Updating module...";
+"mappingFlow.capture.capturing" = "Capturing...";
+"mappingFlow.preview.retakeButton" = "Retake";
+"mappingFlow.preview.approveButton" = "Approve";
+
+"mappingFlow.editAisleName.navigationTitle" = "Change aisle name";
+"mappingFlow.editAisleName.cancelButton" = "Cancel";
+"mappingFlow.editAisleName.saveButton" = "Save";
+"mappingFlow.editAisleName.originalName" = "Original aisle name";
+"mappingFlow.editAisleName.changeTo" = "to be changed to:";
+"mappingFlow.editAisleName.namingConvention" = "Use this naming convention if possible:";
+"mappingFlow.editAisleName.example" = "For example:";
+"mappingFlow.editAisleName.toastError" = "Could not save aisle name. Check connection and try again";
+"mappingFlow.editAisleName.toastSuccess" = "Aisle name changed successfully";
+
+// MARK: Onboarding Flow Settings View - Main
+"onboardingFlow.settings.title" = "Onboarding Flow Settings";
+"onboardingFlow.settings.enabledSymbologies" = "Enabled symbologies";
+"onboardingFlow.settings.fps" = "%d fps";
+"onboardingFlow.settings.resolution" = "%.0f x %.0f";
+"onboardingFlow.settings.videoFormat" = "Video format";
+"onboardingFlow.settings.noVideoFormat" = "N/A";
+
+// MARK: Onboarding Flow Settings View - Barcode Capture
+"onboardingFlow.settings.barcodeFiltering" = "Barcode filtering";
+"onboardingFlow.settings.barcodeFilteringDescription" = "Filter out duplicate barcodes using K out of N window";
+"onboardingFlow.settings.keepBarcodeImages" = "Keep Barcode Images";
+"onboardingFlow.settings.duplicateDetection" = "Duplicate barcode detection tolerance";
+"onboardingFlow.settings.filterK" = "K";
+"onboardingFlow.settings.filterN" = "N";
+"onboardingFlow.settings.filterValue" = "%.0f";
+
+// MARK: Onboarding Flow Settings View - Motion and Camera
+"onboardingFlow.settings.angularVelocity" = "Angular velocity";
+"onboardingFlow.settings.angularVelocityDescription" = "Threshold for detecting excessive motion";
+"onboardingFlow.settings.angularVelocityThreshold" = "Angular velocity threshold";
+"onboardingFlow.settings.angularVelocityValue" = "%.2f rad/s";
+"onboardingFlow.settings.lateralVelocity" = "Camera velocity threshold";
+"onboardingFlow.settings.lateralVelocityValue" = "%.2f m/s";
+
+// MARK: Onboarding Flow Settings View - Experimental
+"onboardingFlow.settings.experimentalSettings" = "Experimental settings";
+"onboardingFlow.settings.enableLongRangeScanning" = "Enable long range scanning";
+"onboardingFlow.settings.showDebugOverlay" = "Show debug overlay";
+"onboardingFlow.settings.showFullFrameCapture" = "Show full frame when capturing barcodes";
+
+// MARK: Onboarding Flow Symbology Config View
+"onboardingFlow.symbologyConfig.overrideCustomSelection" = "Override with custom selection";
+
+// MARK: Onboarding Flow Capture Review View
+"onboardingFlow.captureReview.action.exit" = "Exit";
+"onboardingFlow.captureReview.action.scanNext" = "Scan Next";
+"onboardingFlow.captureReview.barcodeList" = "List of barcodes scanned";
+"onboardingFlow.captureReview.lastModule" = "Last module in aisle: %@";
+"onboardingFlow.captureReview.nextModule" = "Next module: %@";
+"onboardingFlow.captureReview.referenceImage" = "Reference image";
+
+// MARK: Onboarding Flow Module Preview View
+"onboardingFlow.modulePreview.referenceImage" = "Reference image";
+"onboardingFlow.modulePreview.title" = "Module %@";
+
+// MARK: Onboarding Flow Debug Values
+"onboardingFlow.debug.k" = "K";
+"onboardingFlow.debug.n" = "N";
+
+// MARK: Additional OnboardingFlow Settings
+"onboardingFlow.settings.experimentalSettings" = "Experimental settings";
+"onboardingFlow.settings.angularVelocityValue" = "%.2f rad/s";
+"onboardingFlow.settings.lateralVelocityValue" = "%.2f m/s";
+"onboardingFlow.settings.lateralVelocity" = "Camera velocity threshold";
+"onboardingFlow.settings.barcodeFiltering" = "Barcode filtering";
+"onboardingFlow.settings.barcodeFilteringDescription" = "Filter out duplicate barcodes using K out of N window";
+"onboardingFlow.settings.showShelfFaceVisualization" = "Show shelf face visualization";
+
+// MARK: User Guides
+
+"updateFlow.modulePreviewGuide.header" = "Capture Module %@";
+"updateFlow.modulePreviewGuide.body" = "Make sure the module you are facing matches the image below:";
+
+"updateFlow.userGuide.header" = "Module Capture";
+"updateFlow.userGuide.body" = "Capture the entire module plane in a single image.";
+"updateFlow.userGuide.back" = "Back";
+"updateFlow.userGuide.skip" = "Skip";
+"updateFlow.userGuide.next" = "Next";
+"updateFlow.userGuide.ok" = "Ok";
+
+"onboardingFlow.userGuide.page1.header" = "Step 1: Capture Barcodes";
+"onboardingFlow.userGuide.page1.body" = "Scan all the barcodes in the module by moving the camera view across the labels.";
+
+"onboardingFlow.userGuide.page2.header" = "Step 2: Capture Module";
+"onboardingFlow.userGuide.page2.body" = "After recording all the barcodes, take a step back and capture the entire module plane in a single image.";
+
+"onboardingFlow.userGuide.page3.header" = "Alternative: Multi Capture";
+"onboardingFlow.userGuide.page3.body" = "Rotate your device and capture the entire module with three images.";
+
+"mappingFlow.userGuide.header" = "Adding Shelf Modules";
+"mappingFlow.userGuide.body" = "Capture the entire module plane in a single image.";
+
+"videoUpdateFlow.userGuide.header" = "Video Capture";
+"videoUpdateFlow.userGuide.body1" = "Capture the entire shelf plane with a video in one continuous motion.";
+"videoUpdateFlow.userGuide.body2" = "Start from one end of the aisle to the other and fit the entire shelf within the video camera viewfinder.";
+
+// MARK: Routes
+
+"routes.tabTitle" = "Routes";
+"routes.list.label" = "Route";
+"routes.list.capturedAisles" = "%d / %d aisles captured";
+"routes.list.incomplete" = "Incomplete routes";
+"routes.list.complete" = "Complete routes";
+"routes.list.navigation.title" = "Capture Routes";
+"routes.list.navigation.noRoutes" = "No routes available";
+"routes.list.navigation.allCompleted" = "All routes completed";
+"routes.list.noRoutes" = "No routes have been set up yet.";
+"routes.list.completion.title" = "Complete!";
+"routes.list.completion.message" = "Well done! You’ve updated all routes.";
+"routes.list.failure.retryAll" = "Retry all";
+
+"routes.aisleList.aisleCount" = "%d / %d aisles";
+"routes.aisleList.completion.title" = "Route completed";
+"routes.aisleList.completion.message" = "Well done! You've updated all aisles.";
+"routes.aisleList.completion.resets" = "Resets: %@";
+
+"routes.dialog.repeatUpdate.title" = "Repeat update?";
+"routes.dialog.repeatUpdate.message" = "Aisle %@ has already been updated. Do you want to repeat the update?";
+"routes.dialog.repeatUpdate.repeatButton" = "Repeat update";
+
+"routes.lastCaptured" = "Last captured: %@";
+
+"routes.badge.lastCaptured" = "Last captured";
+"routes.badge.uploadPending" = "Upload pending";
+"routes.badge.uploading" = "Uploading";
+"routes.badge.uploadFailed" = "Upload failed";
+
+// MARK: Store selection
+
+"storeList.logout" = "Logout";
+"storeList.noStore" = "No store available.";
+"storeList.errorMessage" = "Error loading stores";
+"storeList.errorRetryButton" = "Retry";
+
+// MARK: UI
+
+"imageLoader.offline.text" = "Shelfview is offline";
+"imageLoader.failure.topText" = "Image could not be loaded";
+"imageLoader.failure.bottomText" = "Images can be downloaded via 'Update' in the main menu";
+
+"aisleList.lastCaptured" = "Last captured: %@";
+
+"groupCard.lastCapture" = "Last capture: %@";
+"groupCard.module" = "Module: %@";

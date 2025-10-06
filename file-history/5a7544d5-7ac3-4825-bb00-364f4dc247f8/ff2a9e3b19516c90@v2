@@ -1,0 +1,71 @@
+# Pull Request Readiness Check
+
+Comprehensive pre-PR validation combining quality, architecture, and testing checks:
+
+**Code Quality:**
+- ESLint compliance (no warnings/errors)
+- TypeScript strict mode compliance
+- No TODO/FIXME comments in production code
+- No commented-out code blocks
+- No console.log/debug statements (except error logging)
+
+**Architecture Compliance:**
+- Layer separation (Component → Action → Use Case → Repository)
+- No Component → Repository (must go through Action → Use Case)
+- No Repository → Repository dependencies
+- executePromise used for ALL external calls in Use Cases
+- ClientResult pattern followed
+- Proper dependency injection in Actions
+
+**Type Organization:**
+- DTO types in `*-type.ts` (exported)
+- Response types in `*-repo.ts` (internal, NOT exported)
+- Props types in components (local, NOT exported)
+
+**Feature Structure:**
+- Correct folder structure:
+  - `actions/[feature]-actions.ts`
+  - `components/[feature]-form.tsx`
+  - `logic/[feature]-use-case.ts`
+  - `logic/[feature]-repo.ts`
+  - `logic/[feature]-type.ts`
+  - `__tests__/[feature]-actions.test.ts`
+  - `__tests__/[feature]-use-case.test.ts`
+  - `__tests__/[feature]-test-utils.ts`
+
+**Next.js Patterns:**
+- "use client" on interactive components
+- "use server" on Server Actions
+- React Hook Form + Zod validation
+- Proper FormData handling
+- Correct redirect usage
+
+**Testing:**
+- Tests exist for new Actions and Use Cases
+- Test utilities created (`*-test-utils.ts`)
+- 3-4 essential test cases per function
+- Tests pass locally (`npm test`)
+
+**Error Handling:**
+- Repository throws errors (no try/catch)
+- Use Case wraps with executePromise
+- Action returns ClientResult or redirects
+- Component displays user-friendly messages
+
+**Code Comments:**
+- Comments explain WHY, not WHAT
+- Business rules documented
+- Security considerations noted
+- No obvious code commented
+
+Provides actionable checklist of issues to fix before creating PR.
+
+**Agent Used:** Invokes `architecture-validator-agent`.
+
+## Usage
+```
+/review-pr [file_or_directory_path]
+```
+
+## Parameters
+- `file_or_directory_path`: Path to file or directory to review (required - usually `features/[feature-name]/`)

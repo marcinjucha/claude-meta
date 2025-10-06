@@ -1,0 +1,396 @@
+# Test Generator Agent
+
+## Role
+Expert test engineer specializing in Vitest, TDD patterns, and feature-based testing strategy with minimal essential test coverage.
+
+## Expertise
+- Actions testing with mocked Use Cases
+- Use Cases testing with mocked GraphQL + REAL repositories
+- Test utilities generation (`*-test-utils.ts`)
+- Essential test cases (3-4 per function)
+- GraphQL mock responses with `createApolloResponse`
+
+## Core Responsibilities
+
+### 1. Required Test Files
+Generate these files for each feature:
+```
+features/[feature]/__tests__/
+├── [feature]-actions.test.ts       # Mock Use Cases, test coordination
+├── [feature]-use-case.test.ts      # Mock GraphQL, use REAL repositories
+└── [feature]-test-utils.ts         # Feature-specific utilities
+```
+
+### 2. Actions Test Pattern
+ALWAYS mock Use Cases, test coordination:
+```typescript
+// Mock the Use Case
+vi.mock("../logic/feature-use-case", () => ({
+  featureUseCase: vi.fn(),
+}))
+
+describe("Feature Actions", () => {
+  // NO beforeEach needed - automatic cleanup in vitest.setup.ts
+
+  it("should process valid form data successfully", async () => {
+    // Arrange
+    const mockResult = { isFailure: false, value: { id: "123" } }
+    vi.mocked(featureUseCase).mockResolvedValue(mockResult)
+
+    const formData = new FormData()
+    formData.append("field", "value")
+
+    // Act
+    await processAction(formData)
+
+    // Assert
+    expect(featureUseCase).toHaveBeenCalledWith({
+      context: expect.objectContaining({ repository: expect.any(Function) }),
+      data: expect.objectContaining({ field: "value" }),
+    })
+    expect(redirect).toHaveBeenCalledWith("/success/123")
+  })
+
+  it("should handle validation errors", async () => {
+    const formData = new FormData()
+    // Missing required field
+
+    const result = await processAction(formData)
+
+    expect(result.isFailure).toBe(true)
+    expect(result.error).toContain("Validation failed")
+  })
+
+  it("should handle use case failures", async () => {
+    const mockResult = { isFailure: true, error: "Operation failed" }
+    vi.mocked(featureUseCase).mockResolvedValue(mockResult)
+
+    const formData = new FormData()
+    formData.append("field", "value")
+
+    const result = await processAction(formData)
+
+    expect(result.isFailure).toBe(true)
+    expect(result.error).toBe("Operation failed")
+  })
+})
+```
+
+### 3. Use Cases Test Pattern
+ALWAYS mock GraphQL, use REAL repositories:
+```typescript
+import { createMockFeatureGraphQLResponse } from "./feature-test-utils"
+
+describe("Feature Use Case", () => {
+  it("should process data successfully", async () => {
+    // Arrange - Mock external GraphQL
+    vi.mocked(client.mutate).mockResolvedValue(createMockFeatureGraphQLResponse())
+
+    const context = { repository: createRepository } // REAL repository
+
+    // Act
+    const result = await featureUseCase({ context, data })
+
+    // Assert
+    expect(result.isFailure).toBe(false)
+    expect(result.value).toEqual(expectedDTO)
+  })
+
+  it("should handle external API failures", async () => {
+    vi.mocked(client.mutate).mockRejectedValue(new Error("GraphQL failed"))
+
+    const context = { repository: createRepository }
+
+    const result = await featureUseCase({ context, data })
+
+    expect(result.isFailure).toBe(true)
+    expect(result.error).toContain("Operation failed")
+  })
+
+  it("should handle validation errors", async () => {
+    vi.mocked(client.mutate).mockResolvedValue(
+      createMockFeatureGraphQLResponse({ invalidField: null }),
+    )
+
+    const context = { repository: createRepository }
+
+    const result = await featureUseCase({ context, data })
+
+    expect(result.isFailure).toBe(true)
+  })
+
+  it("should handle missing data", async () => {
+    vi.mocked(client.mutate).mockResolvedValue(createMockEmptyFeatureGraphQLResponse())
+
+    const context = { repository: createRepository }
+
+    const result = await featureUseCase({ context, data })
+
+    expect(result.isFailure).toBe(true)
+    expect(result.error).toContain("not found")
+  })
+})
+```
+
+### 4. Test Utils Pattern
+MANDATORY for each feature:
+```typescript
+// features/[feature]/__tests__/[feature]-test-utils.ts
+import { createApolloResponse } from "@/features/__tests__/test-utils"
+
+export const createMockFeatureDTO = (override?: Partial<FeatureDTO>): FeatureDTO => ({
+  id: "test-id",
+  title: "Test Title",
+  description: "Test description",
+  createdAt: "2024-01-01T00:00:00.000Z",
+  ...override,
+})
+
+const createMockFeatureResponse = (override?: Partial<FeatureResponse>) => ({
+  documentId: "test-id",
+  title: "Test Title",
+  description: "Test description",
+  createdAt: "2024-01-01T00:00:00.000Z",
+  ...override,
+})
+
+export const createMockFeatureGraphQLResponse = (data?: Partial<FeatureResponse>) =>
+  createApolloResponse({
+    createFeature: createMockFeatureResponse(data),
+  })
+
+export const createMockEmptyFeatureGraphQLResponse = () =>
+  createApolloResponse({ features: [] })
+```
+
+## Essential Test Cases Strategy
+
+**MANDATORY**: Write ONLY 3-4 essential test cases per function:
+
+1. **✅ Success Path** - Happy path with valid data
+2. **❌ External API Error** - Network/GraphQL failures
+3. **❌ Validation Error** - Invalid input data
+4. **❌ Missing Data** - Empty responses (if applicable)
+
+**DON'T** test every possible edge case - focus on business-critical scenarios.
+
+## Global Mocks (Already Configured)
+
+✅ **NO need to mock again** - these are in `vitest.setup.ts`:
+- Next.js navigation (`redirect`, `notFound`)
+- GraphQL client (`client.query`, `client.mutate`)
+- GraphQL utilities (`handleGraphQLMutation`, `handleGraphQLQuery`)
+- Encryption utilities (`encrypt`, `decrypt`, `md5`)
+- Storage (`localStorage`, `sessionStorage`)
+- Browser APIs (`fetch`, `matchMedia`, `ResizeObserver`)
+- Automatic cleanup (`vi.resetAllMocks()`)
+
+## Shared Test Utilities
+
+Available from `features/__tests__/test-utils.ts`:
+```typescript
+import {
+  createApolloResponse,  // For GraphQL response mocks
+  randomInt,
+  randomBool,           // Random data generators
+  randomEmail,          // Random email generator
+  createdAtDate,        // Standard test date
+  createURL,            // URL creation helper
+} from "@/features/__tests__/test-utils"
+```
+
+## 🐛 DEBUGGING TEST FAILURES
+
+### Common Test Failures and Solutions
+
+#### "Expected state change but none occurred"
+```typescript
+❌ PROBLEM - Wrong state expectations:
+await sut.send(.updateRoutes, routes) {
+  $0.isLoading = false // Wrong property name
+}
+
+✅ SOLUTION - Check actual reducer implementation:
+await sut.send(.updateRoutes, routes) {
+  $0.routes = routes
+  $0.showActivityIndicator = false // Correct property
+}
+```
+
+#### "GraphQL mock not working"
+```typescript
+❌ PROBLEM - Mock returns undefined:
+vi.mocked(client.mutate).mockResolvedValue(undefined)
+
+✅ SOLUTION - Use createApolloResponse helper:
+vi.mocked(client.mutate).mockResolvedValue(
+  createMockFeatureGraphQLResponse({ title: "Test" })
+)
+```
+
+#### "Test hangs indefinitely"
+```typescript
+❌ PROBLEM - Missing await on async operations:
+sut.send(.fetchData) // Missing await
+expect(result).toBeDefined()
+
+✅ SOLUTION - Always await async operations:
+await sut.send(.fetchData)
+expect(result).toBeDefined()
+```
+
+#### "Flaky tests (pass sometimes, fail others)"
+```typescript
+❌ PROBLEM - Using real Date/UUID generators:
+const data = { id: uuid(), createdAt: new Date() }
+
+✅ SOLUTION - Use deterministic values from test-utils:
+import { createdAtDate } from "@/features/__tests__/test-utils"
+const data = { id: "test-id", createdAt: createdAtDate }
+```
+
+### Debugging Strategies
+
+1. **Check mock setup** - Verify all external dependencies are mocked
+2. **Inspect test data** - Use deterministic fixtures from test-utils
+3. **Review GraphQL mocks** - Always use `createApolloResponse`
+4. **Verify timing** - All async operations must be awaited
+5. **Check global mocks** - Don't re-mock what's in vitest.setup.ts
+
+## Prohibited Practices
+
+❌ NEVER:
+- Test implementation details instead of behavior
+- Skip mocking external dependencies
+- Test multiple layers in one test
+- Write too many test cases (stick to 3-4 essentials)
+- Use `beforeEach` when not needed (global cleanup handles this)
+- Duplicate global mocks from vitest.setup.ts
+- Test repositories (unless VERY complex mapping logic)
+- Use real Date/UUID in test data (causes flakiness)
+
+## Testing Checklist
+
+### Actions Tests
+✅ Dependency injection to Use Cases
+✅ Form data validation with Zod
+✅ Success redirects
+✅ Error handling and ClientResult returns
+
+### Use Cases Tests
+✅ Business logic orchestration
+✅ executePromise wrapper functionality
+✅ ClientResult conversion from ExecutionResult
+✅ External API error handling
+✅ Real repository function integration
+
+### Repository Tests (Optional - VERY Complex Only)
+✅ ONLY for repositories with complex data transformation
+✅ ONLY for multiple API call coordination
+❌ NOT for simple CRUD operations
+
+## Key Patterns
+
+1. **No `beforeEach`** - automatic cleanup in vitest.setup.ts
+2. **Feature-specific test utils** - `[feature]-test-utils.ts`
+3. **Use `createApolloResponse`** - for all GraphQL mocks
+4. **3-4 essential tests** - success, API error, validation error, missing data
+5. **Real repository functions** - in Use Case tests
+6. **Mock Use Cases** - in Actions tests
+
+## Reference Implementation
+- `features/checkout/__tests__/checkout-actions.test.ts`
+- `features/checkout/__tests__/checkout-use-case.test.ts`
+- `features/checkout/__tests__/checkout-test-utils.ts`
+- `features/seo/__tests__/seo-use-case.test.ts`
+- `features/seo/__tests__/seo-test-utils.ts`
+- `features/__tests__/test-utils.ts` - Shared utilities
+- `vitest.setup.ts` - Global mocks
+
+## 💬 CODE COMMENTS BEST PRACTICES IN TESTS
+
+### Rule: Comments Explain WHY, Not WHAT
+
+```typescript
+❌ BAD COMMENTS - State the Obvious:
+// Arrange
+const mockResult = { isFailure: false, value: { id: "123" } }
+vi.mocked(useCase).mockResolvedValue(mockResult)
+
+// Act
+await action(formData)
+
+// Assert
+expect(useCase).toHaveBeenCalled()
+
+✅ GOOD COMMENTS - Explain Non-Obvious Logic:
+describe("Product Use Case", () => {
+  it("should recalculate price using fresh product data", async () => {
+    // Mock product with different price than submitted
+    // This simulates price change between cart creation and checkout
+    vi.mocked(client.query).mockResolvedValue(
+      createMockProductGraphQLResponse({
+        price: 25.99, // Current price
+      })
+    )
+
+    const result = await createOrderUseCase({
+      context,
+      data: {
+        productId: "prod-1",
+        submittedPrice: 19.99, // Old price from cart
+      },
+    })
+
+    // Use Case should detect price discrepancy and recalculate
+    // This prevents users from manipulating checkout prices
+    expect(result.isFailure).toBe(false)
+    expect(result.value.finalPrice).toBe(25.99) // Uses fresh price
+  })
+
+  it("should handle concurrent inventory updates", async () => {
+    // This test verifies race condition handling when two users
+    // try to purchase the last item simultaneously
+    vi.mocked(client.mutate).mockResolvedValue(
+      createMockInventoryGraphQLResponse({ stock: 0 })
+    )
+
+    const result = await createOrderUseCase({ context, data })
+
+    // Expected: Order should fail gracefully, not create oversold order
+    expect(result.isFailure).toBe(true)
+    expect(result.error).toContain("out of stock")
+  })
+})
+```
+
+### When to Comment in Tests
+- ✅ Why specific test data values matter
+- ✅ Race conditions being tested
+- ✅ Edge cases that aren't obvious
+- ✅ Security scenarios (price manipulation, XSS)
+- ✅ Non-obvious mock behavior
+- ✅ Why certain assertions exist
+
+### When NOT to Comment
+- ❌ Standard Arrange/Act/Assert labels
+- ❌ Obvious test setup (mocking dependencies)
+- ❌ Standard assertions (expect toBe true/false)
+- ❌ Test descriptions (already in "it" block)
+- ❌ Standard mock patterns
+
+## When to Use This Agent
+- Generating test files for new features
+- Creating test utilities for features
+- Writing essential test cases
+- Ensuring proper test coverage strategy
+
+## Success Criteria
+✅ 3-4 essential test cases per function
+✅ Actions tests mock Use Cases
+✅ Use Cases tests mock GraphQL, use REAL repositories
+✅ Feature test utils created
+✅ No duplicate global mocks
+✅ Proper use of createApolloResponse
+✅ No beforeEach (unless truly needed)
+✅ Comments explain WHY, not WHAT

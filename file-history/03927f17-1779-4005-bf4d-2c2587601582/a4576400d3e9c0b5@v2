@@ -1,0 +1,366 @@
+---
+description: How to fix crashes, memory leaks, navigation issues, and avoid common critical mistakes
+alwaysApply: true
+---
+# Critical Patterns & Troubleshooting
+
+## When to use this guide
+
+**This rule is always active, especially useful for:**
+- crashes, memory leaks
+- navigation problems
+- TaskGroup crashes
+- publisher leaks
+- repository circular dependencies
+- pre-commit review
+
+**Natural examples:**
+- "why is my app crashing in TaskGroup?"
+- "navigation not working in child view"
+- "memory leak with publishers"
+- "repository calling another repository"
+- "pre-commit checklist review"
+
+---
+
+## 🚨 CRITICAL ISSUES (Must Read First)
+
+### 1. @Dependency + TaskGroup = CRASH
+```swift
+// ❌ CRASH - Never access @Dependency inside TaskGroup
+@Dependency(\.apiClient) var apiClient
+withThrowingTaskGroup { group in
+    group.addTask { try await self.apiClient.fetch() } // CRASH!
+}
+
+// ✅ ALWAYS capture @Dependency before TaskGroup
+let apiClient = self.apiClient
+withThrowingTaskGroup { group in
+    group.addTask { try await apiClient.fetch() } // Safe
+}
+```
+
+### 2. Memory Leaks with Publishers
+```swift
+// ❌ WRONG - Creates retain cycle
+publisher.sink { [self] value in
+    self.handleValue(value)
+}
+
+// ✅ CORRECT - Use weakSink from Combine+Extensions.swift
+publisher.weakSink(on: self) { strongSelf, value in
+    strongSelf.handleValue(value)
+}
+```
+
+### 3. Navigation Parent/Child Conflict
+```swift
+// ❌ WRONG - Parent uses NavigationDestination.self
+// This breaks child navigation!
+.navigationDestination(for: NavigationDestination.self) { dest in
+    // ...
+}
+
+// ✅ CORRECT - Parent uses specific types only
+.navigationDestination(for: ModeEntry.self) { mode in
+    mode.view
+}
+
+// ✅ Child views use NavigationDestination.self
+.navigationDestination(for: NavigationDestination.self) { dest in
+    switch dest {
+    case .details: DetailsView(...)
+    default: EmptyView()
+    }
+}
+```
+
+### 4. Repository Dependency Cycles
+```swift
+// ❌ WRONG - Repository depends on another repository
+final class RouteDataRepository {
+    @Dependency(\.uploadRepository) var uploadRepository // ❌ CYCLE!
+}
+
+// ✅ CORRECT - Use Service to combine repositories
+final class RouteWithUploadService {
+    @Dependency(\.routeDataRepository) var routeDataRepository
+    @Dependency(\.uploadRepository) var uploadRepository
+    // Service combines both - no cycles
+}
+```
+
+---
+
+## 🧭 Navigation Patterns
+
+### Parent View Pattern
+**Rule**: Parent views use ONLY specific types, never `NavigationDestination.self`
+
+```swift
+// Parent view (HomeView, AppRootView)
+.navigationDestination(for: ModeEntry.self) { mode in
+    mode.view
+}
+.navigationDestination(for: OfflineAvailabilityDestination.self) { _ in
+    OfflineAvailabilityView(...)
+}
+// ❌ NEVER: .navigationDestination(for: NavigationDestination.self)
+```
+
+### Child View Pattern
+**Rule**: Child views ALWAYS use `NavigationDestination.self`
+
+```swift
+// Child view (RouteRootView, module-specific views)
+.navigationDestination(for: NavigationDestination.self) { destination in
+    switch destination {
+    case .routeDetails(let id): RouteDetailsView(routeId: id)
+    case .aislePreview(let aisle): AislePreviewView(aisle: aisle)
+    default: EmptyView()
+    }
+}
+```
+
+### Shared View Navigation
+**Solution**: Create specific type for shared views
+
+```swift
+// 1. Create specific type
+struct OfflineAvailabilityDestination: Hashable {}
+
+// 2. Parent navigates using specific type
+NavigationStore.shared.push(OfflineAvailabilityDestination())
+
+// 3. Child uses generic navigation
+NavigationStore.route.push(.routeDetails(id: routeId))
+```
+
+### Navigation Stores
+- `NavigationStore.shared` - Main app navigation (Home → Settings, etc.)
+- `NavigationStore.route` - Routes module navigation
+
+---
+
+## 🔧 Dependency Injection Patterns
+
+### Standard @Dependency Pattern
+```swift
+// Production code
+final class HomeUseCase: AnyHomeUseCase {
+    @Dependency(\.modeService) private var modeService
+    @Dependency(\.storeRepository) private var storeRepository
+
+    init() {} // No manual injection needed
+}
+```
+
+### Test Factory Pattern (DEBUG Only)
+```swift
+#if DEBUG
+extension HomeUseCase {
+    static func makeWithDeps(
+        modeService: AnyModeService,
+        storeRepository: StoreRepository
+    ) -> HomeUseCase {
+        withDependencies {
+            $0.modeService = modeService
+            $0.storeRepository = storeRepository
+        } operation: { HomeUseCase() }
+    }
+}
+#endif
+```
+
+**Critical Rules:**
+- Wrap `makeWithDeps` in `#if DEBUG` (keeps out of release)
+- All components with `@Dependency` must have `makeWithDeps`
+- Use in tests: `let sut = UseCase.makeWithDeps(repo: mockRepo)`
+
+---
+
+## 🧪 Testing Strategy
+
+### Two-Level Testing Approach
+
+#### Level 1: Presentation Tests (Fast & Isolated)
+```swift
+@MainActor
+final class RouteListFeatureTests: XCTestCase {
+    let useCase = RouteListUseCaseSpy()  // ← Mock
+
+    lazy var sut = TestStoreOf<RouteListFeature>(
+        initialState: RouteListFeature.State()
+    ) {
+        RouteListFeature(useCase: useCase)
+    }
+}
+```
+
+**Mock Everything:**
+- ✅ Use Cases
+- ✅ Navigation
+- ✅ External Services
+
+**Test:**
+- TCA logic (state transitions)
+- UI behavior (loading states, errors)
+- Action handling (user interactions)
+
+#### Level 2: Business Integration Tests (Comprehensive)
+```swift
+final class RouteListUseCaseTests: XCTestCase {
+    let database = ShelfDatabase.inMemory()  // ← Real
+    lazy var dataRepository = RouteDataRepository.makeWithDeps(
+        database: database
+    )
+    lazy var sut = RouteListUseCase.makeWithDeps(
+        dataRepository: dataRepository
+    )
+}
+```
+
+**Use Real Components:**
+- ✅ Repositories
+- ✅ Use Cases
+- ✅ Services
+- ✅ Business Logic
+
+**Mock External Only:**
+- ✅ APIs (HttpService)
+- ✅ FileSystem
+- ✅ Database (use in-memory)
+
+**Test:**
+- Data flow between layers
+- Business logic correctness
+- Publisher emissions
+- Error propagation
+
+---
+
+## 🎨 UI & Performance
+
+### Design System
+```swift
+// Colors
+Design.Color.Text.primary
+Design.Color.Surface.background
+Design.Color.Background.primary
+
+// Components
+LoadingSpinner()
+ImageLoaderView(url: imageURL)
+SegmentedPicker(selection: $store.selectedTab, options: tabs)
+
+// Button Styles
+Button("Save") { }
+    .buttonStyle(ScanditButtonStyle(type: .primary))
+    .buttonStyle(ScanditButtonStyle(type: .secondary))
+    .buttonStyle(ScanditButtonStyle(type: .ghost))
+```
+
+### Performance Patterns
+- ✅ Use reactive publishers (not polling)
+- ✅ Cancel subscriptions in `onDisappear`
+- ✅ Smart caching with expiration
+- ✅ Background processing for heavy operations
+- ✅ `@ObservableState` for automatic optimization
+
+---
+
+## 🚨 Common Problems & Solutions
+
+### Problem: App crashes in TaskGroup
+**Symptoms**: Crash when using TaskGroup with @Dependency
+**Solution**: Capture `@Dependency` before TaskGroup
+```swift
+let apiClient = self.apiClient  // Capture first
+withThrowingTaskGroup { group in
+    group.addTask { try await apiClient.fetch() }  // Use captured
+}
+```
+
+### Problem: Navigation not working in child views
+**Symptoms**: Tapping navigation links does nothing
+**Checks**:
+- ✅ Parent doesn't use `NavigationDestination.self`?
+- ✅ Parent uses specific types only?
+- ✅ Child uses `NavigationDestination.self`?
+
+### Problem: Repository dependency cycles
+**Symptoms**: Compilation error or crash on initialization
+**Solution**: Create Service to combine repositories
+```swift
+// Instead of RouteRepo → UploadRepo
+// Create: RouteService → RouteRepo + UploadRepo
+```
+
+### Problem: TCA not updating UI
+**Checks**:
+- ✅ `@ObservableState` on State struct?
+- ✅ `BindingReducer()` first in reducer body?
+- ✅ Using `@Bindable var store` in SwiftUI?
+- ✅ State properties properly mutated in reducer?
+
+### Problem: Memory leaks
+**Symptoms**: Memory grows continuously, not released
+**Checks**:
+- ✅ Using `weakSink` for publishers?
+- ✅ Cancelling subscriptions in `onDisappear`?
+- ✅ No retain cycles in closures?
+- ✅ Heavy resources properly disposed?
+
+### Problem: Tests failing with "no test implementation"
+**Symptoms**: Crash with "Dependency has no test implementation"
+**Solution**: Mock all dependencies in `withDependencies` block
+```swift
+TestStore(initialState: Feature.State()) {
+    Feature()
+} withDependencies: {
+    $0.apiClient = .mock
+    $0.uuid = .constant(UUID())
+}
+```
+
+---
+
+## ✅ Pre-Commit Checklist
+
+### Critical Patterns
+- [ ] No `@Dependency` accessed inside TaskGroup
+- [ ] Using `weakSink` for all publisher subscriptions
+- [ ] Parent views use specific navigation types only
+- [ ] Child views use `NavigationDestination.self`
+- [ ] No repositories depending on other repositories
+
+### TCA Requirements
+- [ ] `@ObservableState` on all State structs
+- [ ] `BindingReducer()` first in reducer body
+- [ ] Individual `CancelID` for each publisher
+- [ ] Publishers pattern used (not TaskGroup in TCA)
+- [ ] `makeWithDeps` factory exists for all @Dependency components
+
+### Testing Requirements
+- [ ] Business integration tests use real components
+- [ ] Presentation tests mock all dependencies
+- [ ] All @Dependency components have `makeWithDeps`
+- [ ] `makeWithDeps` wrapped in `#if DEBUG`
+
+### Memory Management
+- [ ] Using `weakSink` for publishers
+- [ ] Cancelling subscriptions on cleanup
+- [ ] No retain cycles in closures
+
+---
+
+## 🎯 Quick Reference
+
+**TaskGroup + @Dependency**: CAPTURE before TaskGroup!
+**Memory**: Use `weakSink` from Combine+Extensions.swift
+**Navigation**: Parent = specific types, Child = NavigationDestination.self
+**Repos**: Never depend on other repos (use Service instead)
+**Testing**: Mock external only, use real business logic
+**TCA**: `@ObservableState` + `BindingReducer()` first + unique `CancelID`
+
+**Remember: These patterns prevent the most common production crashes.**
