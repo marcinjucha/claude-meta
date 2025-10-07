@@ -5,3 +5,4 @@ history.jsonl
 todos/*
 todos/*.json
 ide
+shell-snapshots
