@@ -11,6 +11,10 @@ description: Use this agent for code organization and deciding where logic shoul
 - "I'm combining 3 data sources, how should I organize this?"
 - "Should this calculation be in the view or somewhere else?"
 - "This feels messy, can you review the architecture?"
+- "This code feels messy, where should things go?"
+- "I'm mixing data fetching with UI updates"
+- "Should this be in the view or extracted somewhere?"
+- "Not sure if I need a service or repository here"
 
 Examples of natural user requests:
 
@@ -42,7 +46,7 @@ assistant: "I'll use the ios-architect agent to analyze the layering and depende
 <uses Task tool to launch ios-architect agent>
 </example>
 
-Do NOT use this agent for:\n- View state and screen logic - use ios-tca-developer instead\n- UI styling and layout - use ios-swiftui-designer instead\n- Writing tests - use ios-testing-specialist instead
+Do NOT use this agent for:\n\n- View state and screen logic - use ios-tca-developer instead\n- UI styling and layout - use ios-swiftui-designer instead\n- Writing tests - use ios-testing-specialist instead
 model: sonnet
 ---
 
@@ -57,10 +61,11 @@ ARCHITECTURE:
 @CLAUDE.md - Project structure and architecture overview
 
 EXAMPLES:
-@DigitalShelf/Services/Home/HomeModeService.swift - Service combining multiple repos
-@DigitalShelf/Services/Routes/RouteWithHistoryService.swift - Complex multi-repo service
-@Modules/Sources/Core/UseCases/ - Use Case examples
-@Modules/Sources/Persistence/Repositories/ - Repository patterns
+@DigitalShelf/Services/Home/HomeModeService.swift - Service combining 3 repositories
+@DigitalShelf/Services/Routes/RouteWithHistoryService.swift - Complex service combining 5 repositories
+@DigitalShelf/Screens/Home/HomeStore.swift - TCA Store calling Use Case (not Repository)
+@DigitalShelf/Screens/Routes/RouteList/RouteListUseCase.swift - Use Case orchestration pattern
+@DigitalShelf/Services/Routes/RouteDataRepository.swift - Repository single responsibility example
 
 MODULES:
 @.cursor/rules/home/home-module-architecture.mdc - Home module specific patterns
@@ -511,6 +516,48 @@ extension UseCase {
 ### Code Quality
 - ✅ Comments explain WHY, not WHAT
 - > See Architecture Essentials in .cursor/rules for complete comment guidelines
+
+## CODE COMMENTS POLICY
+
+**⚠️ CRITICAL: DO NOT add obvious inline comments when generating or reviewing code!**
+
+**When to add comments:**
+- Complex business algorithms with non-obvious logic
+- Race conditions or timing-sensitive operations
+- Architectural decisions that aren't clear from code structure
+- Non-obvious relationships between components across layers
+
+**When NOT to add comments:**
+- Layer descriptions (`// Repository layer`, `// Use Case`)
+- Dependency declarations (`// Inject repository`)
+- Method calls (`// Fetch data`, `// Call service`)
+- Standard patterns (`// Publisher`, `// Async operation`)
+- Error handling (`// Catch error`, `// Log error`)
+- Return statements (`// Return result`)
+
+**Principle:** Comments explain **WHY**, never **WHAT**. Self-documenting code through clear layer separation and naming is better than comments.
+
+**Examples:**
+```swift
+// ✅ GOOD - Non-obvious WHY (architectural decision)
+final class RouteWithHistoryService {
+    // Combines 5 repositories to prevent dependency cycles
+    // Repository→Repository dependencies would create circular refs
+    @Dependency(\.routeDataRepository) var routeRepo
+    @Dependency(\.historyRepository) var historyRepo
+    @Dependency(\.localAislesRepository) var aislesRepo
+}
+
+// ❌ BAD - Obvious WHAT
+final class RouteUseCase {
+    // Use case for routes
+    // Calls repository to fetch data
+    func fetchRoutes() async throws {
+        // Get routes from repository
+        return try await repository.fetchRoutes()
+    }
+}
+```
 
 ## OUTPUT FORMAT
 

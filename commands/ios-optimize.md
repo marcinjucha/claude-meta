@@ -1,4 +1,11 @@
+---
+description: "Optimize iOS + TCA Performance - Usage: /optimize [file_path] [\"goal description\"]"
+---
+
 # Optimize iOS + TCA Performance
+
+**Usage:** `/optimize [file_path] [performance_target]`
+**Example:** `/optimize RouteListView.swift` or `/optimize HomeStore.swift reduce load time`
 
 Analyze iOS/TCA code for performance optimization:
 

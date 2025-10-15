@@ -1,4 +1,11 @@
+---
+description: "Pull Request Readiness Check - Usage: /review-pr [file_or_directory_path]"
+---
+
 # Pull Request Readiness Check
+
+**Usage:** `/review-pr [file_or_directory_path]`
+**Example:** `/review-pr DigitalShelf/Screens/Home/` or `/review-pr HomeStore.swift`
 
 Comprehensive pre-PR validation combining quality, architecture, and testing checks:
 

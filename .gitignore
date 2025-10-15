@@ -6,3 +6,4 @@ todos/*
 todos/*.json
 ide
 shell-snapshots
+debug

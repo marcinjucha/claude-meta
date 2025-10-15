@@ -1,4 +1,11 @@
+---
+description: "Migrate to TCA + Clean Architecture - Usage: /migration [file_path] [\"migration description\"]"
+---
+
 # Migrate to TCA + Clean Architecture
+
+**Usage:** `/migration [file_path] [migration_type]`
+**Example:** `/migration OldViewModel.swift ViewModel to TCA` or `/migration Store.swift extract Use Case`
 
 Migrate legacy iOS code to TCA and Clean Architecture patterns:
 

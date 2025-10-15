@@ -1,4 +1,11 @@
+---
+description: "Create or Extend iOS + TCA Feature - Usage: /feature [name|path] [simple|standard|complex|form|list|detail|description]"
+---
+
 # Create or Extend iOS + TCA Feature
+
+**Usage:** `/feature [feature_name_or_path] [change_description]`
+**New feature:** `/feature ProductDetail standard` | **Extend:** `/feature path/to/Store.swift add search`
 
 Create new feature or extend existing one following TCA + Clean Architecture patterns.
 

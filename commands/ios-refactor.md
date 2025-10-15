@@ -1,4 +1,11 @@
+---
+description: "Refactor iOS + TCA Architecture - Usage: /refactor [file_path] [\"objective text\"]"
+---
+
 # Refactor iOS + TCA Architecture
+
+**Usage:** `/refactor [file_path] [refactor_goal]`
+**Example:** `/refactor HomeStore.swift` or `/refactor RouteListFeature.swift extract use case`
 
 Analyze code for refactoring opportunities in iOS/TCA context:
 

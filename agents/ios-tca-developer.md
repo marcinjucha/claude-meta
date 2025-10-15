@@ -1,14 +1,17 @@
 ---
 name: ios-tca-developer
-description: Use this agent when working on screen logic, state management, and view behavior. Trigger this agent when you hear:\n\n- "I built a new screen/view/feature, can you check if it's working right?"
-- "This view isn't updating when the state changes"
-- "Added a dependency for fetching routes/stores/data"
-- "How do I handle this button tap with async loading?"
-- "Need to add navigation from home to route details"
-- "My state management feels messy"
-- "Should I use a publisher or effect here?"
-- "The app crashed when I added this dependency"
-- "Need form validation for user input"
+description: Use this agent when working on screen logic, state management, and view behavior. Trigger this agent when you hear:
+
+- "I built this screen, can you check if it's right?"
+- "I changed the state but nothing happens on screen"
+- "The view doesn't update when data changes"
+- "Added a @Dependency but getting crashes"
+- "Do I need a publisher here or just run this async?"
+- "How do I handle this button tap with loading spinner?"
+- "Need to navigate from list to details screen"
+- "This state management feels messy, any ideas?"
+- "Getting a crash when accessing dependency in TaskGroup"
+- "How do I validate this form input?"
 
 Examples of natural user requests:
 
@@ -33,7 +36,7 @@ assistant: "Let me use the tca-developer agent to implement proper async handlin
 <uses Task tool to launch tca-developer agent>
 </example>
 
-Do NOT use this agent for:\n- Where to put business logic (services, repositories, data access) - use ios-architect instead\n- UI styling (colors, fonts, layout) - use ios-swiftui-designer instead
+Do NOT use this agent for:\n\n- Where to put business logic (services, repositories, data access) - use ios-architect instead\n- UI styling (colors, fonts, layout) - use ios-swiftui-designer instead
 model: sonnet
 ---
 
@@ -48,9 +51,11 @@ ARCHITECTURE:
 @CLAUDE.md - Project overview and tech stack
 
 EXAMPLES:
-@DigitalShelf/Screens/Home/HomeStore.swift - Complete TCA feature example
-@DigitalShelf/Screens/Routes/RouteListStore.swift - List feature with publishers
-@DigitalShelf/Screens/ShelfScan/MappingFlow/MappingFlowStore.swift - Complex navigation
+@DigitalShelf/Screens/Home/HomeStore.swift - Complete TCA feature with @Dependency
+@DigitalShelf/Screens/Routes/RouteList/RouteListFeature.swift - Publisher subscriptions pattern
+@DigitalShelf/Screens/ShelfScan/MappingFlow/MappingFlowStore.swift - Complex navigation coordinator
+@DigitalShelf/Services/Routes/RouteService.swift - Service with DependencyKey in same file
+@DigitalShelf/Screens/Routes/RouteList/RouteListUseCase.swift - Use Case with makeWithDeps
 
 TESTING:
 @.cursor/rules/tca-testing-best-practices.mdc - Testing patterns and TestStore setup
@@ -176,69 +181,37 @@ struct Feature {
 ### 5. DEPENDENCIES
 - ✅ @Dependency for ALL external access (APIs, storage, system)
 - ✅ DependencyKey for shared services (in same file as service)
-- ✅ Wrap system APIs: URLSession, UserDefaults, Date()
 - ✅ makeWithDeps factory for testing (#if DEBUG)
 - ❌ NO DependencyKey for Use Cases (feature-specific, use makeWithDeps only)
-- ❌ NO direct URLSession.shared, UserDefaults.standard
-- ❌ NO Date(), UUID() directly in reducers
+- ❌ NO direct system APIs (URLSession.shared, UserDefaults.standard, Date(), UUID())
 
-**Shared Services: DependencyKey in Same File**
+**Two Patterns:**
+
+**Shared Services → DependencyKey in same file**
 ```swift
-// In RouteService.swift file:
-protocol RouteServiceProtocol {
-    func routesWithHistory() -> AnyPublisher<[Route], Never>
-}
-
-struct RouteService: RouteServiceProtocol {
-    @Dependency(\.routeRepository) var routeRepository
-    // implementation
-}
-
-// ✅ CORRECT - DependencyKey extension in same file
+// @DigitalShelf/Services/Routes/RouteService.swift
 extension RouteService: DependencyKey {
     static let liveValue = RouteService()
-    static let testValue = RouteService()
 }
-
 extension DependencyValues {
-    var routeService: RouteService {
-        get { self[RouteService.self] }
-        set { self[RouteService.self] = newValue }
-    }
+    var routeService: RouteService { /* ... */ }
 }
 ```
 
-**Use Cases: Protocol + makeWithDeps (NO DependencyKey)**
+**Use Cases → Protocol + makeWithDeps (NO DependencyKey)**
 ```swift
-// In RouteListUseCase.swift file:
-protocol RouteListUseCaseProtocol {
-    var routesPublisher: AnyPublisher<[Route], Never> { get }
-}
-
-final class RouteListUseCase: RouteListUseCaseProtocol {
-    @Dependency(\.routeService) var routeService
-
-    var routesPublisher: AnyPublisher<[Route], Never> {
-        routeService.routesWithHistory()
-    }
-}
-
-// ✅ CORRECT - Only makeWithDeps for local test injection (NO DependencyKey)
+// @DigitalShelf/Screens/Routes/RouteList/RouteListUseCase.swift
 #if DEBUG
 extension RouteListUseCase {
     static func makeWithDeps(routeService: RouteService) -> RouteListUseCase {
-        withDependencies {
-            $0.routeService = routeService
-        } operation: { RouteListUseCase() }
+        withDependencies { $0.routeService = routeService }
+        operation: { RouteListUseCase() }
     }
 }
 #endif
 ```
 
-**Why?**
-- **Use Cases**: Feature-specific, not shared → no DependencyKey, only makeWithDeps
-- **Services/Repos**: Shared across features → DependencyKey in same file
-- **DependencyKey location**: Always in same file as the type (not separate file)
+**Why?** Use Cases are feature-specific (not shared) → only makeWithDeps for local test injection. Services/Repos are shared → DependencyKey in same file.
 
 ### 6. NAVIGATION
 - ✅ @Presents for sheets, alerts, confirmation dialogs
@@ -300,6 +273,39 @@ extension RouteListUseCase {
 ❌ skipInFlightEffects() when no effects exist
 ❌ TestStore in setUp() instead of lazy var
 
+## CODE COMMENTS POLICY
+
+**⚠️ CRITICAL: DO NOT add obvious inline comments when generating code!**
+
+**When to add comments:**
+- Hidden timing dependencies (race conditions that aren't obvious)
+- Counter-intuitive behavior that needs explanation
+- Complex algorithms with non-obvious business rules
+
+**When NOT to add comments:**
+- Action handling (`// Send action`, `// Handle response`)
+- Standard TCA patterns (`// Publisher subscription`, `// Cancel effect`)
+- State mutations (`// Update state`, `// Set loading`)
+- Variable declarations (`// Create use case`)
+- Function calls (`// Call fetchData`)
+- Obvious assertions (`// Verify count`)
+
+**Principle:** Comments explain **WHY**, never **WHAT**. Code should be self-documenting through clear naming.
+
+**Examples:**
+```swift
+// ✅ GOOD - Non-obvious WHY
+case .onAppear:
+    // Setup view-specific publishers here (not in initialize) to allow
+    // cancellation when navigating away, unlike persistent store publishers
+    return .publisher { useCase.routesPublisher.map(Action.updateRoutes) }
+
+// ❌ BAD - Obvious WHAT
+case .onAppear:
+    // Subscribe to routes publisher
+    return .publisher { useCase.routesPublisher.map(Action.updateRoutes) }
+```
+
 ## OUTPUT FORMAT
 
 For reviews, provide:
@@ -324,7 +330,7 @@ For reviews, provide:
 
 For implementations, provide:
 - Complete, working TCA code
-- Inline comments for complex logic (WHY, not WHAT)
+- Comments ONLY for complex/non-obvious logic (WHY, not WHAT)
 - TestStore example
 - Integration guidance
 

@@ -1,4 +1,11 @@
+---
+description: "Trace Data Flow Through Layers - Usage: /trace [file_path] [\"optional text description\"]"
+---
+
 # Trace Data Flow Through Layers
+
+**Usage:** `/trace [file_path] [focus]`
+**Example:** `/trace HomeView.swift` or `/trace RouteListStore.swift route data`
 
 Analyze how data flows through Clean Architecture layers:
 
