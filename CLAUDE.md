@@ -1,2 +1,0 @@
-- Don't run tests automatically, I'll do it in Xcode
-- Ignoruj informacje o ruby-3.2.1
