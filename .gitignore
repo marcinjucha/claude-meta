@@ -7,3 +7,8 @@ todos/*.json
 ide
 shell-snapshots
 debug
+paste-cache
+image-cache/*
+plans
+projects
+tasks
