@@ -1,6 +1,7 @@
 ---
 name: workflow-creation
-description: Use when creating or refactoring workflow commands (multi-phase agent orchestration). Provides workflow file structure pattern, sufficient context principle (isolated context + quality test), section templates, and anti-patterns from real mistakes. Critical for workflows where agents have isolated context and need exactly the right information for quality output.
+description: Create or refactor workflow commands (multi-phase orchestration). Provides structure pattern, sufficient context principle (agents have isolated context), section templates, and anti-patterns. Critical for agents receiving exactly the right information.
+argument-hint: "[workflow-name]"
 ---
 
 # Workflow Creation - Multi-Agent Orchestration Pattern

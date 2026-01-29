@@ -12,3 +12,6 @@ image-cache/*
 plans
 projects
 tasks
+settings.json
+stats-cache.json
+cache

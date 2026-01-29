@@ -1,6 +1,6 @@
 ---
 name: git-commit-patterns
-description: Git commit organization and message patterns. Use when organizing commits for PR, deciding squashing strategy, writing commit messages, or creating pull requests. Applies Signal vs Noise philosophy (WHY > HOW, natural prose over templates). Includes multi-factor separation logic and squashing decision rules. Critical for clean git history and efficient PR reviews.
+description: Organize commits and write messages for PRs. Use when deciding commit structure, squashing strategy, or writing messages. Applies Signal vs Noise (WHY > HOW, natural prose). Critical for clean git history and efficient reviews.
 ---
 
 # Git Commit Patterns
@@ -404,22 +404,56 @@ EOF
 
 ## Pre-Merge Commit Organization Workflow
 
-### Step 1: Review Commits
+### When to Use This Workflow
+
+Organize commits before merge when:
+- **Multiple WIP commits** need cleanup (squashing opportunity)
+- **Mixed module changes** in history (separation needed per Factor 1)
+- **Breaking changes** not flagged (visibility needed)
+- **PR review blocked** by messy history ("can't review this")
+
+### Why Organize Commits
+
+**Impact on review efficiency:**
+
+Disorganized history:
+- Reviewer sees 15 commits: "WIP", "fix", "temp", "revert", "fix again"
+- Review time: 2-3 hours (must understand 15 commits)
+- Questions: "What's the actual change?"
+
+Organized history:
+- Reviewer sees 3 commits: "feat: Add FeatureX", "refactor: Extract module", "fix: Edge case"
+- Review time: 30-45 minutes (clear separation)
+- Each commit reviewable independently
+
+**Production example:**
+
+Team X before organizing:
+- Average PR review time: 3 hours
+- 40% of PRs required "can you clean up commits?" feedback
+
+Team X after organizing:
+- Average PR review time: 45 minutes (75% faster)
+- Clean commit history became standard practice
+
+### How to Organize (Step-by-Step)
+
+**Step 1: Review Current History**
 
 ```bash
-git log --oneline develop..HEAD
+git log --oneline develop..HEAD  # See all commits since branching
 ```
 
 **Look for:**
-- WIP/fixup commits (squash)
-- Module boundary violations (separate)
-- Feature scope violations (separate)
-- Breaking changes (keep separate)
+- WIP/fixup commits (squash candidates)
+- Module boundary violations (separation needed)
+- Feature scope violations (separation needed)
+- Breaking changes (keep separate + flag)
 
-### Step 2: Interactive Rebase
+**Step 2: Interactive Rebase**
 
 ```bash
-git rebase -i develop
+git rebase -i develop  # Organize commits
 ```
 
 **Commands:**
@@ -428,10 +462,12 @@ git rebase -i develop
 - `reword`: Change commit message
 - `edit`: Stop to split commit
 
-### Step 3: Verify Clean History
+**Apply rules:** Squash WIP, separate modules, flag breaking changes
+
+**Step 3: Verify Clean History**
 
 ```bash
-git log --oneline develop..HEAD
+git log --oneline develop..HEAD  # Confirm organization
 ```
 
 **Check:**

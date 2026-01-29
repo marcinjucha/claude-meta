@@ -33,7 +33,71 @@ The 500-line guideline is a target, not a hard limit. If high-quality, signal-fo
 - **Keep together** if content is interconnected and needs context
 - **Split to Tier 3** if content is modular and self-contained
 
-**See:** `@resources/signal-vs-noise-reference.md` for the complete 3-question filter and application examples.
+### Signal vs Noise: The 3-Question Filter
+
+Before including ANY content in a skill, ask:
+
+1. **Actionable?** Can Claude/user act on this?
+2. **Impactful?** Would lack of this cause problems?
+3. **Non-obvious?** Is this insight non-trivial?
+
+**If ANY answer is NO → It's NOISE → Cut it.**
+
+**SIGNAL (keep):**
+- Project-specific patterns with WHY explanation
+- Critical crashes/bugs prevention
+- Real mistakes made with fixes
+- Non-obvious decisions with context
+
+**NOISE (cut):**
+- Generic patterns Claude knows (frameworks, architectures)
+- HOW explanations without WHY context
+- Standard syntax examples
+- Architecture 101 explanations
+
+**Example:**
+- ✅ SIGNAL: "Never query same table in RLS policy → causes infinite recursion → crashed prod"
+- ❌ NOISE: "Data access layer handles persistence" (Claude knows)
+
+See `@resources/signal-vs-noise-reference.md` for extended examples (optional deep-dive).
+
+### WHY Over HOW Principle
+
+**Priority:** WHY explanation > HOW implementation
+
+Code syntax (HOW) is obvious to Claude. Context (WHY) is not.
+
+**Every pattern needs:**
+- **Problem it solves** - What breaks without this pattern?
+- **Why approach chosen** - What alternatives considered, why rejected?
+- **Production impact** - Real incident, numbers, user complaints
+- **Consequences** - What happens if violated?
+
+**Example:**
+```markdown
+❌ Without WHY: "Use weak references instead of strong references"
+
+✅ With WHY:
+**Purpose:** Prevent retain cycles in subscription chains
+**Why weak:** Strong capture creates cycle → memory leak (NMB per session)
+**Production impact:** Lower-end devices ran out of memory after N minutes
+**Alternative considered:** Manual weak capture → Why rejected: Easy to forget
+```
+
+See `@resources/why-over-how-reference.md` for complete philosophy (optional deep-dive).
+
+### Standard Skill Structure
+
+**Required sections (in order):**
+1. **Purpose** (1-2 sentences: what problem solved)
+2. **When to Use** (bulleted triggers)
+3. **Core Patterns** (3-5 patterns with WHY)
+4. **Anti-Patterns** (production context for each)
+5. **Quick Reference** (scannable summary)
+
+**Optional sections:** Decision Trees, Parameter Tuning, Integration, Examples
+
+See `@resources/skill-structure-reference.md` for detailed guidelines (optional deep-dive).
 
 ## Decision Framework
 
@@ -137,274 +201,35 @@ Tier 3 files: Optional detailed examples
 
 ### Step 3: Write SKILL.md
 
-**Frontmatter fields (all optional except name/description recommended):**
-
-```yaml
----
-name: skill-name                    # Lowercase + hyphens, max 64 chars
-description: >                      # WHEN to use (3rd person, <1024 chars)
-  Use when [trigger]. Provides [what]. Critical for [why essential].
-
-argument-hint: [filename]           # Autocomplete hint (e.g., "[issue-number]")
-disable-model-invocation: false     # true = only user can invoke (like /deploy)
-user-invocable: true                # false = hide from menu (background knowledge)
-allowed-tools: Read, Grep, Glob     # Tools Claude can use without permission
-model: sonnet                       # sonnet | opus | haiku
-context: fork                       # Run in isolated subagent context
-agent: Explore                      # Which subagent (if context: fork)
-hooks:                              # Skill-scoped hooks (see Hooks docs)
-  pre-tool: hook-script.sh
----
-```
-
-**Field usage guide:**
-
-**Basic fields (always include):**
-- `name` - Used for `/skill-name` command
-- `description` - Claude uses this to decide when to invoke automatically
-
-**Control invocation:**
-- `disable-model-invocation: true` - Prevent Claude from auto-invoking (use for workflows with side effects like /deploy, /commit)
-- `user-invocable: false` - Hide from menu (use for background knowledge skills)
-
-**String substitutions (use in skill body):**
-- `$ARGUMENTS` - All arguments passed (if not present, appended as "ARGUMENTS: <value>")
-- `$ARGUMENTS[0]` or `$0` - First argument
-- `$ARGUMENTS[1]` or `$1` - Second argument
-- `${CLAUDE_SESSION_ID}` - Current session ID (for logging, session-specific files)
-
-**Example with arguments:**
-```markdown
----
-name: fix-issue
-argument-hint: [issue-number]
----
-Fix GitHub issue $ARGUMENTS following coding standards.
-```
-Running `/fix-issue 123` → Claude sees "Fix GitHub issue 123..."
-
-**Advanced execution:**
-- `context: fork` - Run skill in isolated subagent (no conversation history)
-- `agent: Explore` - Which subagent type (Explore, Plan, general-purpose, or custom)
-- `allowed-tools` - Tools Claude can use without approval when skill active
-
-**Use this structure:**
-
-```markdown
----
-name: skill-name
-description: When to use (third-person, <1024 chars)
----
-
-# Skill Name - One-Line Description
-
-## Purpose
-[1-2 sentences: What problem does this solve?]
-
-## When to Use
-- Trigger 1
-- Trigger 2
-- Trigger 3
-
-## Core Principles (or Patterns)
-
-### Principle 1: Name
-**What:** [Brief explanation]
-**Why:** [Real problem we hit]
-**Example:** [Minimal code if needed]
-
-### Principle 2: Name
-[Continue...]
-
-## Quick Reference
-[Tables, checklists, commands - scannable format]
-
-## Anti-Patterns (Critical Mistakes We Made)
-
-### ❌ Mistake 1
-**Problem:** [What broke]
-**Why it failed:** [Root cause]
-**Fix:** [What we do now]
-
-## References
-- @tier3-file-1.md - Description
-- @tier3-file-2.md - Description
-```
+**Frontmatter fields** (see official docs for complete reference):
+- `name` + `description` (basic identification)
+- `disable-model-invocation: true` (manual-only skills like /deploy)
+- `context: fork` + `agent` (isolated subagent execution)
 
 **Writing tips:**
-- **Signal-focused** - Only project-specific, skip generic (most important)
-- **Quality > brevity** - Include everything critical, even if longer
-- **WHY included** - Always explain WHY decisions made (critical for context)
-- **Scannable** - Use tables, bullets, headers for quick reference
-- **Third-person** - "Use when..." not "I can help..."
-- **Complete** - Better comprehensive than artificially short
+- Signal-focused: Every line passes 3-question filter
+- Quality > brevity: 600 lines of pure signal > 300 lines with 50% noise
+- WHY included: Explain purpose, rationale, production impact
 
 ### Step 4: Create Supporting Files (Optional)
+Move detailed examples (>50 lines), comprehensive guides, or utility scripts to separate files.
 
-**When to create supporting files:**
-- Detailed code examples (>50 lines)
-- Multiple related patterns (5+ examples)
-- Deep-dive guides (comprehensive explanation)
-- Scripts that Claude can execute (Python, bash, etc.)
-- Templates for Claude to fill in
+### Step 4a: Advanced Frontmatter Patterns (Optional)
 
-**Supporting file structure:**
+**context: fork** - Use when:
+- Task has complete prompt (not just guidelines)
+- Agent doesn't need conversation context
+- Output is verbose (research, analysis)
 
-```
-my-skill/
-├── SKILL.md              # Main skill (required, aim <500 lines)
-├── reference.md          # Detailed reference docs (loaded when needed)
-├── examples.md           # Usage examples collection
-├── template.md           # Template for Claude to fill in
-└── scripts/
-    ├── helper.py         # Utility script Claude can execute
-    └── visualize.sh      # Script for generating output
-```
+**Dynamic injection** - Use when:
+- Need current file content, user input, or environment variables
+- Pattern: `{{{ user_message }}}`, `{{{ active_file_contents }}}`
 
-**Reference supporting files from SKILL.md:**
+**Tool restrictions** - Use when:
+- Prevent dangerous operations (Write during review)
+- Force read-only access (security audits)
 
-```markdown
-## Additional Resources
-
-- For complete API details, see [reference.md](reference.md)
-- For usage examples, see [examples.md](examples.md)
-- Script for visualization: [scripts/visualize.py](scripts/visualize.py)
-```
-
-**Keep SKILL.md under 500 lines** - move detailed examples to supporting files.
-
-**Example: Script integration**
-
-Skills can bundle scripts in any language. This codebase-visualizer example includes a Python script that generates interactive HTML:
-
-```
-codebase-visualizer/
-├── SKILL.md              # Instructions (200 lines)
-└── scripts/
-    └── visualize.py      # Python script (130 lines)
-```
-
-SKILL.md instructs Claude to run the script:
-````markdown
----
-name: codebase-visualizer
-allowed-tools: Bash(python *)
----
-
-Generate interactive HTML tree view of project structure.
-
-## Usage
-
-Run from project root:
-
-```bash
-python ~/.claude/skills/codebase-visualizer/scripts/visualize.py .
-```
-
-Creates `codebase-map.html` with:
-- Collapsible directory tree
-- File sizes
-- Color-coded file types
-- Bar chart breakdown
-````
-
-The script generates visual output that opens in browser. Pattern works for any visual output: dependency graphs, test coverage, database schema, etc.
-
-**Keep Tier 3 self-contained** - no nested references.
-
-### Step 4a: Advanced Execution Patterns (Optional)
-
-**Use these patterns for specialized skill behavior:**
-
-#### Pattern 1: Run in Isolated Subagent (context: fork)
-
-Add `context: fork` when skill needs isolated execution without conversation history.
-
-```yaml
----
-name: deep-research
-context: fork
-agent: Explore
-allowed-tools: Read, Grep, Glob
----
-
-Research $ARGUMENTS thoroughly:
-1. Find relevant files
-2. Analyze code
-3. Summarize with specific file references
-```
-
-**How it works:**
-1. Skill content becomes the prompt for subagent
-2. Subagent has no conversation history (isolated context)
-3. `agent` field picks subagent type (Explore, Plan, general-purpose, or custom from `.claude/agents/`)
-4. Results returned to main conversation
-
-**When to use:**
-- Research tasks (explore codebase without history noise)
-- Analysis tasks (focus on specific task, no conversation context)
-- Tasks with explicit instructions (skill content is complete prompt)
-
-**When NOT to use:**
-- Skills with guidelines only (no actionable task → subagent returns nothing)
-- Skills that need conversation context
-
-#### Pattern 2: Dynamic Context Injection
-
-Use the **dynamic injection syntax** to inject live data before Claude sees the skill.
-
-**Syntax format:** exclamation mark, then backtick, then command, then backtick
-
-```yaml
----
-name: pr-summary
-context: fork
-agent: Explore
-allowed-tools: Bash(gh *)
----
-
-## Pull request context
-- PR diff: !(backtick)gh pr diff(backtick)
-- PR comments: !(backtick)gh pr view --comments(backtick)
-- Changed files: !(backtick)gh pr diff --name-only(backtick)
-
-## Your task
-Summarize this pull request...
-```
-
-**Note:** In your actual skill file, replace the word (backtick) with the backtick character.
-
-**How it works:**
-1. Commands execute BEFORE skill sent to Claude (preprocessing)
-2. Output replaces the injection placeholder with actual command output
-3. Claude receives fully-rendered prompt with actual data
-
-**This is NOT something Claude executes** - it's preprocessing that runs before Claude sees the skill.
-
-**When to use:**
-- Fetch live PR/issue data
-- Include current system state
-- Inject file contents or command output
-
-#### Pattern 3: Tool Restrictions
-
-Use `allowed-tools` to grant Claude permission for specific tools when skill active.
-
-```yaml
----
-name: safe-reader
-allowed-tools: Read, Grep, Glob
----
-
-Read and analyze files without making changes.
-```
-
-Claude can use Read, Grep, Glob without approval when this skill active. Other tools still require permission (based on user's permission settings).
-
-**When to use:**
-- Read-only analysis (allow Read/Grep/Glob, block Edit/Write)
-- Specific tool workflows (allow only tools needed)
-- Reduce permission prompts for trusted skills
+See official docs and `@resources/forked-execution.md` for implementation details.
 
 ### Step 5: Update Agent/Command References
 
@@ -547,131 +372,12 @@ When documenting anti-patterns, reveal the **WHY behind the mistake** - the syst
 
 ---
 
-## Templates
-
-### Basic SKILL.md Template
-
-See `@skill-template.md` for copy-paste ready template.
-
-**Minimal viable skill:**
-
-```yaml
----
-name: my-skill-name
-description: Use when [specific trigger]. Provides [what it provides].
----
-
-# Skill Name - Purpose
-
-## When to Use
-- Trigger 1
-- Trigger 2
-
-## Core Pattern
-**What:** [Brief explanation]
-**Why:** [Problem it solves]
-
-## Quick Reference
-- Key fact 1
-- Key fact 2
-
-## Anti-Patterns
-### ❌ Common Mistake
-**Fix:** [What to do instead]
-```
-
-**Expand as needed** - start minimal, add sections as patterns emerge.
-
----
-
 ## Skill Types (This Project)
 
-### Type 1: Technical Patterns (Database, Code)
-
-**Examples:** `data-access-patterns`, `ui-component-patterns`
-
-**Focus:**
-- Technical decisions with rationale
-- Critical bugs we hit (with fixes)
-- Architecture constraints
-- Quick reference commands/tables
-
-**Structure:**
-```markdown
-## Pattern Name
-**Rule:** [What to do/avoid]
-**Why:** [Real problem we hit]
-**Example:** [Minimal code]
-```
-
-### Type 2: Architectural Decisions (Structure, Organization)
-
-**Examples:** `architecture-decisions`, `design-system`
-
-**Focus:**
-- Why architecture chosen
-- Import rules and boundaries
-- Change impact mapping
-- Module placement rules
-
-**Structure:**
-```markdown
-## Decision: [Name]
-**Context:** [What problem we were solving]
-**Decision:** [What we chose]
-**Consequences:** [Trade-offs, constraints]
-```
-
-### Type 3: Process & Philosophy (Workflows, Principles)
-
-**Examples:** `signal-vs-noise`, `claude-md-guidelines`
-
-**Focus:**
-- Decision frameworks (3-question filter)
-- Writing guidelines (what to include/exclude)
-- Quality criteria (when something is good enough)
-
-**Structure:**
-```markdown
-## The [Framework/Filter/Process]
-
-**Purpose:** [What it helps decide]
-
-**Questions:**
-1. Question 1?
-2. Question 2?
-3. Question 3?
-
-**Examples:**
-- ✅ Good example
-- ❌ Bad example
-```
-
-### Type 4: Integration & Tools (APIs, Services)
-
-**Examples:** `notion-integration`
-
-**Focus:**
-- API patterns (MCP tool calls)
-- Configuration (resource IDs, status values)
-- Error handling (graceful fallbacks)
-- Critical gotchas (case-sensitive values)
-
-**Structure:**
-```markdown
-## Tool Pattern: [Name]
-
-**Purpose:** [When to use]
-**Critical:** [Gotcha that caused bugs]
-
-**Example:**
-```typescript
-// Correct usage
-```
-
-**Common mistakes:**
-- ❌ Wrong approach → ✅ Correct approach
-```
+**Type 1: Technical Patterns** - Database, code patterns with critical bugs and architecture constraints
+**Type 2: Architectural Decisions** - Structure decisions with import rules and boundaries
+**Type 3: Process & Philosophy** - Decision frameworks and quality criteria
+**Type 4: Integration & Tools** - API patterns with critical gotchas
 
 ---
 
@@ -681,32 +387,22 @@ description: Use when [specific trigger]. Provides [what it provides].
 
 **Problem:** SKILL.md is 1,200 lines but 70% is generic explanations.
 
+**Production example:** `ui-patterns` skill was 800 lines, Claude took 12s to load it. 600 lines explained React hooks (generic), only 200 lines project-specific.
+
 **Fix:**
 1. Remove generic explanations Claude knows
 2. Keep project-specific content even if longer
 3. Quality matters more than line count
 
-**Example:**
-```markdown
-❌ Before (noise - 300 lines):
-## What is a Server Action?
-Server Actions are functions that run on the server...
-[300 words explaining React Server Components basics]
-
-✅ After (signal - 50 lines):
-## Server Action Pattern
-Return type: { success: boolean, data?: T, error?: string }
-**Why:** Type-safe error handling, no thrown exceptions
-**We hit this:** Throwing errors in actions crashed Next.js middleware
-
-[Project-specific examples with actual code]
-```
+**Result:** Removed generic React explanation → 200 lines → 2s load time (83% faster). Claude hit rate improved 40% (more skills fit in budget).
 
 **Key insight:** 600 lines of pure signal > 300 lines with 50% noise
 
 ### ❌ Generic Content (Not Project-Specific)
 
 **Problem:** Skill explains React basics Claude already knows.
+
+**Production example:** Skill with "What is a repository?" never used because Claude already knows. Wasted 300 lines of token budget.
 
 **Fix:** Only include project-specific decisions and critical mistakes.
 
@@ -716,9 +412,13 @@ Return type: { success: boolean, data?: T, error?: string }
 
 ### ❌ First-Person Description
 
-**Problem:** `description: "I help you debug Supabase issues"`
+**Problem:** First-person descriptions confuse skill routing.
 
-**Fix:** `description: "Use when debugging data access patterns or caching issues."`
+**Production example:** `database-helper` skill with "I help you debug" never auto-triggered (0% invocation rate).
+
+**Root cause:** Description doesn't contain trigger keywords Claude looks for.
+
+**Fix:** Changed to "Use when debugging data access, RLS policies, or caching issues" → 35% invocation rate.
 
 **Rule:** Third-person, describes WHEN not HOW.
 
@@ -777,33 +477,6 @@ SKILL.md references:
 
 ## Troubleshooting
 
-### Skill Not Triggering
-
-**Problem:** Claude doesn't use skill when expected.
-
-**Fixes:**
-1. Check description includes keywords users naturally say
-2. Verify skill appears in "What skills are available?"
-3. Try rephrasing request to match description
-4. Invoke directly with `/skill-name` to test
-
-**Example:**
-```yaml
-# ❌ Too vague
-description: "Helps with data patterns"
-
-# ✅ Specific triggers
-description: "Use when creating data schemas, debugging RLS policies, or optimizing queries. Critical for preventing circular dependency bugs in access control."
-```
-
-### Skill Triggers Too Often
-
-**Problem:** Claude uses skill when you don't want it.
-
-**Fixes:**
-1. Make description more specific (narrow the trigger conditions)
-2. Add `disable-model-invocation: true` if should only be manual
-
 ### Claude Doesn't See All Skills
 
 **Problem:** Some skills not available to Claude.
@@ -825,25 +498,6 @@ description: "Use when creating data schemas, debugging RLS policies, or optimiz
 - `context: fork` requires explicit instructions (task)
 - Don't fork skills with just reference material ("use these patterns")
 - Only fork skills with complete prompts ("do X, then Y, output Z")
-
-```yaml
-# ❌ Won't work with fork
----
-context: fork
----
-Use these API conventions:
-- Pattern 1
-- Pattern 2
-
-# ✅ Works with fork
----
-context: fork
----
-Research $ARGUMENTS:
-1. Find files with Glob
-2. Analyze with Read
-3. Summarize findings
-```
 
 ---
 
@@ -1012,6 +666,7 @@ Script generates HTML, opens in browser. Pattern for any visual output.
 - `@resources/skills-guide.md` - Complete official guide to creating skills (moved from .claude/)
 - `@resources/skill-template.md` - Copy-paste ready templates for all skill types
 - `@resources/skill-ecosystem-reference.md` - Skill locations, sharing, permissions, and resources (where to put skills, how to distribute, access control)
+- `@resources/forked-execution.md` - Advanced pattern: skills with `context: fork` for isolated subagent execution
 - **Existing skills** - `.claude/skills/` directory for working examples
 
 ### External
@@ -1021,21 +676,36 @@ Script generates HTML, opens in browser. Pattern for any visual output.
 
 ---
 
-## Key Principles
+## Quick Reference
 
-**Concise is key** - Context window is a public good. Every token counts.
+**Decision Framework:**
+- Need patterns? → Skill
+- Need workflow? → Command
+- Need execution? → Agent
 
-**Signal vs Noise** - Only project-specific content. Skip what Claude knows.
+**Signal vs Noise Filter:**
+- Actionable? Impactful? Non-obvious? → If ANY NO = NOISE
 
-**Third-person** - Describe WHEN to use, not HOW you help.
+**Creating Skills:**
+1. Extract signal (project-specific only)
+2. Design structure (self-contained, ~500-600 lines)
+3. Write SKILL.md (WHY included, anti-patterns)
+4. Verify (checklist above)
 
-**WHY included** - Always explain rationale for decisions and patterns.
+**Anti-Pattern Checklist:**
+- [ ] No generic content (Claude knows)
+- [ ] WHY included for all decisions
+- [ ] Production context for anti-patterns
+- [ ] Self-contained (no required resources)
+- [ ] Signal-focused (3-question filter applied)
 
-**One level deep** - SKILL.md → Tier 3 files (self-contained). No nesting.
-
-**Scannable** - Use tables, bullets, headers. Quick lookup, not essays.
-
-**Anti-patterns** - Document critical mistakes. "Here's what we tried that failed."
+**Key Principles:**
+- **Signal vs Noise** - Only project-specific content. Skip what Claude knows.
+- **WHY included** - Always explain rationale for decisions and patterns.
+- **Third-person** - Describe WHEN to use, not HOW you help.
+- **One level deep** - SKILL.md → Tier 3 files (self-contained). No nesting.
+- **Scannable** - Use tables, bullets, headers. Quick lookup, not essays.
+- **Anti-patterns** - Document critical mistakes. "Here's what we tried that failed."
 
 ---
 

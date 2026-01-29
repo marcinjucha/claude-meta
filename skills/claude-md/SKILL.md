@@ -1,6 +1,7 @@
 ---
 name: claude-md
 description: Write and maintain CLAUDE.md documentation files. Use when creating new CLAUDE.md, updating existing documentation (adding patterns, fixing outdated info, restructuring), or removing obsolete sections. Critical for keeping documentation accurate as codebase evolves.
+argument-hint: ""
 ---
 
 # CLAUDE.md - Write & Maintain Documentation
@@ -175,7 +176,7 @@ File: ComponentFlow/Leaf/LeafComponent.ext:line 23
 - [ ] Code example still compiles
 - [ ] File paths correct
 - [ ] Numbers match current implementation
-- [ ] WHY still accurate
+- [ ] Context still accurate
 
 ### Pattern 3: Removing Obsolete Sections
 
@@ -289,7 +290,7 @@ Keep 20% of content that provides 80% of value:
 
 **Verification:**
 - [ ] Each section answers: "Is this project-specific?"
-- [ ] WHY included for every weird part
+- [ ] Context included (see Core Philosophy)
 - [ ] Quick Reference scannable (bullets)
 - [ ] Total length reasonable (< 500 lines for feature doc)
 
@@ -315,7 +316,7 @@ Check if pattern already in skill:
 
 CLAUDE.md:
 - Keep: How this feature uses the pattern
-- Keep: Project-specific WHY
+- Keep: Project-specific context
 - Remove: Generic pattern explanation
 - Add: Reference to skill for details
 
@@ -341,7 +342,7 @@ If pattern not in any skill but used across features:
 → Or create new skill if substantial
 
 **When to Keep in CLAUDE.md vs Move to Skill:**
-- Keep in CLAUDE.md: Feature-specific usage, local WHY
+- Keep in CLAUDE.md: Feature-specific usage, local context
 - Move to Skill: Reusable pattern, used by 2+ features
 
 ---
@@ -404,7 +405,7 @@ The resource manager is owned and managed by the LeafComponent
 class. This is an important architectural decision that was made after...
 ```
 
-**Format:** Bullets + Bold WHY
+**Format:** Bullets + Bold **Why**
 
 ```markdown
 GOOD:
@@ -420,8 +421,8 @@ After operation completes → move to next item automatically.
 ### What Section Does Update Belong In?
 
 ```
-Discovered non-obvious behavior? → "The Weird Parts"
-Fixed production bug? → "Critical Mistakes We Made"
+Discovered non-obvious behavior? → "The Weird Parts" (include why)
+Fixed production bug? → "Critical Mistakes We Made" (include why)
 Frequently needed fact? → "Quick Reference"
 Architecture change? → Update existing section + migration note
 Pattern no longer used? → "Deprecated Patterns" or remove
@@ -434,14 +435,14 @@ Generic pattern Claude knows? → Don't add (or remove if exists)
 Pattern used by this feature only? → CLAUDE.md
 Pattern used by 2+ features? → Skill (create or update)
 Duplicates existing skill? → Remove from CLAUDE.md, cross-reference skill
-Feature-specific WHY? → Keep in CLAUDE.md even if pattern in skill
+Feature-specific context? → Keep in CLAUDE.md even if pattern in skill
 ```
 
 ### How Much Detail?
 
 ```
 Apply signal-vs-noise:
-- Project-specific oddity? → Detailed (with WHY)
+- Project-specific oddity? → Detailed (with context)
 - Generic pattern? → Remove entirely
 - Critical mistake? → Detailed (problem + fix)
 - Frequently referenced? → Bullet in Quick Reference
@@ -580,7 +581,7 @@ See skill documentation for pattern details.
 
 **Why bad:** Must update two places. Likely to drift out of sync.
 
-**Fix:** Keep project-specific usage + WHY. Reference skill for pattern details.
+**Fix:** Keep project-specific usage + WHY context. Reference skill for pattern details.
 
 ---
 
@@ -588,7 +589,7 @@ See skill documentation for pattern details.
 
 **Creating new CLAUDE.md:**
 - Voice: Direct, concise (notes to future you with amnesia)
-- Format: Bullets + Bold WHY
+- Format: Bullets + Bold **Why**
 - Template: Orientation → Weird Parts → Mistakes → Quick Ref
 - Test: "Is this something Claude already knows?" → YES = Cut
 
@@ -596,7 +597,7 @@ See skill documentation for pattern details.
 - New weird part → "The Weird Parts" section
 - Bug fix → "Critical Mistakes We Made" section
 - Frequent fact → "Quick Reference" section
-- Always include WHY (problem, incident, complaint)
+- Include WHY context (see Core Philosophy)
 
 **Updating Content:**
 - Code changed → Update file paths, examples, numbers
@@ -615,7 +616,7 @@ See skill documentation for pattern details.
 
 **Cross-Referencing:**
 - Pattern in skill → Reference skill from CLAUDE.md
-- Keep feature-specific WHY in CLAUDE.md
+- Keep feature-specific context in CLAUDE.md
 - Update skill if pattern missing
 
 ---
@@ -626,7 +627,7 @@ Before committing CLAUDE.md:
 
 1. **Obviousness**: Would Claude know this already? → Cut
 2. **Specificity**: Is this project-specific? → Keep
-3. **WHY included**: Do I explain WHY? → Required
+3. **WHY context**: Do I explain WHY? → Required (see Core Philosophy)
 4. **Actionability**: Would this help me in 6 months? → Keep
 5. **Structure**: Standard sections applied? → Required
 6. **Scannable**: Quick Reference in bullet form? → Required
@@ -648,7 +649,7 @@ Before committing CLAUDE.md:
 **Why included:**
 - Consistent philosophy across all meta skills (skills, agents, workflows, docs)
 - Decision framework for documentation content (what to include, what to skip)
-- Quality guidelines (completeness > brevity, WHY explanations mandatory)
+- Quality guidelines (completeness > brevity, WHY mandatory - see Core Philosophy)
 
 ---
 
@@ -705,11 +706,11 @@ cleanup. Leak eliminated.
 ```
 
 **Result:**
-- Future developers know WHY resource in leaf (not root)
+- Future developers understand resource placement rationale (leaf vs root)
 - Production incident documented (prevents regression)
 - Cross-referenced skill for full pattern details
 - 95 lines added (signal, not noise)
 
 ---
 
-**Key Lesson:** CLAUDE.md is living documentation. Update after every significant discovery, production incident, or refactoring. Project-specific + WHY + Real incident = Good documentation. Good CLAUDE.md = Notes to future you with amnesia, not documentation.
+**Key Lesson:** CLAUDE.md is living documentation. Update after every significant discovery, production incident, or refactoring. Project-specific + WHY context + Real incident = Good documentation. Good CLAUDE.md = Notes to future you with amnesia.

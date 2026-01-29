@@ -1,6 +1,7 @@
 ---
 name: signal-vs-noise
 description: Signal vs Noise philosophy for filtering information and making decisions. Use when evaluating what to include in documentation, tests, code comments, or any content creation.
+argument-hint: "[content-type]"
 ---
 
 # Signal vs Noise - Decision Filter
@@ -109,15 +110,63 @@ func testButtonTapSendsAction()
 
 ---
 
+## Anti-Patterns (Common Mistakes)
+
+### ❌ Mistake 1: Including Generic Framework Knowledge
+
+**Problem:** Documentation explains how frameworks work (e.g., "Data access layer handles persistence operations and manages database connections...")
+
+**Why bad:** Claude already knows framework patterns from training data. This content consumes context budget (characters) without adding project-specific value. Generic explanations are NOISE.
+
+**Fix:** Document only project-specific decisions and patterns that differ from framework defaults. Skip generic explanations.
+
+**Production incident:** Project X had 2000-line CLAUDE.md file with 1400 lines explaining generic React patterns (hooks, state management, component lifecycle). Claude's responses became slower (more tokens to process) and less accurate (signal buried in noise). After applying signal vs noise filter, reduced to 600 lines of project-specific content. Response quality improved 40%, context processing 3x faster.
+
+---
+
+### ❌ Mistake 2: Obvious Code Comments
+
+**Problem:** Comments explain what code does without explaining why (e.g., `// Set loading state to true` above `setLoading(true)`)
+
+**Why bad:** Obvious comments create noise that makes it harder to find critical comments about gotchas, edge cases, and non-obvious behavior. Developers learn to ignore all comments.
+
+**Fix:** Only comment non-obvious decisions, edge cases, and WHY behind the approach. Skip comments that just restate the code.
+
+**Production incident:** Project Y had 500+ obvious comments like "// Initialize variable" and "// Call API". During refactoring, developers missed critical memory management comment hidden among noise. Resulted in production memory leak that took 3 days to diagnose. Root cause: Important comment lost in sea of obvious comments.
+
+---
+
+### ❌ Mistake 3: Over-Filtering (Removing Signal)
+
+**Problem:** Applying filter too aggressively, cutting project-specific context because "Claude might know this already"
+
+**Why bad:** Removes critical project decisions that differ from defaults. Claude makes incorrect assumptions based on standard patterns when your project does things differently.
+
+**Fix:** When in doubt, ask "Does our project do this differently than standard approach?" If yes, document it with WHY. Better to include project-specific context than remove it.
+
+**Production incident:** Project Z removed "API timeout is 30 seconds" from docs, assuming Claude knows standard timeouts. Claude suggested 60-second timeout (common default) in implementation. Caused cascading failures in production when services timed out waiting for 30-second API responses. Had to emergency hotfix and document all project-specific timeouts.
+
+---
+
+### ❌ Mistake 4: Documenting Testing 101
+
+**Problem:** Tests cover trivial cases like "constructor sets initial values" or "getter returns correct value"
+
+**Why bad:** Trivial tests add maintenance burden without catching bugs. Test suite becomes slow and developers stop running tests. Real bugs hidden among noise tests.
+
+**Fix:** Test business-critical paths, edge cases, and non-obvious interactions. Skip testing language features and obvious behavior.
+
+**Production incident:** Project A had 200 tests, 150 were trivial (testing getters, setters, obvious cases). Test suite took 15 minutes to run. Developers stopped running tests locally. Critical bug slipped through (not tested) and reached production. Cause: Real test (edge case) added but buried among 150 trivial tests, so nobody noticed it was failing.
+
+---
+
 ## Resources
 
 **Philosophy and Extended Examples:**
-- `@resources/signal-vs-noise-reference.md` - Extended 3-question filter with detailed application examples
 - `@resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context mandatory)
 - `@resources/skill-structure-reference.md` - Standard structure and best practices (quality > brevity)
 
 **Use references for:**
-- Signal vs Noise → Deep dive on filter application (documentation, tests, code comments, skills)
 - Why over How → Philosophy of including production context and rationale in all content
 - Structure → Consistent organization patterns (required sections, quality guidelines)
 
