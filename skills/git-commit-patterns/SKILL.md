@@ -229,10 +229,39 @@ Depends-On: Previous refactor commit"
 
 ## Commit Message Format
 
+### Step 1: Extract Ticket Number from Branch
+
+**BEFORE writing commit message**, extract ticket number from branch name.
+
+**Branch name pattern:**
+```
+(chore/feature/bugfix)/(TICKET-NUMBER)-description
+```
+
+**Extract ticket command:**
+```bash
+# Get current branch and extract ticket number
+git branch --show-current | grep -oE '[A-Z]+-[0-9]+'
+```
+
+**Examples:**
+```bash
+# Branch: bugfix/SHELF-21614-mapping-mode-db-issue
+# Extract: SHELF-21614
+
+# Branch: feature/CIOS-1234-new-feature
+# Extract: CIOS-1234
+
+# Branch: chore/SHELF-9999-cleanup-code
+# Extract: SHELF-9999
+```
+
+**Why extract first:** Ticket number prepends to commit subject. Must be extracted before writing message.
+
 ### Structure
 
 ```
-<type>: <subject>
+[TICKET-NUM] <type>: <subject>
 
 [Paragraph 1: Business context - why this change matters]
 
@@ -241,6 +270,13 @@ Depends-On: Previous refactor commit"
 [Paragraph 3: Additional context - bug fixes, edge cases, constraints]
 
 [Paragraph 4 (optional): Cross-cutting concerns - platform alignment, migration notes]
+```
+
+**Ticket prefix examples:**
+```
+[SHELF-21614] fix: Prevent duplicate uploads from rapid taps
+[CIOS-1234] feat: Add user authentication flow
+[SHELF-9999] chore: Update dependencies
 ```
 
 ### Type Prefixes
@@ -257,23 +293,25 @@ Depends-On: Previous refactor commit"
 ### Subject Line
 
 **Rules:**
+- Start with `[TICKET-NUM]` prefix
 - Imperative mood ("Add feature" not "Added feature")
 - No period at end
-- Max 72 characters
-- Capitalize first word
+- Max 72 characters (including ticket prefix)
+- Capitalize first word after type
 
 **Examples:**
 ```
-✅ feat: Add data status filtering
-❌ feat: added data status filtering.
-❌ feat: Adds data status filtering
+✅ [SHELF-21614] fix: Prevent duplicate uploads from rapid taps
+✅ [CIOS-1234] feat: Add data status filtering
+❌ [SHELF-21614] fix: prevented duplicate uploads.
+❌ fix: Adds data status filtering (missing ticket)
 ```
 
 ### Body: Natural Prose > Template
 
-**✅ Good (Natural prose, WHY-focused):**
+**✅ Good (Natural prose, WHY-focused, with ticket):**
 ```
-feat: Implement OAuth Authentication Flow
+[SHELF-5678] feat: Implement OAuth Authentication Flow
 
 OAuth authentication required because third-party identity providers don't
 expose passwords to apps. Delegating authentication improves security (no
@@ -288,7 +326,7 @@ long-running operations. Without proactive refresh, operations spanning token
 lifetime would fail mid-execution, forcing user re-authentication.
 ```
 
-**❌ Bad (Template with sections, NOISE):**
+**❌ Bad (Template with sections, NOISE, missing ticket):**
 ```
 feat: Implement OAuth Authentication Flow
 
@@ -310,6 +348,7 @@ Breaking Changes: NO
 
 **Why bad:** Template sections add NOISE. Git already shows files, line counts.
 Message should focus on WHY (business context, decisions), not WHAT (git shows).
+Missing ticket number from branch name.
 
 ### Footer (Rarely Used)
 

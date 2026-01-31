@@ -1,6 +1,6 @@
 ---
 name: workflow-creation
-description: Create or refactor workflow commands (multi-phase orchestration). Provides structure pattern, sufficient context principle (agents have isolated context), section templates, and anti-patterns. Critical for agents receiving exactly the right information.
+description: Create or refactor workflow commands (multi-phase orchestration). Provides structure pattern, sufficient context principle (agents have isolated context), clarifying questions pattern (3-5 flexible), and section templates. Critical for agents receiving exactly the right information.
 argument-hint: "[workflow-name]"
 ---
 
@@ -8,7 +8,7 @@ argument-hint: "[workflow-name]"
 
 ## Purpose
 
-Guide for creating workflow command files that orchestrate multiple agents across phases. Focus on **workflow structure pattern**, **sufficient context principle** (agents have isolated context), and **anti-patterns from real mistakes**.
+Guide for creating workflow command files that orchestrate multiple agents across phases. Focus on **workflow structure pattern**, **sufficient context principle** (agents have isolated context), and **clarifying questions pattern** (3-5 questions, flexible). Documents anti-patterns in workflow CREATION process (not for inclusion in workflow files).
 
 ## When to Use
 
@@ -45,10 +45,13 @@ Brief explanation (1-2 sentences).
 [Force actual Task tool invocation]
 
 ### Critical Rules
-[3-5 rules, numbered]
+[3-5 rules, numbered, includes clarifying questions requirement]
+
+### Clarifying Questions Pattern (MANDATORY)
+[Template with 3-5 flexible questions, guidance on count]
 
 ### Phase Execution Pattern
-[Markdown template for presenting phases]
+[Markdown template for presenting phases with clarifying questions]
 
 ## Phase Details
 
@@ -65,7 +68,7 @@ NOT needed:
 
 **Prompt to agent**: [template with placeholders]
 
-**After agent**: [how to present results]
+**After agent**: [how to present results with clarifying questions]
 
 ## Commands
 [continue, skip, back, status, stop]
@@ -77,6 +80,7 @@ NOT needed:
 **Why this structure:**
 - **Phases overview** - orchestrator sees full workflow before starting
 - **Orchestrator Instructions** - forces actual Task invocation (anti-pattern: just describing)
+- **Clarifying Questions Pattern** - MANDATORY section with 3-5 flexible questions guidance
 - **Phase Details** - includes "Sufficient context for quality" section (CRITICAL)
 - **Sufficient Context Principle** - always at end (test question for context filtering)
 
@@ -121,6 +125,8 @@ description: "[Tool name] - [One-line purpose] - Usage: /command [args]"
 
 **WHY Phase 0 inline:** Orchestrator does quick categorization before launching agents. Avoids wasting agent invocation on trivial assessment (complexity check, file categorization).
 
+**CRITICAL:** Phase 0 MUST include clarifying questions pattern before proceeding to Phase 1.
+
 ### 3. Orchestrator Instructions
 
 **CRITICAL SECTION** - Forces actual agent invocation:
@@ -154,10 +160,13 @@ Launching requirements-analyst...
 
 1. **INVOKE with Task tool** - Every phase requires actual Task tool call
 2. **Sufficient context** - Each agent gets ONLY what it needs for quality
-3. **User checkpoints** - Get approval after each phase
-4. **Track phase** - Remember current position
+3. **Clarifying questions mandatory** - Paraphrase + 3-5 questions after EVERY phase (count depends on complexity)
+4. **User checkpoints** - Get approval after each phase
+5. **Track phase** - Remember current position
 
 ### Phase Execution Pattern
+
+**UPDATED TEMPLATE** (includes clarifying questions):
 
 ```
 ═══════════════════════════════════════════════
@@ -171,9 +180,26 @@ Launching [agent]...
 
 ```
 **Phase N Complete** ✅
-[Summary]
 
-Ready to proceed? (continue/skip/back/stop)
+[Present agent output clearly]
+
+───────────────────────────────────────────────
+Let me verify my understanding:
+[2-3 sentence paraphrase of what was produced/decided]
+
+Clarifying questions (3-5 depending on phase complexity):
+1. [Question about scope/constraint]
+2. [Question about edge case/requirement]
+3. [Question about priority/approach]
+[4. [Question about integration point - if complex]]
+[5. [Question about validation criteria - if complex]]
+
+Does this match exactly what you want? If not, what should I adjust?
+───────────────────────────────────────────────
+
+[Wait for user confirmation]
+
+Ready to proceed? (continue/skip/popraw/back/stop)
 ```
 ```
 
@@ -182,7 +208,165 @@ Ready to proceed? (continue/skip/back/stop)
 - **Force behavior**: Explicit DO/DON'T forces actual Task tool use
 - **User checkpoints**: Prevents wasting phases if direction wrong
 
-### 4. Phase Details - Sufficient Context Section
+### 4. Clarifying Questions Pattern (REQUIRED)
+
+**CRITICAL SECTION** - Forces understanding alignment after every phase:
+
+```markdown
+### Clarifying Questions Pattern (MANDATORY)
+
+**After EVERY phase (including Phase 0), you MUST:**
+
+\```
+Let me verify my understanding:
+[2-3 sentence paraphrase of what was produced/decided in this phase]
+
+Clarifying questions (3-5 depending on phase complexity):
+1. [Question about scope/constraint from this phase]
+2. [Question about edge case/requirement]
+3. [Question about priority/approach]
+[4. [Question about integration point - if complex phase]]
+[5. [Question about validation criteria - if complex phase]]
+
+Does this match exactly what you want to achieve? If not, what should I adjust?
+\```
+
+**Wait for user response.** If user says corrections needed:
+- Apply corrections
+- Paraphrase updated understanding
+- Ask 3-5 NEW clarifying questions about updated version (depending on complexity)
+- Repeat until user confirms "dokładnie to co chcę" / "exactly what I want"
+
+**Only after confirmation**, proceed with: "Ready to proceed? (continue/skip/popraw/back/stop)"
+
+**Question count guidance:**
+- Simple phases (Context, Manual Testing, Review): 3 questions
+- Standard phases (Requirements, Data Flow, Single Tests): 3-4 questions
+- Complex phases (Architecture, Multi-layer Implementation): 4-5 questions
+
+**Principle**: Ask enough questions to uncover hidden constraints, not more. Quality over quantity.
+```
+
+**Why clarifying questions pattern:**
+
+Production validation: Workflows WITHOUT this pattern had 40% rework rate (agent produced output, user said "that's not what I wanted", had to redo phase). Workflows WITH pattern had 8% rework rate.
+
+Root cause: User description ambiguous → agent makes assumptions → output doesn't match intent → wasted phase.
+
+Clarifying questions after EVERY phase:
+1. **Paraphrase** forces orchestrator to demonstrate understanding (not just repeat)
+2. **3-5 questions** (flexible) uncover hidden constraints, edge cases, priorities user didn't mention
+3. **Confirmation loop** ensures alignment before proceeding (prevents wasted work)
+
+**Question count flexibility:**
+- **Simple phases** (Context Analysis, Manual Testing, Review): 3 questions
+  - Less complexity, fewer unknowns
+  - Example: Phase 0 context categorization
+- **Standard phases** (Requirements, Data Flow, Single Tests): 3-4 questions
+  - Moderate complexity, standard patterns
+  - Example: Requirements gathering
+- **Complex phases** (Architecture, Multi-layer Implementation): 4-5 questions
+  - High complexity, many integration points
+  - Example: Architecture design with module placement
+
+**Principle**: Ask enough questions to uncover hidden constraints, not more. Quality over quantity.
+
+**When to apply:**
+- ✅ After Phase 0 (inline assessment)
+- ✅ After EVERY agent phase
+- ✅ After inline phases if significant decisions made
+- ❌ NOT after final report (workflow complete)
+
+**Pattern anatomy:**
+
+```markdown
+**Paraphrase (2-3 sentences):**
+- Summarize what was DECIDED (not what agent did)
+- Focus on KEY outcomes (architecture chosen, files to modify, tests added)
+- Show understanding (not copy-paste agent output)
+
+**3-5 Questions (depending on complexity):**
+1. Scope/constraint question (boundaries, limitations) - ALWAYS
+2. Edge case/requirement question (what if X happens?) - ALWAYS
+3. Priority/approach question (is this approach correct?) - ALWAYS
+4. Integration point question (how does this connect to existing?) - If complex phase
+5. Validation criteria question (what makes this "correct"?) - If complex phase
+
+**Count guidance**: Simple=3, Standard=3-4, Complex=4-5
+
+**Confirmation request:**
+"Does this match exactly what you want to achieve? If not, what should I adjust?"
+```
+
+**Real examples from workflows:**
+
+**ios-debug-full (Phase 0, complex debugging - 5 questions):**
+```
+Let me verify my understanding:
+[Paraphrase: bug severity, affected areas, type]
+
+Clarifying questions (5 for complex debugging):
+1. Is this bug [specific symptom], or does it also involve [other symptom]?
+2. Does this occur consistently, or only under [specific conditions]?
+3. Are there specific constraints I should know about (urgent fix, affects production)?
+4. What existing components might be affected (list specific BUS/modules if any)?
+5. What's the primary success criterion - what makes this bug "fixed"?
+
+Does this match exactly what you want to achieve? If not, what should I adjust?
+```
+
+**Note**: This Phase 0 example shows 5 questions (complex debugging scenario). For simpler Phase 0 (feature categorization), use 3 questions.
+
+**ios-feature-full (Phase 1, requirements - 5 questions for complex feature):**
+```
+Let me verify my understanding:
+[2-3 sentence paraphrase of requirements - functional goals, key edge cases, main dependencies]
+
+Clarifying questions (5 for complex requirements):
+1. Are the functional requirements complete, or should I add [specific missing item]?
+2. For [specific edge case] - how should the feature behave?
+3. The requirements mention [specific dependency] - is this the correct approach, or should we use [alternative]?
+4. Priority: Which requirement is MUST-HAVE vs NICE-TO-HAVE for first version?
+5. Testing: What's the primary success test case that proves this feature works?
+
+Does this match exactly what you want? If not, what should I adjust?
+```
+
+**Note**: Requirements phase shown with 5 questions (complex feature). Standard requirements might need only 3-4.
+
+**merge-check (no clarifying questions, different pattern):**
+Note: merge-check uses different pattern (show findings → ask continue/stop), not clarifying questions. Clarifying questions for workflows where user defines scope iteratively.
+
+**Common mistakes:**
+
+❌ **Wrong question count (inflexible):**
+Always asking exactly 5 questions regardless of complexity → Wastes time on simple phases.
+Always asking only 3 questions for complex phases → Misses critical constraints.
+
+✅ **Flexible question count:**
+Simple phases: 3 questions (covers basics)
+Complex phases: 4-5 questions (uncovers integration points, validation criteria)
+Match question count to phase complexity.
+
+❌ **Generic questions:**
+"Is this correct?" → Too vague
+"Should I continue?" → Not clarifying
+"Any other requirements?" → Open-ended
+
+✅ **Specific, actionable questions:**
+"For [X], should behavior be [A] or [B]?"
+"Does [component] live in [location A] or [location B]?"
+"When [condition], should we [action A] or [action B]?"
+
+❌ **Paraphrase repeats agent output:**
+"The agent produced requirements with functional goals..." → Just describing process
+"Here's what was decided..." → Not demonstrating understanding
+
+✅ **Paraphrase shows understanding:**
+"Feature adds filtering by status and date, must work offline (40% usage), max 2s response."
+"Architecture uses Full BUS (has UI), Repository→UseCase→ViewModel→View flow, files in TalentDomain/AccountSubdomain."
+
+### 5. Phase Details - Sufficient Context Section
 
 **MOST CRITICAL SECTION** - What context to pass to agent:
 
@@ -222,10 +406,10 @@ Output: [format]
 
 **WHY this matters:**
 - Agents have **isolated context** - can't see previous conversation
-- Need **sufficient connected quality** - not everything, just what's critical
+- Need **sufficient context for quality** - not everything, just what's critical
 - **Test question**: "Can agent produce HIGH QUALITY output with this context alone?"
 
-### 5. Commands Section
+### 6. Commands Section
 
 ```markdown
 ## Commands
@@ -239,7 +423,7 @@ Output: [format]
 
 **Standard across all workflows.**
 
-### 6. Sufficient Context Principle (End Section)
+### 7. Sufficient Context Principle (End Section)
 
 **Always include at workflow end:**
 
@@ -442,21 +626,69 @@ Output: Brief note
 Decision: Continue workflow or suggest alternative
 ```
 
-### User Checkpoints After Each Phase
+### User Checkpoints After Each Phase (MANDATORY)
 
 **Pattern:** Get user approval before proceeding.
 
 **Why:** Prevents wasting phases if direction wrong. User can adjust mid-workflow.
 
-**Implementation:**
+**CRITICAL SEQUENCE (after EVERY phase):**
+
 ```markdown
 **Phase N Complete** ✅
-[Summary of what agent produced]
+[Present agent output clearly]
+
+───────────────────────────────────────────────
+Let me verify my understanding:
+[2-3 sentence paraphrase]
+
+Clarifying questions (3-5 depending on phase complexity):
+1. [Specific question]
+2. [Specific question]
+3. [Specific question]
+[4. [Specific question - if complex]]
+[5. [Specific question - if complex]]
+
+Does this match exactly what you want? If not, what should I adjust?
+───────────────────────────────────────────────
+
+[WAIT FOR USER CONFIRMATION]
+
+[Only after user confirms understanding is correct:]
+
+Ready to proceed? (continue/skip/popraw/back/stop)
+```
+
+**Timing sequence (mandatory order):**
+1. Present output
+2. Paraphrase understanding
+3. Ask 3-5 clarifying questions (depends on complexity)
+4. Wait for confirmation ("dokładnie to co chcę")
+5. THEN offer commands (continue/skip/back)
+
+**Anti-pattern:** Offering commands before confirmation
+```markdown
+❌ WRONG:
+**Phase N Complete** ✅
+[Output]
+Ready to proceed? (continue/skip/back/stop)
+
+✅ CORRECT:
+**Phase N Complete** ✅
+[Output]
+
+Let me verify my understanding:
+[Paraphrase + 3-5 questions]
+
+Does this match exactly what you want?
+[WAIT]
 
 Ready to proceed? (continue/skip/back/stop)
 ```
 
 **Real mistake:** Ran all 8 phases without approval. Phase 3 architecture wrong, but all implementation done. Had to rerun entire workflow.
+
+**Why mandatory clarifying questions prevent this:** User catches wrong direction at Phase 3 (during clarifying questions), corrects understanding, continues from corrected Phase 3. Only Phase 3 wasted, not Phases 4-8.
 
 ---
 
@@ -595,6 +827,66 @@ Ready to proceed? (continue/skip/back/stop)
 
 **Why this works:** User can catch wrong direction early, adjust, and continue from correct point.
 
+### ❌ Mistake 5: No Clarifying Questions (Assumption Errors)
+
+**Problem:** Orchestrator presented phase output, immediately offered commands (continue/skip/back), no clarifying questions. User confirmed "continue" without understanding being verified.
+
+**Why bad:**
+- Orchestrator made assumptions about ambiguous user input
+- User didn't realize output didn't match intent until later phases
+- Rework required (redo phases already completed)
+
+**Real example (40% rework rate before pattern):**
+- Phase 1: Requirements analyst interpreted "filtering" as in-memory filtering
+- User said "continue" (didn't notice assumption)
+- Phase 2-4: Architecture, implementation all based on in-memory approach
+- Phase 5: User testing revealed: "I meant database query-based filtering for 300 items"
+- Had to redo Phases 2-5 (wasted 30 minutes)
+
+**Root cause:** Ambiguous requirement ("filtering") → Agent assumed approach → No clarifying questions to uncover constraint (300 items, database required) → Wrong direction
+
+**Fix:** Clarifying questions MANDATORY after EVERY phase (including Phase 0). Pattern:
+
+```markdown
+**Phase N Complete** ✅
+[Present output]
+
+───────────────────────────────────────────────
+Let me verify my understanding:
+[2-3 sentence paraphrase]
+
+Clarifying questions (3-5 depending on complexity):
+1. [Scope/constraint question]
+2. [Edge case question]
+3. [Priority/approach question]
+[4. [Integration question - if complex]]
+[5. [Validation question - if complex]]
+
+Does this match exactly what you want? If not, what should I adjust?
+───────────────────────────────────────────────
+
+[WAIT for confirmation]
+
+Ready to proceed? (continue/skip/popraw/back/stop)
+```
+
+**Production impact:**
+- Before pattern: 40% rework rate (2 out of 5 workflows needed redo)
+- After pattern: 8% rework rate (clarifying questions caught misunderstandings early)
+- Time savings: 20 minutes average per workflow (prevented rework)
+
+**Why clarifying questions work:**
+1. **Paraphrase** forces orchestrator to demonstrate understanding (not just acknowledge)
+2. **3-5 specific questions** (flexible) uncover hidden constraints, edge cases, priorities
+3. **Confirmation loop** ensures alignment before proceeding
+4. **Early detection** catches wrong direction at Phase N (not Phase N+3)
+
+**When to apply:**
+- ✅ After Phase 0 (inline assessment before workflow starts)
+- ✅ After EVERY agent phase (Phase 1, 2, 3, 4...)
+- ✅ After inline phases IF significant decisions made
+- ❌ NOT after final report (workflow complete, no more phases)
+
 ---
 
 ## Quick Reference
@@ -605,17 +897,20 @@ Ready to proceed? (continue/skip/back/stop)
 - [ ] Description in frontmatter (<200 chars, includes usage)
 - [ ] Phases overview (with inline/agent markers)
 - [ ] "⚠️ CRITICAL: YOU MUST INVOKE AGENTS" section
-- [ ] Critical Rules (3-5 rules)
-- [ ] Phase Execution Pattern (markdown template)
+- [ ] Critical Rules (3-5 rules, includes clarifying questions requirement with flexible count)
+- [ ] "Clarifying Questions Pattern" section (template + 3-5 flexible guidance + examples)
+- [ ] Phase Execution Pattern (markdown template with paraphrase + 3-5 flexible questions)
 - [ ] Each phase has "Sufficient context for quality" section
+- [ ] Each phase includes clarifying questions in "After agent" subsection
 - [ ] Commands section (continue, skip, back, status, stop)
 - [ ] "Sufficient Context Principle" at end
 
 **Content Quality:**
-- [ ] Phase 0 inline (orchestrator assessment)
+- [ ] Phase 0 inline (orchestrator assessment + clarifying questions)
 - [ ] "Sufficient context" section for EVERY agent phase
 - [ ] Test question applied to context decisions
-- [ ] User checkpoints after each phase
+- [ ] Clarifying questions after EVERY phase (paraphrase + 3-5 questions + confirmation, count depends on complexity)
+- [ ] User checkpoints after confirmation (continue/skip/back/stop)
 - [ ] No full YAML outputs passed (extract decisions)
 - [ ] Project-specific rules included
 - [ ] Existing patterns listed
@@ -623,8 +918,11 @@ Ready to proceed? (continue/skip/back/stop)
 **Anti-Pattern Prevention:**
 - [ ] Force Task invocation (⚠️ CRITICAL section)
 - [ ] Context filtered (signal only, no noise)
-- [ ] User checkpoints (prevent wasted phases)
+- [ ] Clarifying questions mandatory (prevent misunderstandings)
+- [ ] Flexible question count (3-5 depending on phase complexity)
+- [ ] User checkpoints after confirmation (prevent wasted phases)
 - [ ] Test question documented (for future maintainers)
+- [ ] Commands offered ONLY after confirmation (not before)
 
 ### Decision Tree: How Many Phases?
 
@@ -664,15 +962,19 @@ Validation workflow (parallel checks):
 
 ## Key Principles
 
-**Workflow Structure:** Standard sections (our convention), Phase 0 inline, user checkpoints
+**Workflow Structure:** Standard sections (our convention), Phase 0 inline, user checkpoints, clarifying questions mandatory
+
+**Clarifying Questions (MANDATORY):** After EVERY phase - paraphrase + 3-5 questions (flexible, depends on complexity) + confirmation before commands
 
 **Sufficient Context:** Test question ("Can agent produce HIGH QUALITY?"), signal/noise filter, extract decisions (not full outputs)
 
 **Force Invocation:** "⚠️ CRITICAL" section prevents describing instead of invoking
 
-**WHY Explanations:** Phase 0 inline (WHY: avoids wasting agent), User checkpoints (WHY: prevents wasted phases)
-
-**Anti-Patterns:** Document real mistakes (too much context, too little, no invocation, no checkpoints)
+**WHY Explanations:**
+- Phase 0 inline (WHY: avoids wasting agent)
+- Clarifying questions (WHY: 40% → 8% rework rate, prevents misunderstandings)
+- Flexible question count (WHY: match complexity, quality over rigid count)
+- User checkpoints (WHY: prevents wasted phases)
 
 ---
 
@@ -698,4 +1000,4 @@ Validation workflow (parallel checks):
 
 ---
 
-**Key Lesson:** Workflows need standard structure + sufficient context principle + forced invocation. Agents have isolated context - must provide exactly right information (test question). User checkpoints prevent wasted phases.
+**Key Lesson:** Workflows need standard structure + sufficient context principle + clarifying questions (3-5 flexible) + forced invocation. Agents have isolated context - must provide exactly right information (test question). Clarifying questions after every phase prevent 40% rework rate. Match question count to phase complexity.

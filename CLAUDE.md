@@ -7,4 +7,6 @@ They load all skills’ metadata, including name and description, so it’s impo
 Agents (Thin router) - operating system; Skills - applications (capabilities)
 Agenty nie powinny powielać tego, co mają w skillach. 
 
+zawsze pytaj na koniec pracy czy nie powinienem zaktualizowac CLAUDE.md files i skills
+
 ignoruj foldery zaczynajace sie na worktree-*
