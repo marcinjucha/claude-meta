@@ -7,6 +7,20 @@ description: Organize commits and write messages for PRs. Use when deciding comm
 
 **Purpose:** Commit organization and message writing for clean git history. Covers commit separation logic, squashing decisions, and commit message conventions with Signal vs Noise philosophy.
 
+## ⚠️ CRITICAL: COMMIT MESSAGES MUST BE FACT-BASED
+
+**ABSOLUTE RULE:**
+
+- ❌ **NEVER invent production incidents** in commit message examples
+- ❌ **Don't make up bug impact** or statistics in examples
+- ❌ **Example commit messages should be generic** or based on real user scenarios
+
+**For commit message examples:**
+
+- ✅ Use generic placeholders: "Fixed bug", "Improved performance"
+- ✅ Ask user for real scenario if specific example needed
+- ✅ Don't invent specific numbers or incidents in examples
+
 ---
 
 ## Core Philosophy

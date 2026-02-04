@@ -27,6 +27,23 @@ Create and maintain focused, actionable CLAUDE.md documentation that Claude actu
 
 ---
 
+## ⚠️ CRITICAL: FACT-BASED DOCUMENTATION ONLY
+
+**Why this rule exists:** CLAUDE.md is living documentation of actual project state. Invented production context leads Claude to make decisions based on false constraints.
+
+**What to do:**
+- User describes discovery → Document it with real details
+- No real data → Use placeholder: `[Real incident details needed]` or ask user
+**Why**: Server processes in 15s. Without window, 95% fewer false-positive tickets.
+
+✅ CORRECT (FACT-BASED):
+## 15-Second Time Window
+**Why**: [User to provide: server processing time and impact]
+OR (if user provided):
+## 15-Second Time Window (Bug Fix)
+**Why**: Server processes in up to 15s (confirmed by user). UI showed errors when operations succeeded.
+```
+
 ## Core Philosophy
 
 ### Quality > Line Count

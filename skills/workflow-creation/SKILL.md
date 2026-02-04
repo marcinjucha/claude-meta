@@ -10,6 +10,15 @@ argument-hint: "[workflow-name]"
 
 Guide for creating workflow command files that orchestrate multiple agents across phases. Focus on **workflow structure pattern**, **sufficient context principle** (agents have isolated context), and **clarifying questions pattern** (3-5 questions, flexible). Documents anti-patterns in workflow CREATION process (not for inclusion in workflow files).
 
+## ⚠️ CRITICAL: FACT-BASED WORKFLOW EXAMPLES ONLY
+
+**Why this rule exists:** Invented rework rates or timing metrics in workflow anti-patterns create false expectations about workflow performance.
+
+**What to do:**
+- User provides real workflow incident → Document it
+- No data → Skip metrics or use placeholder: `[Real metric needed]`
+- During audit → Flag invented content for removal
+
 ## When to Use
 
 - Creating new workflow command (multi-phase orchestration)

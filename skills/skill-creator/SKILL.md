@@ -33,6 +33,22 @@ The 500-line guideline is a target, not a hard limit. If high-quality, signal-fo
 - **Keep together** if content is interconnected and needs context
 - **Split to Tier 3** if content is modular and self-contained
 
+## ⚠️ CRITICAL: FACT-BASED CONTENT ONLY
+
+**Why this rule exists:** Invented metrics/incidents in skills create false context. Claude uses this false data in decisions, leading to incorrect assumptions about project constraints.
+
+**What to do instead:**
+- User provides real data → Use it
+- No data available → Placeholder: `[User to provide real metric]` or skip section
+- During audit → Flag invented content for removal
+
+**Example:**
+```markdown
+❌ Invented: "80% reduction in crashes, 3x faster response"
+✅ Real data: User confirmed 15MB leak, crashes after 20min
+✅ No data: [Real incident details needed]
+```
+
 ### Signal vs Noise: The 3-Question Filter
 
 Before including ANY content in a skill, ask:

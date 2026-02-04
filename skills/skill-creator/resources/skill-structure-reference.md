@@ -315,8 +315,10 @@ Pattern feature-specific? → Keep in local documentation
 See @resources/data-flow-patterns.md for detailed examples
 
 <!-- resources/data-flow-patterns.md -->
-[Complete, self-contained content - no further references]
+[Complete content - can reference OTHER skills if needed (skill chaining supported by Claude Code)]
 ```
+
+**Clarification:** Resources should be self-contained WITHIN THE SAME SKILL (no nested @resources/ → @resources/), but CAN cross-reference OTHER skills if needed.
 
 ❌ **BAD (Too deep):**
 ```markdown

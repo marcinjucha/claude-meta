@@ -20,6 +20,14 @@ Guide the creation of high-quality custom subagents that delegate to task-specif
 - **Refactoring workflows** - Converting complex workflows to agent-based approach
 - **Reviewing agent quality** - Verifying agent follows best practices
 
+## ⚠️ CRITICAL: FACT-BASED EXAMPLES ONLY
+
+**Why this rule exists:** Invented production examples in agent documentation create false assumptions about when/how to use the agent.
+
+**What to do:**
+- User provides example → Use it
+- No example available → Skip or use placeholder: `[Real example needed]`
+
 ## Core Philosophy
 
 **Agents are Thin Routers, Skills are Thick Applications**

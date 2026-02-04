@@ -8,6 +8,26 @@ argument-hint: "[content-type]"
 
 **Purpose:** Filter information to focus on what matters. Apply to documentation, tests, code comments, feature decisions.
 
+## ⚠️ CRITICAL: SIGNAL MUST BE REAL, NOT INVENTED
+
+**ABSOLUTE RULE:**
+
+- ❌ **NEVER invent metrics, numbers, or incidents** to demonstrate signal vs noise
+- ❌ **Production impact examples MUST be real** (user-provided only)
+- ❌ **Don't make up "before/after" statistics** to show improvements
+
+**Signal vs Noise applies to REAL data:**
+
+- ✅ **Real project-specific patterns** (not invented examples)
+- ✅ **Real incidents** user described (not hypothetical scenarios)
+- ✅ **Actual numbers** user provided (not made-up metrics)
+
+**If no real data available:**
+
+- Ask user: "Do you have real metrics/incidents for this?"
+- Use placeholder: `[User to provide real example]`
+- Focus on the principle without fake examples
+
 ---
 
 ## The 3-Question Filter

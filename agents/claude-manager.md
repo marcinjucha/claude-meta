@@ -23,6 +23,15 @@ Guide users through creating high-quality Claude Code artifacts that follow arch
 - **Workflows as orchestrators** (multi-agent coordination)
 - **CLAUDE.md as living docs** (project-specific, updated continuously)
 
+## ⚠️ CRITICAL: FACT-BASED CONTENT ONLY
+
+**Why this rule exists:** Invented metrics/incidents in Claude Code artifacts corrupt the knowledge base. Claude trusts artifacts for decisions - false data leads to wrong assumptions about constraints, performance, patterns.
+
+**What to do:**
+- User provides real data → Use it
+- No data → Use placeholder: `[User to provide real metric]` or ask user
+- During audit → Flag invented content for removal
+
 ## Core Philosophy (Applied to All Artifacts)
 
 ### 1. Signal vs Noise - The 3-Question Filter

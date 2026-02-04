@@ -38,6 +38,39 @@ Before updating a skill, apply Signal vs Noise filter:
 
 **See:** `@resources/signal-vs-noise-reference.md` for complete 3-question filter and detailed examples.
 
+## ⚠️ CRITICAL: FACT-BASED UPDATES ONLY
+
+**Why this rule exists:** Adding invented metrics during skill updates corrupts existing knowledge base. Claude trusts skill content for decisions.
+
+**What to do:**
+- User provides data → Add it
+- No data available → Ask user: "Do you have real metrics for this?" or use placeholder
+- Found invented content → Flag for removal
+
+**WHEN UPDATING SKILLS:**
+
+- ✅ **ONLY add metrics/incidents if user provided them**
+- ✅ **Ask user for real data**: "Do you have actual metrics for this?"
+- ✅ **Use placeholders** if no data: `[User to provide real metric]`
+- ✅ **Remove invented content** if found during audit
+
+**IF YOU FIND HALLUCINATED CONTENT:**
+
+- 🚨 **Flag it**: "This looks like invented data (e.g., 'NMB memory leak', '95% improvement')"
+- 🚨 **Ask user**: "Is this real or should I remove it?"
+- 🚨 **Replace or remove**: Either get real data or delete the made-up content
+
+**Example of proper update:**
+```markdown
+❌ WRONG (ADDING INVENTED DATA):
+**Production impact:** 12MB memory leak → 80% crash reduction after fix
+
+✅ CORRECT (FACT-BASED):
+**Production impact:** [User to provide real incident details]
+OR (if user gave data):
+**Production impact:** Memory leak confirmed by user, specific measurements to be added
+```
+
 ## Content Quality: Why over How
 
 **Priority:** WHY explanation > HOW implementation
