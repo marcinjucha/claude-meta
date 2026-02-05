@@ -71,6 +71,44 @@ OR (if user gave data):
 **Production impact:** Memory leak confirmed by user, specific measurements to be added
 ```
 
+## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT
+
+**Why this rule exists:** Adding generic content that Claude already knows wastes token budget and dilutes signal. Skills should contain ONLY project-specific patterns, not framework basics.
+
+**WHEN UPDATING SKILLS:**
+
+- ✅ **Before adding content** → Ask: "Does AI already know this?"
+- ✅ **Remove AI-known content** if found during updates
+- ✅ **Keep project-specific** decisions, critical bugs, non-obvious patterns
+- ✅ **Self-check**: "Would Claude know this without the skill?" → If YES, remove
+
+**IF YOU FIND AI-KNOWN CONTENT:**
+
+- 🚨 **Flag it**: "This is generic framework explanation (e.g., 'What is dependency injection')"
+- 🚨 **Ask user**: "Should I remove this generic content?"
+- 🚨 **Replace with project-specific**: Focus on HOW YOU USE pattern, not what pattern is
+
+**Example of proper update:**
+```markdown
+❌ WRONG (AI-KNOWN CONTENT):
+## Dependency Injection
+Dependency injection is a design pattern where dependencies are provided to a class
+rather than created inside the class. Benefits include testability and flexibility.
+
+✅ CORRECT (PROJECT-SPECIFIC):
+## Dependency Injection: Service Pattern Only
+**Why service pattern:** Prevents circular dependencies (hit this in DataLayer + UILayer)
+**Production incident:** Direct injection caused cycle → 15MB leak
+**Fix:** Use service layer between components
+
+**When NOT to use:** Single repository access (that's Use Case pattern)
+```
+
+**During skill updates:**
+- Focus on updating PROJECT-SPECIFIC content (decisions, bugs, patterns)
+- Remove GENERIC content (framework explanations, architecture 101)
+- Ask user: "Is there anything specific about how YOU use this that differs from standard?"
+
 ## Content Quality: Why over How
 
 **Priority:** WHY explanation > HOW implementation
@@ -164,389 +202,92 @@ symptoms:
 
 **When:** Code implementation changed, skill still describes old approach
 
+**What to update:**
+- Code examples (match current implementation)
+- File paths (if moved during refactoring)
+- Thresholds/numbers (if configuration changed)
+- WHY context (if rationale changed)
+
+**Add migration note for breaking changes:**
 ```markdown
-## Update Process
-
-Step 1: Identify What Changed
-
-Check:
-- [ ] Code location (files moved)
-- [ ] Pattern itself (new approach)
-- [ ] Parameters (thresholds, timeouts adjusted)
-- [ ] Dependencies (new dependencies added/removed)
-- [ ] Integration (how components interact changed)
-
-Step 2: Update Skill Sections
-
-For each outdated section:
-
-A. Core Patterns
-   - Update code examples to match current implementation
-   - Update explanations if approach changed
-   - Keep WHY if still valid, update if not
-
-B. Anti-Patterns
-   - Update "wrong" examples if pattern changed
-   - Add new anti-pattern if discovered
-   - Update "fix" if approach changed
-
-C. Quick Reference
-   - Update commands if syntax changed
-   - Update thresholds/numbers to current values
-   - Update file paths if moved
-
-D. Real Project Example
-   - Verify example still accurate
-   - Update file paths
-   - Update code snippets if implementation changed
-
-Step 3: Add Migration Note (if major change)
-
-For breaking changes, add note:
-
 ## Pattern Migration
-
 **Changed in:** [Date or Version]
 **Old pattern:** [Brief description]
 **New pattern:** [Brief description]
 **Why changed:** [Production reason]
-
-Example:
-## Pattern Migration
-
-**Changed in:** Version X (Date)
-**Old pattern:** Resource owned by root component
-**New pattern:** Resource owned by leaf feature with conditional cleanup
-**Why changed:** NMB memory leak in production (root didn't know navigation direction)
-
-Step 4: Verify Examples Compile
-
-- [ ] Copy code example to IDE
-- [ ] Verify compiles without errors
-- [ ] Check file paths exist
-- [ ] Test against current codebase
 ```
 
-**Example Update:**
-
-**BEFORE (resource-lifecycle-patterns skill):**
-```markdown
-## Pattern 1: Resource Ownership
-
-Resource owned by RootComponent:
-
-\`\`\`
-Component RootComponent {
-    state {
-        resource: Resource?
-    }
-}
-\`\`\`
-```
-
-**AFTER (updated):**
-```markdown
-## Pattern 1: Resource Ownership in Feature (Not Root)
-
-**Purpose:** Prevent memory leaks through proper ownership
-
-Resource owned by LeafComponent (leaf node), NOT root:
-
-\`\`\`
-Component LeafComponent {  // ← Leaf feature, not root
-    state {
-        resource: Resource?
-    }
-}
-\`\`\`
-
-**Why feature ownership:**
-- Leaf node knows navigation direction (forward vs back)
-- Can cleanup conditionally based on navigation context
-- Prevents memory leak (root preserved resource on all navigation)
-
-**Production incident - Before fix:**
-- Resource in root → leaked NMB per back navigation
-- Devices crashed after multiple navigations
-
-## Pattern Migration
-
-**Changed in:** Version X (Date)
-**Old pattern:** Resource in RootComponent (root)
-**New pattern:** Resource in LeafComponent (leaf) + conditional cleanup
-**Why changed:** Memory leak eliminated
-```
+**Verify:** Copy code example to IDE, confirm it compiles against current codebase.
 
 ### Pattern 3: Clarifying Imprecise Instructions
 
 **When:** Skill instructions vague, causing agent confusion
 
-**Production impact:**
+**Production impact:** Vague "use appropriate threshold" → developers chose different values → inconsistent behavior → bug reports.
 
-Incident: Vague "use appropriate threshold" instruction → 3 different developers chose 3 different values (15%, 35%, 50%) → inconsistent behavior across features → 5 bug reports from users → 6 hours debugging to find root cause.
-
-Fix: Replace vague instructions with specific decision criteria.
+**Fix:** Replace vague terms with specific criteria:
 
 ```markdown
-## Clarification Process
-
-Step 1: Identify Imprecision
-
-Look for:
-- "Should" without WHEN (should do X - but when?)
-- Multiple interpretations (could mean A or B)
-- Missing decision criteria (when to use pattern A vs B?)
-- Vague terms ("appropriate", "reasonable", "good" - what values?)
-
-Step 2: Add Decision Criteria
-
-Transform vague → specific:
-
-BEFORE (vague):
-"Use appropriate threshold for validation"
-
-AFTER (specific):
+❌ VAGUE: "Use appropriate threshold"
+✅ SPECIFIC:
 "Validation threshold:
 - Small items (< Xcm): 25-30%
-- Standard items (Y-Zcm): 35% (default)
-- Large items (> Ncm): 35-40%"
+- Standard (Y-Zcm): 35% (default)
+- Large (> Ncm): 35-40%"
 
-BEFORE (missing WHEN):
-"Should use Service for complex logic"
-
-AFTER (decision tree):
+❌ VAGUE: "Should use Service for complex logic"
+✅ SPECIFIC:
 "Use Service when:
 - Combining 3+ repositories (prevents cycles)
-- OR complex algorithm (multi-criteria, computations)
+- OR complex algorithm
 NOT when:
-- Just thin delegation (that's Use Case)
-- Single repository access (that's Repository)"
+- Thin delegation (Use Case)
+- Single repository (Repository)"
+```
 
-Step 3: Add Examples for Each Case
-
-For each decision branch, show example:
-
-\`\`\`markdown
-**Example 1: Service (Multi-Repo)**
-DataCombinerService combines repoA + repoB + repoC
-→ Service (prevents cycle)
-
-**Example 2: Use Case (Thin Delegation)**
-DataListUseCase exposes publisher from DataService
-→ Use Case (just delegates)
-\`\`\`
-
-Step 4: Add "When to Use" Triggers
-
-Make it scannable:
-
-\`\`\`markdown
+**Make scannable with triggers:**
+```markdown
 ## When to Use
-
-- API call returns nil → Check configuration, auth state
-- Data positions jittery → Apply deduplication + averaging
-- Multiple results detected → Use ranking algorithm
-- Calculation returns NaN → Normalize input values
-\`\`\`
-```
-
-**Example Clarification:**
-
-**BEFORE (imprecise):**
-```markdown
-## Spatial Deduplication
-
-Use spatial tolerance to deduplicate items.
-Tolerance should be appropriate for item size.
-```
-
-**AFTER (precise):**
-```markdown
-## Spatial Deduplication (Xcm Tolerance)
-
-**Purpose:** Prevent same physical item from creating multiple detections
-
-**Default tolerance:** Xcm
-
-**When to adjust:**
-- Small products (< Ycm spacing): Y1-Y2cm tolerance
-- Standard products (Z1-Z2cm spacing): Xcm tolerance (default)
-- Large products (> Ncm spacing): N1-N2cm tolerance
-
-**Why Xcm:**
-- System has ±Ycm noise per frame
-- Xcm compensates for noise + allows slight movement
-- Below Ycm: Same item detected 2-3 times (too strict)
-- Above Ncm: Different items merged as one (too loose)
-
-**Production validation:**
-- Without: NNN item entries from N physical items
-- With Xcm: N unique entries (correct!)
+- API returns nil → Check auth state
+- Data jittery → Apply deduplication
+- Multiple results → Use ranking
 ```
 
 ### Pattern 4: Adding Missing Anti-Patterns
 
 **When:** Production bug happened, not documented in skill
 
+**Structure:**
 ```markdown
-## Process
-
-Step 1: Analyze Production Incident
-
-Gather:
-- What went wrong (symptom)
-- Root cause (why it happened)
-- How it was fixed
-- Impact (users affected, severity)
-
-Step 2: Create Anti-Pattern Entry
-
-Structure:
 ### ❌ Mistake N: [Descriptive Name]
-
 **Problem:** [What breaks, production impact]
-
-\`\`\`
-// ❌ WRONG
-[Bad code that caused issue]
-
-// ✅ CORRECT
-[Fixed code]
-\`\`\`
-
-**Why bad:** [Root cause, what happens]
-
+**Why bad:** [Root cause]
 **Fix:** [What to do instead]
-
-**Production incident:** [Brief description of when this happened]
-
-Step 3: Add to Skill
-
-Location in skill:
-- If common mistake → "Anti-Patterns (Critical Mistakes)" section
-- If subtle → Add note in relevant "Pattern" section
-- If blocking → Add to "When to Use" triggers
-
-Step 4: Cross-Reference from Related Skills
-
-If multiple skills relate:
-→ Add cross-reference in "Integration with Other Skills"
+**Production incident:** [When this happened]
 ```
 
-**Example Addition:**
-
-**Skill:** spatial-patterns
-
-**Production Incident:** Same item appeared NNN times (no deduplication)
-
-**Added Anti-Pattern:**
-```markdown
-## Anti-Patterns (Critical Mistakes)
-
-### ❌ Mistake 1: No Spatial Deduplication
-
-**Problem:** Hundreds of duplicate items from same physical item.
-UI laggy, algorithm fails.
-
-\`\`\`
-// ❌ WRONG - Every detection is unique
-function ingest(detection) {
-    const entry = {
-        id: generateUUID(),
-        groupID: detection.data,
-        locations: [detection.location]
-    }
-    entries[generateUUID()] = entry  // ❌ New entry every frame!
-}
-\`\`\`
-
-**Why bad:** System captures N-M FPS after throttling. Same item detected
-every frame = NNN entries from N items in 60 seconds. UI laggy, algorithm
-fails (too many points).
-
-**Fix:**
-\`\`\`
-// ✅ CORRECT - Check proximity first
-if (existing = findExisting(detection.data, detection.location)) {
-    existing.locations.push(detection.location)  // Update existing
-} else {
-    add(newEntry)  // Add only if truly new
-}
-\`\`\`
-
-**Production incident:** Version X - users reported "hundreds of items"
-when scanning. NNN entries → N unique after fix.
-```
+**Add to:**
+- Common mistake → "Anti-Patterns (Critical Mistakes)" section
+- Subtle issue → Note in relevant "Pattern" section
+- Blocking issue → "When to Use" triggers
 
 ### Pattern 5: Reorganizing Skill Structure
 
-**When:** Skill grew too large, hard to navigate
+**When:** Skill grew too large (>1000 lines), hard to navigate
 
-```markdown
-## Reorganization Triggers
+**Why 1000 lines threshold:**
 
-- Skill > 1000 lines (hard to scan)
-- Multiple unrelated patterns (should split)
-- Can't find pattern quickly (poor organization)
-- Duplicate patterns (need deduplication)
+Production validation: Skills >1000 lines took 2-3 minutes to find patterns vs <30 seconds for <600 line skills.
 
-**Why 1000 lines specifically:**
-
-Production validation: Skills >1000 lines took developers 2-3 minutes to find patterns vs <30 seconds for <600 line skills. Cognitive load increases sharply after 1000 lines.
-
-Measured pattern discovery time:
+Pattern discovery time:
 - <600 lines: ~20-30 seconds
 - 600-1000 lines: ~45-90 seconds
 - >1000 lines: 2-3 minutes
 
-Reorganize threshold: >1000 lines OR >15 sections OR can't find pattern in 2 minutes.
-
-## Process
-
-Step 1: Identify Separation Opportunities
-
-Check if skill covers multiple distinct domains:
-- YES → Split into separate skills
-- NO → Reorganize sections
-
-Example:
-domain-specialist (977 lines) covers:
-- API patterns → api-patterns
-- Spatial tracking → spatial-patterns
-- Data processing → data-patterns
-- Validation → validation-patterns
-- Resource lifecycle → resource-lifecycle-patterns
-
-→ Split into 5 focused skills (400-600 lines each)
-
-Step 2: Apply Standard Structure
-
-Required sections (in order):
-1. Purpose (1-2 sentences)
-2. When to Use (triggers)
-3. Core Patterns (3-5 patterns with examples)
-4. Anti-Patterns (Critical Mistakes)
-5. Quick Reference (commands/checklists)
-6. Integration with Other Skills
-7. Real Project Example
-
-Optional sections:
-- Decision Trees (if complex decisions)
-- Parameter Tuning Guide (if many parameters)
-
-Step 3: Deduplicate Content
-
-If pattern appears in multiple places:
-→ Keep in one authoritative location
-→ Cross-reference from other locations
-
-Step 4: Verify Navigation
-
-- [ ] Can find any pattern in < 30 seconds
-- [ ] Section headers descriptive
-- [ ] Quick Reference at end (scannable)
-- [ ] Examples near patterns (not separated)
-```
+**Action:**
+- Multiple distinct domains → Split into separate skills (400-600 lines each)
+- Single domain → Reorganize with standard structure
+- Duplicate patterns → Keep in one location, cross-reference from others
 
 ### Pattern 6: Adding Advanced Features (Frontmatter, Scripts, Execution)
 
@@ -867,159 +608,35 @@ Complete replacement? → Keep old in "Deprecated Patterns", add new
 
 ## Anti-Patterns (Common Mistakes)
 
-### ❌ Mistake 1: Not Updating After Refactoring
+### ❌ Not Updating After Refactoring
+**Problem:** Code refactored, skill still references old structure
+**Why bad:** Wastes time, erodes trust in skills
+**Fix:** Update immediately after refactoring, add migration note
 
-**Problem:** Code refactored, skill references old structure
+### ❌ Vague Instructions
+**Problem:** "Use appropriate value" without defining "appropriate"
+**Why bad:** Agent must guess, might guess wrong
+**Fix:** Replace vague terms with specific values/decision trees
 
-**Production incident - version X:**
-
-Refactoring: ComponentA split into SubComponent + LeafComponent (structure change)
-
-Skill not updated: Remained pointing to old ComponentA location for 2 months
-
-Impact:
-- 5 developers wasted 30 minutes each searching old location
-- 2.5 hours total wasted developer time
-- Trust in skills eroded ("skills are outdated")
-
-Fix: Update skills immediately after refactoring. Add migration note in CLAUDE.md.
-
-```markdown
-❌ BAD (skill not updated):
-File: ComponentA/RootComponent.swift:line 45
-
-[File moved to ComponentA/SubComponent/LeafComponent.swift 2 months ago]
-
-✅ GOOD (skill updated):
-File: ComponentA/SubComponent/LeafComponent.swift:line 23
-(Moved from RootComponent.swift version X - memory leak fix)
-```
-
-**Why bad:** Wastes developer time searching wrong location. Erodes trust in skills.
-
-**Fix:** Update skills immediately after refactoring. Add migration note.
-
-### ❌ Mistake 2: Vague Instructions
-
-**Problem:** Skill says "use appropriate value" without defining "appropriate"
-
-```markdown
-❌ VAGUE:
-"Use appropriate threshold for validation"
-
-✅ SPECIFIC:
-"Validation threshold:
-- Small items (< Xcm): 25-30%
-- Standard (Y-Zcm): 35% (default)
-- Large (> Ncm): 35-40%"
-```
-
-**Why bad:** Agent must guess, might guess wrong. No decision criteria.
-
-**Fix:** Replace vague terms with specific values/decision trees.
-
-### ❌ Mistake 3: Missing Production Context
-
+### ❌ Missing Production Context
 **Problem:** Pattern added without WHY or real incident
+**Why bad:** Future developer might remove/change without understanding importance
+**Fix:** Include production context (incident, bug report, user complaint)
 
-```markdown
-❌ NO CONTEXT:
-## Pattern: Use Xcm deduplication tolerance
+### ❌ Outdated Examples
+**Problem:** Code examples don't compile with current codebase
+**Why bad:** Breaks trust, agent generates non-compiling code
+**Fix:** Verify examples compile after refactoring
 
-✅ WITH CONTEXT:
-## Pattern: Xcm Deduplication Tolerance
+### ❌ Wrong context: fork Usage
+**Problem:** Added `context: fork` to reference skill (guidelines only)
+**Why bad:** Returns nothing useful - fork requires explicit task
+**Fix:** Only use fork for actionable tasks, not reference material
 
-**Production incident:** Version X - users reported "hundreds of items"
-when scanning. NNN entries from N physical items.
-
-**Root cause:** No deduplication. System ±Ycm noise + N-M FPS capture
-= same item detected every frame.
-
-**Fix:** Xcm tolerance filters noise. NNN entries → N unique.
-```
-
-**Why bad:** Future developer doesn't understand importance, might remove or change.
-
-**Fix:** ALWAYS include production context (incident, bug report, user complaint).
-
-### ❌ Mistake 4: Outdated Examples
-
-**Problem:** Code example doesn't compile with current codebase
-
-```markdown
-❌ OUTDATED (doesn't compile):
-\`\`\`
-const resource = OldResourceClass()  // OldResourceClass removed version X
-\`\`\`
-
-✅ UPDATED (compiles):
-\`\`\`
-const resource = NewResourceClass()  // Renamed in version X
-\`\`\`
-```
-
-**Why bad:** Breaks trust. Agent generates code that doesn't compile.
-
-**Fix:** Verify examples compile after every major refactoring.
-
-### ❌ Mistake 5: Wrong context: fork Usage
-
-**Problem:** Added `context: fork` to reference skill (guidelines only), returns nothing useful
-
-```markdown
-❌ WRONG (fork with guidelines):
----
-name: api-patterns
-context: fork
----
-Use these API patterns:
-- Pattern A
-- Pattern B
-
-Result: Subagent receives guidelines but no task → returns nothing
-
-✅ CORRECT (fork with complete task):
----
-name: api-research
-context: fork
-agent: Explore
----
-Research API usage for $ARGUMENTS:
-1. Find files
-2. Analyze patterns
-3. Summarize findings
-
-Result: Subagent executes research → returns summary
-```
-
-**Why bad:** `context: fork` requires explicit instructions (complete prompt). Guidelines alone don't work.
-
-**Fix:** Only use `context: fork` for skills with actionable tasks, not reference material.
-
-### ❌ Mistake 6: Skill Bloat
-
-**Problem:** Skill covers too many unrelated patterns (> 1000 lines)
-
-```markdown
-❌ TOO LARGE:
-domain-specialist (977 lines):
-- API patterns
-- Spatial tracking
-- Data processing
-- Validation
-- Resource lifecycle
-
-✅ SPLIT:
-api-patterns (520 lines)
-spatial-patterns (550 lines)
-data-patterns (700 lines)
-validation-patterns (650 lines)
-resource-lifecycle-patterns (500 lines)
-```
-
-**Why bad:** Hard to navigate. Can't find pattern quickly. Agent loads unnecessary content.
-
-**Fix:** Split into focused skills (400-600 lines each) when > 1000 lines.
+### ❌ Skill Bloat
+**Problem:** Skill covers too many unrelated patterns (>1000 lines)
+**Why bad:** Hard to navigate, can't find patterns quickly
+**Fix:** Split into focused skills (400-600 lines each)
 
 ## Quick Reference
 
@@ -1061,88 +678,18 @@ resource-lifecycle-patterns (500 lines)
 
 ## Real Project Example
 
-**Scenario:** Resource lifecycle pattern changed (memory leak fix)
+**Scenario:** Resource lifecycle pattern changed after memory leak
 
-**Skill Before (resource-lifecycle-patterns):**
-```markdown
-## Pattern 1: Resource Ownership
+**Before:** Resource in RootComponent → leaked NMB per navigation
 
-Resource owned by root component:
-\`\`\`
-Component RootComponent {
-    state {
-        resource: Resource?
-    }
-}
-\`\`\`
-```
+**Updated skill includes:**
+- Code example (LeafComponent with conditional cleanup)
+- WHY context (leaf knows navigation direction, root doesn't)
+- Production incident (memory leak, devices crashed)
+- Migration note (what changed, why changed)
+- Anti-pattern entry (prevents regression)
 
-**Production Incident:**
-- NMB memory leak per back navigation
-- Devices crashed after multiple navigations
-- Root cause: Root component didn't know navigation direction, always preserved resource
-
-**Skill After (updated):**
-```markdown
-## Pattern 1: Resource Ownership in Feature (Not Root)
-
-**Purpose:** Prevent memory leaks through proper ownership
-
-Resource owned by LeafComponent (leaf node), NOT root:
-
-\`\`\`
-Component LeafComponent {  // ← Leaf feature, not root
-    state {
-        resource: Resource?
-    }
-
-    onDisappear() {
-        if (!isNavigatingBack) {
-            // Forward navigation - preserve resource
-            resource.pause()
-            return
-        }
-
-        // Back navigation - destroy resource
-        resource.cleanup()
-        resource = null
-        cancelOperations()
-    }
-}
-\`\`\`
-
-**Why feature ownership:**
-- Leaf node knows navigation direction (navigation context awareness)
-- Conditional cleanup prevents leak
-- Root component can't distinguish forward vs back
-
-**Production incident - Version X:**
-- Before: Resource in root → NMB leak per back navigation
-- After: Resource in leaf → 0MB leak, stable memory
-
-## Pattern Migration
-
-**Changed in:** Version X (Date)
-**Old pattern:** Resource in RootComponent (root component)
-**New pattern:** Resource in LeafComponent (leaf feature) with conditional cleanup
-**Why changed:** Memory leak eliminated (root didn't know navigation direction)
-**Migration:** Move resource state from root to leaf + add navigation context conditional
-
-## Anti-Patterns (Critical Mistakes)
-
-### ❌ Mistake 1: Resource in Root Component
-
-**Problem:** NMB memory leak per back navigation
-
-[Full anti-pattern entry...]
-```
-
-**Result:**
-- Skill updated with current pattern
-- Production incident documented
-- Migration path clear
-- Anti-pattern prevents regression
-- Future developers understand WHY feature ownership
+**Result:** Future developers understand WHY pattern exists, won't regress.
 
 ---
 

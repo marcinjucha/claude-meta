@@ -49,6 +49,30 @@ The 500-line guideline is a target, not a hard limit. If high-quality, signal-fo
 ✅ No data: [Real incident details needed]
 ```
 
+## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT
+
+**Why this rule exists:** Adding content that Claude already knows wastes token budget and dilutes signal. Generic explanations, framework basics, standard patterns - Claude knows these without documentation.
+
+**What to do:**
+- Before documenting → Ask: "Does AI already know this?"
+- Generic framework knowledge → Skip it (React hooks basics, standard design patterns)
+- Project-specific application → Document it (how we use pattern, why we chose it)
+- Self-check: "Would Claude know this without the skill?" → If YES, remove
+
+**Example:**
+```markdown
+❌ AI-known (remove): "React hooks allow state management in functional components"
+✅ Project-specific (keep): "Use weak ref in subscription hooks to prevent NMB leak (production incident)"
+
+❌ AI-known (remove): "Repository pattern separates data access from business logic"
+✅ Project-specific (keep): "Never query same table in RLS policy → infinite recursion (crashed prod)"
+```
+
+**During skill creation:**
+- Focus on project-specific decisions, critical bugs, non-obvious patterns
+- Skip framework explanations, architecture 101, standard syntax
+- Ask user: "Is there anything specific about how YOU use this pattern that differs from standard usage?"
+
 ### Signal vs Noise: The 3-Question Filter
 
 Before including ANY content in a skill, ask:
@@ -296,95 +320,34 @@ wc -l .claude/skills/skill-name/SKILL.md
 
 ---
 
-## Advanced Pattern: Document Mental Models, Not Just Mistakes
+## Advanced Pattern: Document Mental Models
 
-**Meta-principle for skill creation:**
+**When:** Systematic thinking errors (2+ developers, "feels natural but wrong")
 
-When documenting anti-patterns, reveal the **WHY behind the mistake** - the systematic mental model that caused it. This prevents the mistake from recurring, not just documents it happened.
+**Signal test:** "Is this a systematic thinking error?"
+- ✅ YES → Same mistake by multiple developers independently
+- ❌ NO → One-off bug, obvious mistake
 
-### Why Mental Models Matter (Signal vs Noise)
-
-**SIGNAL (High Value):**
-- **Why mistakes happen** - cognitive bias, incorrect assumptions
-- **Systematic patterns** - same error by multiple developers independently
-- **Mental model shift** - what thinking needs to change
-
-**NOISE (Low Value):**
-- **What mistake looks like** - code example alone
-- **How to fix** - mechanical steps without understanding
-- **One-off bugs** - unique circumstances, not repeatable pattern
-
-**Production validation:**
-- 6 mental model anti-patterns in `tca-error-patterns`
-- Prevented 8/10 future test failures (same mental model)
-- ROI: One mental model = prevents N future bugs
-
-### Signal Test: When to Document Mental Models
-
-**Ask: "Is this a systematic thinking error?"**
-
-**YES → Document mental model:**
-- ✅ Same mistake by 2+ developers independently
-- ✅ "Feels natural but is wrong" pattern
-- ✅ Tests fail on first attempt consistently
-- ✅ Mistake repeated after fix (mental model not updated)
-
-**NO → Regular anti-pattern:**
-- ❌ One-off bug with unique context
-- ❌ Obvious mistake (typo, copy-paste error)
-- ❌ Framework limitation, not thinking error
-
-**Example:** LoginStore tests
-- Symptom: 3 developers made same mistake (manual `.send()` after automatic action)
-- Root cause: NOT "didn't read docs"
-- Root cause: **"Synchronous thinking in async world"** = mental model error
-
-### Structure Template: Mental Model Anti-Patterns
-
-**Focus on WHY, minimize HOW:**
-
+**Template:**
 ```markdown
-### ❌ Mental Model N: [Descriptive Name]
+### ❌ Mental Model N: [Name]
 
-**Incorrect mental model:**
-"[Quote the incorrect thinking - one sentence]"
+**Incorrect thinking:** "[Quote wrong assumption]"
 
-**Why this thinking fails:**
-- [Cognitive bias / natural assumption that misleads]
-- [Context that makes wrong approach feel right]
-- [What developers expect vs what actually happens]
+**Why fails:** [Cognitive bias, misleading context]
 
-**Correct mental model:**
-"[Quote the correct thinking - one sentence]"
+**Correct thinking:** "[Quote correct approach]"
 
-**Why this matters:**
-[Production impact / prevented bugs / developer efficiency]
-
-**Decision trigger:**
-[One question to ask before action]
+**Why matters:** [Production impact]
 ```
 
-**Anti-pattern:** Don't include code examples in mental model section
-- Code = HOW to fix
-- Mental model = WHY mistake happens
-- Keep focused on thinking shift, not mechanical fix
+**When to include:**
+- Testing skills (reveal thinking patterns)
+- Multiple bugs from same root cause
+- Counter-intuitive patterns
+- New developers make same mistake
 
-### Integration: When Creating Skills
-
-**Include mental model section IF:**
-1. Skill involves testing (tests reveal thinking patterns)
-2. Multiple production bugs from same root cause
-3. Pattern violation "feels natural" (counter-intuitive correct approach)
-4. New team members consistently make same mistake
-
-**Skip mental model section IF:**
-- Skill is purely informational (no decisions/actions)
-- Mistakes are one-off, context-specific
-- Pattern is obvious once explained (no thinking shift needed)
-
-**Example skills with mental models:**
-- `tca-error-patterns` - 6 TCA testing mental models (high ROI)
-- Future: Any skill where "natural thinking" leads to systematic bugs
+**Focus:** WHY mistake happens (thinking shift), not HOW to fix (code)
 
 ---
 
@@ -400,120 +363,37 @@ When documenting anti-patterns, reveal the **WHY behind the mistake** - the syst
 ## Anti-Patterns (Common Mistakes)
 
 ### ❌ Too Much Noise (Generic Content)
-
-**Problem:** SKILL.md is 1,200 lines but 70% is generic explanations.
-
-**Production example:** `ui-patterns` skill was 800 lines, Claude took 12s to load it. 600 lines explained React hooks (generic), only 200 lines project-specific.
-
-**Fix:**
-1. Remove generic explanations Claude knows
-2. Keep project-specific content even if longer
-3. Quality matters more than line count
-
-**Result:** Removed generic React explanation → 200 lines → 2s load time (83% faster). Claude hit rate improved 40% (more skills fit in budget).
-
-**Key insight:** 600 lines of pure signal > 300 lines with 50% noise
-
-### ❌ Generic Content (Not Project-Specific)
-
-**Problem:** Skill explains React basics Claude already knows.
-
-**Production example:** Skill with "What is a repository?" never used because Claude already knows. Wasted 300 lines of token budget.
-
-**Fix:** Only include project-specific decisions and critical mistakes.
-
-**Self-check:** "Would Claude know this without the skill?"
-- YES → Remove it (noise)
-- NO → Keep it (signal)
+**Problem:** SKILL.md with 70% generic explanations Claude knows
+**Fix:** Remove generic content, keep project-specific only
+**Rule:** "Would Claude know this without the skill?" → YES = remove
 
 ### ❌ First-Person Description
-
-**Problem:** First-person descriptions confuse skill routing.
-
-**Production example:** `database-helper` skill with "I help you debug" never auto-triggered (0% invocation rate).
-
-**Root cause:** Description doesn't contain trigger keywords Claude looks for.
-
-**Fix:** Changed to "Use when debugging data access, RLS policies, or caching issues" → 35% invocation rate.
-
-**Rule:** Third-person, describes WHEN not HOW.
+**Problem:** "I help you debug" never auto-triggers
+**Fix:** Third-person, describes WHEN: "Use when debugging data access..."
+**Rule:** Third-person triggers, not first-person explanations
 
 ### ❌ Missing WHY
-
-**Problem:** States rules without explaining rationale.
-
-```markdown
-❌ Without WHY:
-## RLS Policy Rule
-Never query same table in RLS policy.
-
-✅ With WHY:
-## RLS Policy Rule
-Never query same table in RLS policy.
-**Why:** Causes infinite recursion, crashes PostgreSQL with stack overflow.
-**We hit this:** survey_links table RLS checking survey_links.active crashed prod.
-```
+**Problem:** States rules without rationale
+**Fix:** Always include WHY (problem, rationale, production impact)
+**Rule:** Every pattern needs WHY explanation
 
 ### ❌ Nested References (Too Deep)
+**Problem:** SKILL.md → guide.md → examples.md (3 levels)
+**Fix:** One level deep only, Tier 3 files self-contained
+**Rule:** SKILL.md → Tier 3 (stop), no chains
 
-**Problem:** SKILL.md → guide.md → examples.md → details.md
-
-**Fix:** Keep references one level deep. Make Tier 3 files self-contained.
-
-```markdown
-✅ Correct:
-SKILL.md references:
-  - @rls-policies.md (self-contained examples)
-  - @client-selection.md (self-contained guide)
-
-❌ Wrong:
-SKILL.md references:
-  - @guide.md which references @examples.md which references @details.md
-```
-
-### ❌ Windows Paths
-
-**Problem:** Examples use `C:\Users\...` in cross-platform project.
-
-**Fix:** Use Unix paths (`~/`, `/path/to/`) or relative paths.
-
-### ❌ Time-Sensitive Information
-
-**Problem:** "As of January 2025, Supabase version 2.5..."
-
-**Fix:** "Check Supabase version in package.json"
-
-### ❌ Generic Skill Names
-
-**Problem:** `patterns`, `helper`, `utils`
-
-**Fix:** Domain-specific: `data-access-patterns`, `ui-component-patterns`, `design-system`
+### ❌ Time-Sensitive or Generic Names
+**Problem:** "As of January 2025..." or skill named `helper`
+**Fix:** Timeless content, domain-specific names
+**Rule:** No dates/versions, descriptive names (`data-access-patterns`)
 
 ---
 
 ## Troubleshooting
 
-### Claude Doesn't See All Skills
+**Claude doesn't see all skills:** Descriptions exceed budget → Run `/context` to check → Increase `SLASH_COMMAND_TOOL_CHAR_BUDGET` or shorten descriptions
 
-**Problem:** Some skills not available to Claude.
-
-**Cause:** Skill descriptions exceed character budget (default 15,000 characters).
-
-**Fix:**
-1. Run `/context` to check for warning about excluded skills
-2. Increase limit: Set `SLASH_COMMAND_TOOL_CHAR_BUDGET` environment variable
-3. Or shorten skill descriptions (focus on triggers, remove examples)
-
-### Skill with context: fork Returns Nothing
-
-**Problem:** Forked skill returns empty or useless output.
-
-**Cause:** Skill contains guidelines but no actionable task.
-
-**Fix:**
-- `context: fork` requires explicit instructions (task)
-- Don't fork skills with just reference material ("use these patterns")
-- Only fork skills with complete prompts ("do X, then Y, output Z")
+**Forked skill returns nothing:** Guidelines without task → `context: fork` needs explicit instructions ("do X, output Y"), not reference material
 
 ---
 
@@ -557,119 +437,17 @@ Before finalizing skill, verify:
 
 ---
 
-## Quick Start Template
-
-**Fastest way to create a skill:**
+## Quick Start
 
 ```bash
-# 1. Create directory
 mkdir -p .claude/skills/my-skill-name
-
-# 2. Copy template
-cp .claude/skills/skill-creator/skill-template.md \
-   .claude/skills/my-skill-name/SKILL.md
-
-# 3. Edit SKILL.md
-# - Update YAML frontmatter (name, description)
-# - Fill in sections with project-specific content
-# - Remove unused sections
-# - Keep <500 lines
-
-# 4. Verify line count
-wc -l .claude/skills/my-skill-name/SKILL.md
-
-# 5. Test invocation
-# Ask Claude: "Use @my-skill-name to help with..."
+cp .claude/skills/skill-creator/skill-template.md .claude/skills/my-skill-name/SKILL.md
+# Edit: frontmatter, sections, verify <500 lines
 ```
 
----
+**Example skills:** data-access-patterns, signal-vs-noise, claude-md (see `.claude/skills/`)
 
-## Examples from This Project
-
-### High-Quality Skills (Follow These)
-
-**data-access-patterns (132 lines)**
-- ✅ Project-specific (circular dependency bug)
-- ✅ WHY included (explains why patterns exist)
-- ✅ Critical mistakes documented
-- ✅ Quick reference tables (server vs browser client)
-- ✅ Concise (<500 lines)
-
-**signal-vs-noise (112 lines)**
-- ✅ Decision framework (3 questions)
-- ✅ Examples show good vs bad
-- ✅ Actionable (helps decide what to include)
-- ✅ Philosophy skill (no code, pure decision-making)
-
-**claude-md-guidelines (127 lines)**
-- ✅ Writing guidelines (what to include/exclude)
-- ✅ Self-check questions
-- ✅ Examples of good vs bad docs
-- ✅ Meta-documentation (how to document)
-
-### Advanced Pattern Examples
-
-**Skill with context: fork (research task):**
-```yaml
----
-name: deep-research
-description: Research topic thoroughly using codebase exploration
-context: fork
-agent: Explore
----
-
-Research $ARGUMENTS thoroughly:
-1. Find relevant files using Glob and Grep
-2. Read and analyze the code
-3. Summarize findings with specific file references
-```
-When invoked: Creates isolated subagent, executes research, returns summary.
-
-**Skill with dynamic context injection (PR analysis):**
-```yaml
----
-name: pr-summary
-description: Summarize pull request changes
-context: fork
-agent: Explore
-allowed-tools: Bash(gh *)
----
-
-## Pull request context
-- PR diff: !(backtick)gh pr diff(backtick)
-- PR comments: !(backtick)gh pr view --comments(backtick)
-
-## Your task
-Summarize this pull request...
-```
-Note: Replace (backtick) with the backtick character. Commands execute first, output injected, then Claude sees fully-rendered prompt.
-
-**Skill with script integration (visual output):**
-```yaml
----
-name: codebase-visualizer
-description: Generate interactive tree visualization
-allowed-tools: Bash(python *)
----
-
-Run visualization script:
-```bash
-python ~/.claude/skills/codebase-visualizer/scripts/visualize.py .
-```
-
-Creates `codebase-map.html` with interactive directory tree.
-```
-Script generates HTML, opens in browser. Pattern for any visual output.
-
-### Skills to Reference
-
-- **data-access-patterns** - Technical pattern skill (data layer, access control)
-- **code-patterns** - Application pattern skill (React, TypeScript)
-- **architecture-decisions** - Architectural skill (structure, rules)
-- **notion-integration** - Integration skill (API, MCP tools)
-- **design-system** - Design skill (UI, accessibility)
-- **signal-vs-noise** - Philosophy skill (decision framework)
-- **claude-md-guidelines** - Process skill (documentation guidelines)
+**Advanced patterns:** See `@resources/forked-execution.md` (context: fork), `@resources/skill-ecosystem-reference.md` (dynamic injection, scripts)
 
 ---
 

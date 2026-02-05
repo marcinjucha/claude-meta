@@ -275,52 +275,22 @@ tail -f ~/.claude/projects/.../subagents/agent-xyz.jsonl
 
 ### Pattern 1: Read-Only Analyst
 
-**Purpose:** Analyze codebase without modifications
-
 ```yaml
 ---
 name: code-reviewer
-description: Review code for quality and best practices. Use after code changes.
 tools: Read, Grep, Glob, Bash
-model: sonnet
-skills:
-  - code-quality-patterns
-  - security-patterns
+disallowedTools: Write, Edit
+skills: [code-quality-patterns]
 ---
-
-You are a senior code reviewer.
-
-When invoked:
-1. Run git diff to see changes
-2. Focus on modified files
-3. Apply patterns from preloaded skills
-
-Provide feedback organized by priority:
-- Critical issues (must fix)
-- Warnings (should fix)
-- Suggestions (consider)
 ```
 
-**Why read-only tools:**
+**Why read-only tools:** Production incident - agent with Write access "fixed" code during review → feedback inconsistent with committed code.
 
-Production incident: Review agent with Write access accidentally "fixed" code during review → review feedback inconsistent with committed code → confusion in PR discussion thread.
-
-Fix: Explicit tool restrictions (`tools: Read, Grep, Glob, Bash`) enforce read-only → agent cannot modify files → consistent review process → feedback matches actual code state.
-
-**Key points:**
-- ✅ Tool restrictions enforce read-only
-- ✅ Skills contain patterns (not agent body)
-- ✅ System prompt describes approach
-
-### Pattern 2: Conditional Validator
-
-**Purpose:** Allow tool but validate usage
+### Pattern 2: Conditional Validator (Hook)
 
 ```yaml
 ---
 name: db-reader
-description: Execute read-only database queries. Use for data analysis.
-tools: Bash
 hooks:
   PreToolUse:
     - matcher: "Bash"
@@ -328,426 +298,100 @@ hooks:
         - type: command
           command: "./scripts/validate-readonly.sh"
 ---
-
-You are a database analyst with read-only access.
-
-Execute SELECT queries to answer questions.
-You cannot modify data (INSERT, UPDATE, DELETE).
 ```
 
-**Hook script (scripts/validate-readonly.sh):**
-```bash
-#!/bin/bash
-INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+**Hook script:** Exit code 2 blocks operation. Grep for INSERT/UPDATE/DELETE → block if found.
 
-# Block write operations
-if echo "$COMMAND" | grep -iE '\b(INSERT|UPDATE|DELETE|DROP|CREATE|ALTER)\b' > /dev/null; then
-  echo "Blocked: Only SELECT queries allowed" >&2
-  exit 2  # Exit code 2 blocks the operation
-fi
-
-exit 0
-```
-
-**Key points:**
-- ✅ Hook validates before execution
-- ✅ Exit code 2 blocks operation
-- ✅ Error message via stderr
-
-### Pattern 3: Parallel Researcher
-
-**Purpose:** Independent research in isolation
-
-```yaml
----
-name: deep-researcher
-description: Thorough codebase research with detailed analysis
-model: sonnet
-permissionMode: plan
-skills:
-  - research-guidelines
----
-
-You are a thorough researcher.
-
-When invoked:
-1. Explore codebase systematically
-2. Document findings with file references
-3. Summarize patterns and insights
-
-Present findings in structured format.
-```
-
-**Key points:**
-- ✅ Plan mode for read-only
-- ✅ Model specified for capability
-- ✅ Skills provide research methodology
-
-### Pattern 4: Fast Processor
-
-**Purpose:** Quick operations with Haiku
+### Pattern 3: Fast Processor (Haiku)
 
 ```yaml
 ---
 name: log-analyzer
-description: Parse and summarize log files. Use for log analysis.
 model: haiku
 tools: Read, Bash
 ---
-
-You are a log analyzer.
-
-When invoked:
-1. Read log files
-2. Extract errors and warnings
-3. Summarize by category
-
-Keep analysis concise.
 ```
 
-**Why Haiku for simple tasks:**
-
-Production metrics:
-- Haiku: ~2-3s response time, 90% accuracy for log categorization
-- Sonnet: ~8-10s response time, 95% accuracy for same task
-- Trade-off: 3x faster, 5% accuracy loss acceptable for simple categorization
-
-When NOT to use Haiku:
-- Complex reasoning (use Sonnet) - code architecture analysis, multi-step debugging
-- Code generation (use Sonnet) - implementation quality matters more than speed
-- Multi-step analysis (use Sonnet) - requires maintaining complex context
-
-**Key points:**
-- ✅ Haiku for speed + cost
-- ✅ Limited tools for focused task
-- ✅ Concise system prompt
+**When Haiku:** Simple categorization (3x faster, 5% accuracy loss acceptable)
+**When Sonnet:** Complex reasoning, code generation, multi-step analysis
 
 ---
 
 ## Advanced Patterns
 
-### Pattern: Agent with Skills
+### Pattern 4: Agent with Skills
 
-**Agent preloads skill content at startup:**
+**Preload skills** when agent uses skill in >50% of invocations (0s delay vs 2-5s on-demand).
 
 ```yaml
 ---
-name: api-developer
-description: Implement API endpoints following team conventions
 skills:
   - api-conventions
   - error-handling-patterns
-  - testing-strategy
 ---
-
-You implement API endpoints.
-
-Follow conventions from preloaded skills:
-- api-conventions (patterns and rules)
-- error-handling-patterns (error handling)
-- testing-strategy (test coverage)
-
-When implementing:
-1. Design endpoint following conventions
-2. Implement with error handling
-3. Add tests per strategy
 ```
 
-**Why preload skills:**
+**Skills NOT inherited** from parent conversation (must list in frontmatter).
 
-Performance impact:
-- Preloaded: Skills available immediately in agent context (0s delay)
-- On-demand: Agent must invoke Skill tool → additional API call → 2-5s delay per skill access
-
-When to preload:
-- Agent uses skill in >50% of invocations → preload (example: code-reviewer uses style-guide in 80% of reviews)
-- Agent uses skill rarely (<20%) → let agent load on-demand (example: db-reader rarely needs migration-patterns)
-
-**How it works:**
-1. Agent starts with skills injected into context
-2. Full skill content available (not just description)
-3. Agent references skill knowledge in system prompt
-4. Skills are NOT inherited from parent conversation
-
-**When to use:**
-- Agent needs domain knowledge to operate
-- Domain knowledge reusable across agents
-- Knowledge changes independently of agent logic
-
-### Pattern: Lifecycle Hooks
-
-**Agent with setup/cleanup:**
+### Pattern 5: Lifecycle Hooks
 
 ```yaml
 ---
-name: integration-tester
-description: Run integration tests with environment setup
 hooks:
-  PreToolUse:
+  PreToolUse:  # Validation before tool use
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "./scripts/validate-test-command.sh"
-  Stop:
+          command: "./scripts/validate.sh"
+  Stop:  # Cleanup when agent finishes
     - hooks:
         - type: command
-          command: "./scripts/cleanup-test-env.sh"
+          command: "./scripts/cleanup.sh"
 ---
-
-You run integration tests.
-
-Environment is set up automatically.
-Run tests and report results.
-Environment is cleaned up on completion.
 ```
 
-**Hook events:**
+### Pattern 6: Background Agent
 
-| Event | Matcher | When it fires |
-|-------|---------|---------------|
-| `PreToolUse` | Tool name | Before agent uses tool |
-| `PostToolUse` | Tool name | After agent uses tool |
-| `Stop` | (none) | When agent finishes |
-
-### Pattern: Background Agent
-
-**Agent runs concurrently:**
-
-```yaml
----
-name: test-runner
-description: Run test suite in background
-model: haiku
-permissionMode: acceptEdits
----
-
-You run the test suite.
-
-1. Run all tests
-2. Collect failures
-3. Report summary with file:line references
-
-Continue even if some tests fail.
-```
-
-**Invocation:**
-- User: "Run tests in the background"
-- Claude: Launches agent with `run_in_background: true`
-- Agent executes concurrently
-- Results returned when complete
-
-**Key points:**
-- ✅ Permission prompts upfront (before background)
-- ✅ Auto-deny any non-approved tools
-- ✅ No AskUserQuestion (fails if attempted)
-- ✅ No MCP tools in background
+**Background execution:** `run_in_background: true`
+- ✅ Permission prompts upfront
+- ❌ No AskUserQuestion (fails)
+- ❌ No MCP tools
 
 ---
 
-## Anti-Patterns (Common Mistakes)
+## Anti-Patterns (CRITICAL)
 
 ### ❌ Domain Knowledge in Agent Body
-
-**Problem:** Agent contains 500 lines of API patterns
-
-```yaml
-# ❌ WRONG
----
-name: api-developer
----
-You implement API endpoints. Follow these patterns:
-
-## REST Conventions
-[300 lines of REST patterns...]
-
-## Error Handling
-[200 lines of error patterns...]
-```
-
-**Fix:** Move domain knowledge to skills
-
-```yaml
-# ✅ CORRECT
----
-name: api-developer
-skills:
-  - api-conventions
-  - error-handling-patterns
----
-You implement API endpoints following team conventions.
-Refer to preloaded skills for patterns.
-```
-
-### ❌ Agent Duplicates Existing Skills
-
-**Problem:** Agent reimplements patterns already in skills
-
-**Fix:** Reference skills instead of duplicating content
+**Fix:** Move patterns to skills, reference skills in frontmatter
 
 ### ❌ Too Many Tool Restrictions
-
-**Problem:** Agent restricts tools unnecessarily
-
-```yaml
-# ❌ WRONG - Read-only but denies Grep/Glob
----
-name: code-reviewer
-tools: Read
----
-```
-
-**Fix:** Allow all needed tools for read-only analysis
-
-```yaml
-# ✅ CORRECT
----
-name: code-reviewer
-tools: Read, Grep, Glob, Bash
-disallowedTools: Write, Edit
----
-```
+**Fix:** Allow all needed tools (Read, Grep, Glob, Bash for read-only, not just Read)
 
 ### ❌ Generic Agent Name
-
-**Problem:** `helper`, `processor`, `analyzer`
-
-**Fix:** Domain-specific: `code-reviewer`, `db-reader`, `test-runner`
+**Fix:** Domain-specific: `code-reviewer`, not `helper`
 
 ### ❌ First-Person Description
-
-**Problem:** `description: "I help you review code"`
-
-**Fix:** `description: "Review code for quality and best practices. Use after code changes."`
+**Fix:** Third-person: "Review code..." not "I help you..."
 
 ### ❌ Missing WHY in Description
-
-**Problem:** `description: "Code reviewer"`
-
-**Fix:** `description: "Review code for quality and security. Use proactively after code changes or before merging."`
-
-### ❌ Agent Contains Hook Scripts
-
-**Problem:** Agent body includes bash script code
-
-**Fix:** Hook scripts in separate files, referenced via hooks frontmatter
+**Fix:** Include trigger: "Use proactively after code changes"
 
 ---
 
-## CLI Pattern: Temporary Agents
+## Integration
 
-**Create agent for current session only:**
-
-```bash
-claude --agents '{
-  "code-reviewer": {
-    "description": "Review code for quality and best practices",
-    "prompt": "You are a senior code reviewer. Focus on security and performance.",
-    "tools": ["Read", "Grep", "Glob", "Bash"],
-    "model": "sonnet"
-  }
-}'
-```
-
-**JSON format:**
-- `prompt` = System prompt (equivalent to markdown body)
-- Same fields as frontmatter
-- Not saved to disk (session only)
-
-**When to use:**
-- Quick testing
-- Automation scripts
-- CI/CD pipelines
-- One-off tasks
-
----
-
-## Integration with Skills and Commands
-
-### Agent References Skills
-
-**Agent loads skills at startup:**
-
-```yaml
----
-name: api-developer
-skills:
-  - api-conventions
-  - error-handling-patterns
----
-```
-
-**Full skill content injected when agent starts.**
-
-### Command Uses Agent
-
-**Command delegates to agent:**
-
-```markdown
-# .claude/commands/implement-api.md
-
-Phase 1: Use api-developer agent to implement endpoint
-Phase 2: Use test-runner agent to validate
-Phase 3: Use code-reviewer agent to review
-```
-
-**Command orchestrates, agents execute.**
-
-### Skill Forks to Agent
-
-**Skill runs in agent context:**
-
-```yaml
-# .claude/skills/deep-research/SKILL.md
----
-name: deep-research
-context: fork
-agent: Explore
----
-
-Research $ARGUMENTS thoroughly:
-1. Find files
-2. Analyze code
-3. Summarize findings
-```
-
-**Skill content becomes agent task.**
+**Agent references skills:** Full skill content injected at startup
+**Command uses agent:** Command orchestrates, agents execute
+**Skill forks to agent:** Skill content becomes agent task (`context: fork`)
 
 ---
 
 ## Troubleshooting
 
-### Agent Not Triggering
-
-**Problem:** Claude doesn't delegate to agent
-
-**Fixes:**
-1. Check description matches user's natural language
-2. Verify description includes "Use proactively" if should auto-trigger
-3. Ask Claude "What agents are available?"
-4. Request explicitly: "Use the agent-name agent to..."
-
-### Agent Missing Skills
-
-**Problem:** Agent doesn't have access to skill content
-
-**Cause:** Skills not listed in agent's `skills:` field
-
-**Fix:** Add skills to frontmatter (agents don't inherit from parent)
-
-### Hook Not Blocking
-
-**Problem:** PreToolUse hook doesn't block operation
-
-**Cause:** Exit code not 2 (only exit code 2 blocks)
-
-**Fix:** Ensure hook script `exit 2` on validation failure
-
-### Agent Triggers Too Often
-
-**Problem:** Claude delegates when you don't want it
-
-**Fix:** Make description more specific (narrow trigger conditions)
+**Agent not triggering:** Check description matches user language, add "Use proactively"
+**Missing skills:** Add to `skills:` frontmatter field (not inherited)
+**Hook not blocking:** Exit code must be 2 (only 2 blocks operation)
+**Triggers too often:** Narrow description trigger conditions
 
 ---
 
@@ -820,72 +464,6 @@ EOF
 
 # 3. Test
 # Ask Claude: "Use my-agent-name to..."
-```
-
----
-
-## Examples from Documentation
-
-### Built-in Agents
-
-**Explore** - Fast codebase research
-- Model: Haiku (speed)
-- Tools: Read-only (no Write/Edit)
-- Purpose: File discovery, code search
-
-**Plan** - Research for planning
-- Model: Inherits from main
-- Tools: Read-only
-- Purpose: Gather context before plan
-
-**General-purpose** - Complex multi-step
-- Model: Inherits from main
-- Tools: All tools
-- Purpose: Research + action
-
-### Custom Agent Examples
-
-**Code Reviewer** (from docs)
-```yaml
----
-name: code-reviewer
-description: Expert code review. Use proactively after code changes.
-tools: Read, Grep, Glob, Bash
-model: inherit
----
-
-You are a senior code reviewer.
-
-When invoked:
-1. Run git diff
-2. Focus on modified files
-3. Begin review
-
-Review checklist:
-- Code clarity
-- No duplicated code
-- Error handling
-- Security issues
-
-Provide feedback by priority.
-```
-
-**Database Query Validator** (from docs)
-```yaml
----
-name: db-reader
-description: Execute read-only database queries
-tools: Bash
-hooks:
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "./scripts/validate-readonly.sh"
----
-
-You are a database analyst with read-only access.
-Execute SELECT queries. Cannot modify data.
 ```
 
 ---

@@ -1063,40 +1063,6 @@ Modification complete!
 
 ---
 
-## Anti-Patterns to Prevent
-
-### ❌ Not Invoking claude-manager (Just Describing)
-
-**Problem:** Orchestrator describes what claude-manager will do, doesn't invoke Task tool.
-
-**Fix:** "⚠️ CRITICAL" section forces actual invocation.
-
-### ❌ Too Much Context (Full Conversation)
-
-**Problem:** Passing entire Phase 1 conversation to Phase 2 claude-manager.
-
-**Fix:** Extract decisions only (50 lines vs 500 lines).
-
-### ❌ No Clarifying Questions After Phase 0
-
-**Problem:** Proceeded to Phase 1 without verifying understanding of complexity/type.
-
-**Fix:** Mandatory paraphrase + 5 questions after Phase 0.
-
-### ❌ Offering Commands Before Confirmation
-
-**Problem:** Showed "Ready to proceed?" before user confirmed understanding.
-
-**Fix:** Clarifying questions → confirmation → THEN commands.
-
-### ❌ Skipping Sufficient Context Sections
-
-**Problem:** AUDIT mode found workflows missing "Sufficient context for quality" sections.
-
-**Fix:** Phase 1 structure check includes this requirement.
-
----
-
 ## Key Principles
 
 **Modes:** CREATE (new workflow) vs AUDIT (check compliance)
@@ -1112,7 +1078,3 @@ Modification complete!
 **Force Invocation:** "⚠️ CRITICAL" section prevents describing instead of invoking
 
 **User Checkpoints:** After confirmation, offer commands (continue/skip/back/stop)
-
----
-
-**Key Lesson:** Workflows need architectural compliance (structure + WHY + signal filtering). AUDIT mode detects violations, recommends fixes. CREATE mode ensures new workflows follow patterns from start.

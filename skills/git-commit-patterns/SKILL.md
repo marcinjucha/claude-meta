@@ -55,29 +55,6 @@ Commit messages explain WHY, git diff shows HOW.
 
 **Why:** Module changes require different reviewers + merge strategy. Core changes affect multiple features (risk), App changes isolated to single feature.
 
-**Example:**
-```bash
-# Commit 1: Core module changes
-git commit -m "Add DataAccessLayer to Core module
-
-Implements reactive data access with observer pattern.
-Adds indexes for foreign key constraints.
-Used by FeatureA + FeatureB.
-
-Module: Core/DataLayer
-Breaking: No"
-
-# Commit 2: App layer usage
-git commit -m "Integrate filtering in FeatureX
-
-Add filter UI panel.
-Connect to DataAccessLayer.
-Update tests.
-
-Module: App/Features
-Breaking: No"
-```
-
 ---
 
 ### Factor 2: Feature Scope (HIGH Priority)
@@ -85,25 +62,6 @@ Breaking: No"
 **Rule:** Different features = SEPARATE commits (even in same module).
 
 **Why:** Features reviewed independently. Mixing features = complex PR, slow review.
-
-**Example:**
-```bash
-# Commit 1: FeatureA
-git commit -m "Add status filtering to FeatureA
-
-Filter by completed/pending states.
-Update list component.
-
-Feature: FeatureA"
-
-# Commit 2: FeatureB
-git commit -m "Add name editing to FeatureB
-
-Inline editing in list view.
-Validation + persistence.
-
-Feature: FeatureB"
-```
 
 ---
 
@@ -113,131 +71,30 @@ Feature: FeatureB"
 
 **Why:** Breaking changes need special review attention. Mixing with non-breaking = hidden risk.
 
-**Example:**
-```bash
-# Commit 1: Breaking change
-git commit -m "BREAKING: Change DataRepository API signature
-
-fetchData() now requires contextId parameter.
-Removed default context fallback (unreliable behavior).
-
-BREAKING: All callers must pass contextId explicitly
-Migration: Update 12 call sites (see diff)"
-
-# Commit 2: Non-breaking implementation
-git commit -m "Add caching to improve performance
-
-Cache data in memory for 5 minutes.
-Reduces database queries by 80%.
-
-Breaking: No"
-```
-
 ---
 
 ### Factor 4: Commit Type (MEDIUM Priority)
 
 **Rule:** Different types = CONSIDER separating.
 
-**Types:**
-- **feat**: New functionality
-- **fix**: Bug fix
-- **refactor**: Code restructuring (no behavior change)
-- **test**: Test additions/updates
-- **docs**: Documentation only
+**Types:** feat, fix, refactor, test, docs
 
 **When to separate:**
 - feat + fix = SEPARATE (different review focus)
 - refactor + feat = SEPARATE (refactor first, then add feature)
 - test + feat = SAME (tests belong with feature)
 
-**Example:**
-```bash
-# Commit 1: Refactor (groundwork)
-git commit -m "refactor: Extract filtering logic to service layer
-
-Move filtering from use case to service.
-Prepare for multi-feature reuse.
-
-Type: refactor"
-
-# Commit 2: Feature (builds on refactor)
-git commit -m "feat: Add date range filtering
-
-Add date picker UI component.
-Integrate with DataService.
-
-Type: feat
-Depends-On: Previous refactor commit"
-```
-
 ---
 
 ## Squashing Decision Rules
 
-### Rule 1: WIP/Fixup Commits = SQUASH
+### SQUASH When:
+- **WIP/Fixup commits** - "WIP", "fixup", "temp", "debug" → ALWAYS squash
+- **Same Feature + Same Module** - Multiple commits within same feature/module → Consider squashing
 
-**Pattern:** "WIP", "fixup", "temp", "debug" → ALWAYS squash.
-
-**Example:**
-```bash
-# Before squash:
-- feat: Add data filtering
-- WIP
-- fixup tests
-- Fix typo
-- Debug logging
-
-# After squash:
-- feat: Add data filtering with tests
-```
-
----
-
-### Rule 2: Same Feature + Same Module = SQUASH
-
-**Pattern:** Multiple commits within same feature/module → Consider squashing.
-
-**Example:**
-```bash
-# Before squash:
-- Add filter UI
-- Connect to data layer
-- Add tests
-- Update documentation
-
-# After squash:
-- feat: Add data filtering feature
-
-  Implements status + date range filtering with UI panel,
-  data layer integration, and comprehensive tests.
-```
-
----
-
-### Rule 3: Different Modules = DON'T SQUASH
-
-**Pattern:** Core vs App commits → Keep separate.
-
-**Example:**
-```bash
-# Keep separate (different modules):
-- feat: Add DataAccessLayer to Core module
-- feat: Integrate filtering in FeatureX (App layer)
-```
-
----
-
-### Rule 4: Breaking Changes = DON'T SQUASH
-
-**Pattern:** Breaking change commits → Keep separate (needs visibility).
-
-**Example:**
-```bash
-# Keep separate (breaking change needs attention):
-- BREAKING: Change DataRepository API
-- feat: Use new API in FeatureX
-```
+### DON'T SQUASH When:
+- **Different Modules** - Core vs App commits → Keep separate
+- **Breaking Changes** - Breaking change commits → Keep separate (needs visibility)
 
 ---
 
@@ -247,30 +104,12 @@ Depends-On: Previous refactor commit"
 
 **BEFORE writing commit message**, extract ticket number from branch name.
 
-**Branch name pattern:**
-```
-(chore/feature/bugfix)/(TICKET-NUMBER)-description
-```
-
-**Extract ticket command:**
+**Command:**
 ```bash
-# Get current branch and extract ticket number
 git branch --show-current | grep -oE '[A-Z]+-[0-9]+'
 ```
 
-**Examples:**
-```bash
-# Branch: bugfix/SHELF-21614-mapping-mode-db-issue
-# Extract: SHELF-21614
-
-# Branch: feature/CIOS-1234-new-feature
-# Extract: CIOS-1234
-
-# Branch: chore/SHELF-9999-cleanup-code
-# Extract: SHELF-9999
-```
-
-**Why extract first:** Ticket number prepends to commit subject. Must be extracted before writing message.
+**Why:** Ticket number prepends to commit subject. Must be extracted before writing message.
 
 ### Structure
 
@@ -366,41 +205,14 @@ Missing ticket number from branch name.
 
 ### Footer (Rarely Used)
 
-**IMPORTANT: Default is NO footer.** Only add when absolutely necessary.
-
-**When to add:**
+**Default: NO footer.** Only add when necessary:
 - Breaking changes: `BREAKING: <description>` with migration notes
 - Issue references: `Closes #123`, `Fixes JIRA-456`
 
 **NEVER add:**
-- ❌ `Co-Authored-By: Claude ...` - Obvious noise, adds no value
-- ❌ `Signed-off-by:` - Unless legally required by project
-- ❌ Template fields (Risk Level, Files Changed, etc.) - Git shows this
-
-**Example (Breaking change with footer):**
-```
-BREAKING: Change repository API signature
-
-Repository methods now require explicit context parameter because default
-context caused data isolation bugs in multi-user scenarios. All callers must
-pass context explicitly.
-
-Migration:
-- Old: repository.fetch()
-- New: repository.fetch(context: userContext)
-
-Closes ISSUE-1234
-```
-
-**Example (Normal commit - NO footer):**
-```
-feat: Add survey submission feature
-
-Clients can now submit survey responses via public links.
-Form validates inputs and saves to database with tenant isolation.
-
-[END - No footer needed]
-```
+- ❌ `Co-Authored-By: Claude ...` - Noise
+- ❌ `Signed-off-by:` - Unless legally required
+- ❌ Template fields - Git shows this
 
 ---
 
@@ -491,86 +303,36 @@ Team X after organizing:
 
 ### How to Organize (Step-by-Step)
 
-**Step 1: Review Current History**
-
+**Step 1:** Review current history
 ```bash
-git log --oneline develop..HEAD  # See all commits since branching
+git log --oneline develop..HEAD
 ```
 
-**Look for:**
-- WIP/fixup commits (squash candidates)
-- Module boundary violations (separation needed)
-- Feature scope violations (separation needed)
-- Breaking changes (keep separate + flag)
-
-**Step 2: Interactive Rebase**
-
+**Step 2:** Interactive rebase
 ```bash
-git rebase -i develop  # Organize commits
+git rebase -i develop
 ```
 
-**Commands:**
-- `pick`: Keep commit as-is
-- `squash`: Merge with previous commit
-- `reword`: Change commit message
-- `edit`: Stop to split commit
+**Commands:** `pick` (keep), `squash` (merge), `reword` (change message), `edit` (split)
 
-**Apply rules:** Squash WIP, separate modules, flag breaking changes
-
-**Step 3: Verify Clean History**
-
+**Step 3:** Verify clean history
 ```bash
-git log --oneline develop..HEAD  # Confirm organization
+git log --oneline develop..HEAD
 ```
-
-**Check:**
-- [ ] No WIP/fixup commits
-- [ ] Module boundaries respected
-- [ ] Breaking changes separate + flagged
-- [ ] Commit messages follow conventions
 
 ---
 
 ## Examples
 
-### Good Commit Structure
+### Good vs Bad Commit Structure
 
-```bash
-# 3 separate commits (module boundaries + feature scope)
-1. feat: Add DataAccessLayer to Core module
+**✅ Good:** 3 separate commits (module boundaries + feature scope)
+- feat: Add DataAccessLayer to Core module
+- feat: Add filtering UI in FeatureX
+- test: Add integration tests for data filtering
 
-   Implements reactive data access with observer pattern.
-   Adds indexes for foreign key constraints.
-
-   Module: Core/DataLayer
-   Breaking: No
-
-2. feat: Add filtering UI in FeatureX
-
-   Status + date range filters with reactive updates.
-   Integrates with DataAccessLayer.
-
-   Module: App/Features
-   Breaking: No
-
-3. test: Add integration tests for data filtering
-
-   Covers all filter combinations + edge cases.
-
-   Module: App/Features
-```
-
-### Bad Commit Structure
-
-```bash
-# Mixed modules + WIP commits (needs cleanup)
-1. WIP
-2. Add filtering
-3. Fix Core changes
-4. Update FeatureA + FeatureB  # Mixed features!
-5. Fix tests
-6. Debug logging
-```
+**❌ Bad:** Mixed modules + WIP commits
+- WIP, Add filtering, Fix Core changes, Update FeatureA + FeatureB, Fix tests, Debug logging
 
 **Fix:** Squash WIP commits, separate Core vs App, separate FeatureA vs FeatureB.
 
@@ -578,16 +340,9 @@ git log --oneline develop..HEAD  # Confirm organization
 
 ## Integration Notes
 
-**Related skills:**
-- **clean-architecture** - Module boundaries (Core vs App)
-- **signal-vs-noise** - What deserves commit message detail
+**Related skills:** clean-architecture (module boundaries), signal-vs-noise (commit message detail)
 
-**When to use this skill:**
-- Pre-merge commit organization
-- Writing commit messages
-- Deciding when to squash commits
-- PR preparation
-- Creating pull requests with structured format
+**Use when:** Pre-merge organization, writing messages, squashing decisions, PR preparation
 
 ---
 
@@ -598,15 +353,7 @@ git log --oneline develop..HEAD  # Confirm organization
 - `@resources/why-over-how-reference.md` - WHY over HOW philosophy (business context, technical rationale, bug context)
 - `@resources/commit-message-examples.md` - Structure patterns (template vs natural prose, transformation examples)
 
-**Use resources for:**
-- Signal vs Noise → Apply 3-question filter to commit message content (Actionable? Impactful? Non-Obvious?)
-- Why over How → Focus on business context and rationale, not implementation details
-- Examples → See transformation from template to natural prose
-
-**Why included:**
-- Self-contained philosophy guide (consistent Signal vs Noise principles)
-- Universal patterns applicable to any project
-- Transformation examples (template → natural prose)
+**Use resources for:** Signal vs Noise (3-question filter), Why over How (business context), transformation examples (template → natural prose)
 
 ---
 

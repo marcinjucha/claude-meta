@@ -40,27 +40,21 @@ Automatically detects intent from natural language and executes appropriate skil
 
 ## Orchestrator Instructions
 
-### ⚠️ CRITICAL: YOU MUST INVOKE AGENTS
+### Agent Invocation
 
-**You are the orchestrator.** Your job is to **ACTUALLY INVOKE AGENTS using the Task tool**.
+**You are the orchestrator.** Invoke agents using the Task tool.
 
-**DO NOT**:
-- ❌ Say "I will launch claude-manager"
-- ❌ Describe what the agent will do
-- ❌ Explain the phase without invoking
+**Pattern:**
+- Use Task tool with `subagent_type="claude-manager"`, description, prompt parameters
+- Wait for agent completion
+- Show results to user
 
-**DO**:
-- ✅ Immediately invoke Task tool with agent
-- ✅ Use subagent_type="claude-manager", description, prompt parameters
-- ✅ Wait for agent completion
-- ✅ Show results to user
-
-**Example**:
+**Example:**
 ```
 Phase 1/4: Signal Extraction
 Launching claude-manager...
 ```
-[IMMEDIATELY invoke Task tool NOW with subagent_type="claude-manager"]
+[IMMEDIATELY invoke Task tool with subagent_type="claude-manager"]
 
 ### Critical Rules
 
@@ -69,7 +63,7 @@ Launching claude-manager...
 3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 5 questions + confirmation
 4. **User checkpoints** - Get approval after confirmation before proceeding
 5. **Track phase** - Remember current position and mode (CREATE/AUDIT/MODIFY)
-6. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
+6. **Use only user-provided data** - Extract from source material, no invented metrics/incidents
 
 ### Phase Execution Pattern
 
@@ -114,7 +108,7 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 0: Intent Detection and Mode Selection (Inline)
 **You do this - no agent**
 
-**CRITICAL: Analyze user's natural language request to determine mode.**
+**Analyze user's natural language request to determine mode.**
 
 **Step 1: Detect Intent**
 
@@ -526,7 +520,7 @@ Structure verification:
 Content verification:
   - [ ] Signal-focused (no generic content that Claude knows)
   - [ ] WHY over HOW (patterns explain problem/rationale/impact)
-  - [ ] WHY context in anti-patterns (what to avoid + why it's wrong, not timeline)
+  - [ ] WHY context in anti-patterns (what to avoid + why it's wrong)
   - [ ] Production context included (real incidents, root causes)
   - [ ] Examples are project-specific (not generic tutorials)
 
@@ -551,8 +545,7 @@ Reference verification:
 
 Quality verification:
   - [ ] 3-question filter passed (Actionable? Impactful? Non-obvious?)
-  - [ ] Current state focused (HOW TO USE NOW, not historical timeline)
-  - [ ] No "Changed in [date]" or "Pattern Migration" sections (update existing content instead)
+  - [ ] Current state focused (HOW TO USE NOW)
   - [ ] Clear and scannable (headers, bullets, tables)
 ```
 
@@ -756,13 +749,7 @@ For each skill, check:
    - Generic explanations (frameworks Claude knows)
    - Standard syntax examples (available in docs)
    - Obvious practices (coding basics)
-   - **INVENTED metrics or production incidents** (CRITICAL - flag for removal)
-
-   Example violation:
-   ```markdown
-   ❌ "Architecture uses layers: presentation, domain, data..."
-   ✅ "BUS uses 4 layers (Model/Presentation/UseCase/Repository) - see pattern details"
-   ```
+   - **INVENTED metrics or production incidents** (flag for removal)
 
 2. **WHY over HOW violations:**
    Patterns must include:
@@ -770,46 +757,17 @@ For each skill, check:
    - Rationale (why this approach over alternatives?)
    - Impact (what happens if not followed?)
 
-   Example violation:
-   ```markdown
-   ❌ "Use weak var for router reference"
-   ✅ "Use weak var for router reference (prevents retain cycle: Router → ViewModel → Router → leak)"
-   ```
-
 3. **WHY context missing in anti-patterns:**
    Anti-patterns must explain:
    - WHAT to avoid (specific mistake)
-   - WHY it's wrong (problem caused, not historical timeline)
+   - WHY it's wrong (problem caused)
    - Impact (production incident if available)
-
-   Example violation:
-   ```markdown
-   ❌ "Mistake: Strong router reference (changed in 2024)"
-   ✅ "Mistake: Strong router reference → 12MB leak per flow → crash on <2GB RAM devices"
-   ```
 
 4. **Current state vs historical timeline:**
    Skills should show HOW TO USE NOW, not history.
 
-   Violations:
-   - "Pattern Migration" sections (should update existing content)
-   - "Changed in [date]" notes (should replace with correct version)
-   - Historical timeline instead of current state
-
-   Example violation:
-   ```markdown
-   ❌ "Pattern changed from X to Y in 2024. Old pattern: [X]"
-   ✅ "Pattern: [Y]. (Update existing content, don't add history)"
-   ```
-
 5. **Tier 3 content in SKILL.md:**
    Check if detailed examples >50 lines should move to resources/.
-
-   Example violation:
-   ```markdown
-   ❌ SKILL.md contains 100-line complete code example
-   ✅ SKILL.md: "See @resources/complete-example.md" + resources/complete-example.md file
-   ```
 
 Use signal-vs-noise and skill-creator skills.
 
@@ -1028,7 +986,7 @@ Clarifying questions:
 1. Scope: Should changes affect [specific sections] or entire skill?
 2. Category: Is this primarily [category A] or [category B]?
 3. Approach: Should I [approach A] or [approach B] for [specific change]?
-4. CRITICAL: Should I UPDATE existing content (replace wrong) or ADD history section?
+4. Update strategy: UPDATE existing content (replace wrong) or ADD history section?
 5. Verification: After changes, full quality check or just changed sections?
 
 Does this match exactly what you want? If not, what should I adjust?
@@ -1068,10 +1026,8 @@ USER ADJUSTMENTS: [from Phase 0 clarifying questions]
 
 Task: Analyze current skill state and plan modifications.
 
-CRITICAL INSTRUCTION:
-- UPDATE existing content (replace wrong with correct)
-- DO NOT add history sections ("Pattern Migration", "Changed in [date]", timeline)
-- DO NOT add "Previously" or "Was" sections
+UPDATE STRATEGY:
+- Update existing content (replace wrong with correct)
 - Skills show HOW TO USE NOW, not historical evolution
 - Replace outdated patterns with current patterns in-place
 
@@ -1081,8 +1037,8 @@ Read skill file(s) and analyze:
 3. Impact (dependencies, cross-references affected)
 4. Approach for each category:
    - pattern_update: Replace/enhance existing patterns
-   - clarification: Improve existing content (don't add history)
-   - anti_pattern: Add WHY context (WHAT to avoid + WHY it's wrong, not when it happened)
+   - clarification: Improve existing content
+   - anti_pattern: Add WHY context (WHAT to avoid + WHY it's wrong)
    - drift_fix: UPDATE outdated info (replace with current state)
    - tier3_reorganization: Move content to/from resources/
    - script_addition: Add utility scripts with references
@@ -1127,7 +1083,7 @@ Clarifying questions:
 1. Plan suggests [N] modifications - is this complete or should I add [X]?
 2. Change order: [A] → [B] → [C] - correct priority?
 3. Section [X] will be [modified/enhanced/replaced] - is this what you want?
-4. Plan updates existing content (no history sections) - correct approach?
+4. Plan updates existing content - correct approach?
 5. After changes, skill will [outcome] - matches your goal?
 
 Does this match exactly what you want? If not, what should I adjust?
@@ -1154,7 +1110,7 @@ Pattern updates:
   - Update examples to reflect current practices
 
 Clarification improvements:
-  - Improve existing content clarity (no history sections)
+  - Improve existing content clarity
   - Replace ambiguous statements with specific guidance
   - Add WHY context where missing (problem/rationale/impact)
   - Simplify complex explanations
@@ -1162,13 +1118,12 @@ Clarification improvements:
 Anti-pattern additions/updates:
   - Add WHAT to avoid + WHY it's wrong
   - Include production impact if available
-  - NO historical timeline ("changed in 2024")
   - Focus on current state (what's wrong NOW)
 
 Drift fixes:
   - UPDATE existing content (replace wrong information)
   - Replace outdated patterns with current patterns
-  - Fix incorrect information (don't add "Previously" sections)
+  - Fix incorrect information
   - Current state focus
 
 Tier 3 reorganization:
@@ -1212,13 +1167,13 @@ Content verification:
   - [ ] Changes match approved plan
   - [ ] Signal focused (no new noise introduced)
   - [ ] WHY context present (patterns and anti-patterns)
-  - [ ] Current state focus (no historical timeline sections)
-  - [ ] Updated existing content (didn't add history)
+  - [ ] Current state focus
+  - [ ] Updated existing content
 
 Quality verification:
   - [ ] 3-question filter passed (Actionable? Impactful? Non-obvious?)
   - [ ] WHY over HOW (problem/rationale/impact for patterns)
-  - [ ] Anti-patterns have WHY (WHAT + WHY, not timeline)
+  - [ ] Anti-patterns have WHY (WHAT + WHY)
   - [ ] Production context included (if applicable)
 
 Tier 3 verification (if reorganized):
@@ -1244,7 +1199,7 @@ Clarifying questions:
 2. Verification found [N] issues - should I fix automatically or show you?
 3. Modified skill ready at [path] - should I commit or let you review?
 4. Changes improve [aspect] - does this achieve your goal?
-5. Updated existing content (no history sections) - is this the right approach?
+5. Updated existing content - is this the right approach?
 
 Does this match your expectations? What should I adjust?
 ```
@@ -1275,13 +1230,6 @@ Modification complete!
 - ✅ Specific task for this phase
 - ✅ Expected output format
 
-**Do NOT provide:**
-
-- ❌ Full previous outputs (extract decisions only)
-- ❌ Entire conversation history (conclusions only)
-- ❌ Generic skill theory (claude-manager has skill-creator, signal-vs-noise skills)
-- ❌ Detailed examples (skills provide these)
-
 **Test question**:
 
 > "Can claude-manager produce HIGH QUALITY output with this context alone?"
@@ -1308,35 +1256,6 @@ Modification complete!
 
 ---
 
-## Anti-Patterns to Prevent
-
-### ❌ Not Invoking claude-manager (Just Describing)
-
-**Problem:** Orchestrator describes what claude-manager will do, doesn't invoke Task tool.
-
-**Fix:** "⚠️ CRITICAL" section forces actual invocation.
-
-### ❌ Too Much Context (Full Conversation)
-
-**Problem:** Passing entire Phase 1 conversation to Phase 2 claude-manager.
-
-**Fix:** Extract decisions only (50 lines vs 500 lines). Sufficient Context sections specify "Input needed" vs "NOT needed".
-
-### ❌ No Clarifying Questions After Phase 0
-
-**Problem:** Proceeded to Phase 1 without verifying understanding of skill scope/complexity.
-
-**Fix:** Mandatory paraphrase + 5 questions after Phase 0 (both Universal and mode-specific).
-
-### ❌ Offering Commands Before Confirmation
-
-**Problem:** Showed "Ready to proceed?" before user confirmed understanding.
-
-**Fix:** Clarifying questions → user confirmation → THEN commands.
-
-
----
-
 ## Key Principles
 
 **Signal vs Noise is GATE:** 3-question filter (Actionable? Impactful? Non-obvious?) applied before any content. ANY NO = NOISE.
@@ -1345,22 +1264,16 @@ Modification complete!
 
 **Nothing AI knows:** Cut generic explanations, frameworks, standard practices.
 
-**Current state focus:** Skills show HOW TO USE NOW, not historical timeline. Update existing content, don't add history sections.
+**Current state focus:** Skills show HOW TO USE NOW. Update existing content.
 
-**WHY context in anti-patterns:** Explain WHAT to avoid + WHY it's wrong (not historical dates/timeline).
+**WHY context in anti-patterns:** Explain WHAT to avoid + WHY it's wrong.
 
 **Production context:** Real incidents, root causes, impact statements.
 
 **Tier 3 organization:** Detailed examples >50 lines move to resources/. SKILL.md references via `@resources/filename.md`. ONE LEVEL DEEP (no nested references).
-
-**Force Invocation:** "⚠️ CRITICAL" section prevents describing instead of invoking.
 
 **Clarifying Questions MANDATORY:** After Phase 0 and EVERY agent phase (paraphrase + 5 questions + confirmation).
 
 **Sufficient Context:** Extract decisions only (50 lines vs 500 lines full output). Test question: "Can agent produce HIGH QUALITY with this?"
 
 **Quality > Brevity:** 600 lines pure signal > 300 lines with 50% noise.
-
----
-
-**Key Lesson:** Skills need architectural compliance (Signal vs Noise, WHY over HOW, current state focus, Tier 3 organization). AUDIT mode detects violations, recommends fixes. CREATE mode ensures new skills follow patterns from start. MODIFY mode updates skills correctly (replace wrong, don't add history).

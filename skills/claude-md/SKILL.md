@@ -93,19 +93,9 @@ Than:
 **Example:**
 ```markdown
 ## 15-Second Time Window (Bug Fix)
-
 ComponentHistoryService filters history with 15-second time window.
-
-**Why**: Server processes operations in up to 15 seconds. Without window, UI showed
-"not processed" even when operation succeeded. Users reported bugs, created support
-tickets. Window prevents false negatives. 95% fewer false-positive tickets after fix.
-
-Implementation:
-```language
-let recentOperations = history.filter { operation in
-    operation.timestamp > Date().addingTimeInterval(-15)
-}
-```
+**Why**: Server processes in up to 15s. Without window, UI showed "not processed"
+even when succeeded. 95% fewer false-positive tickets after fix.
 ```
 
 #### Structure for Critical Mistake
@@ -123,15 +113,9 @@ let recentOperations = history.filter { operation in
 **Example:**
 ```markdown
 ### ❌ Resource in Root Component (Memory Leak)
-
-**Problem**: Resource in RootComponent leaked NMB per back navigation.
-Devices crashed after 3 navigations. Production issue.
-
-**Why it failed**: Root component kept resource alive across entire flow. Back
-navigation didn't destroy resource instance.
-
-**Fix**: Moved resource to LeafComponent with conditional cleanup.
-Only dispose on actual dismiss, not forward navigation. Leak fixed.
+**Problem**: Resource leaked NMB per back navigation. Devices crashed.
+**Why it failed**: Root kept resource alive. Back navigation didn't destroy.
+**Fix**: Moved to LeafComponent with conditional cleanup. Leak fixed.
 ```
 
 **Where to Add:**
@@ -173,27 +157,17 @@ Only dispose on actual dismiss, not forward navigation. Leak fixed.
 3. **Add deprecation note if needed**
 
 **Example Update:**
-
 ```markdown
-BEFORE:
-## Resource Lifecycle
-Resource owned by RootComponent.
-File: ComponentFlow/RootComponent.ext:line 45
+BEFORE: ## Resource Lifecycle
+        Resource owned by RootComponent. File: ComponentFlow/RootComponent.ext:45
 
-AFTER:
-## Resource Lifecycle (Ownership Changed - version X)
-Resource owned by LeafComponent, NOT RootComponent.
-**Why**: Previous approach leaked NMB. Moved to leaf component for proper cleanup.
-File: ComponentFlow/Leaf/LeafComponent.ext:line 23
-
-~~Previous: RootComponent owned resource (deprecated version X)~~
+AFTER:  ## Resource Lifecycle (Ownership Changed - version X)
+        Resource owned by LeafComponent, NOT RootComponent.
+        **Why**: Previous leaked NMB. Moved for proper cleanup.
+        File: ComponentFlow/Leaf/LeafComponent.ext:23
 ```
 
-**Verification:**
-- [ ] Code example still compiles
-- [ ] File paths correct
-- [ ] Numbers match current implementation
-- [ ] Context still accurate
+**Verify:** Code compiles, file paths correct, numbers current, context accurate.
 
 ### Pattern 3: Removing Obsolete Sections
 
@@ -221,21 +195,14 @@ File: ComponentFlow/Leaf/LeafComponent.ext:line 23
 → Add strikethrough + deprecation date
 
 **Example Archive:**
-
 ```markdown
-## Deprecated Patterns (Historical Context)
-
+## Deprecated Patterns
 ### ~~Lazy Init Guard (v1.2 - v2.1)~~ [REMOVED version X]
-
-Previously used loaded flag to prevent double-init. Framework onAppear bug
-fixed in version Y. Pattern no longer needed for version Y+ deployment target.
-
-**Why kept here**: If bugs resurface, this shows what we tried.
+Framework onAppear bug fixed in version Y. Pattern no longer needed.
+**Why kept**: Shows what we tried if bugs resurface.
 ```
 
-**When to Remove vs Archive:**
-- Remove: Obvious mistake, never should document
-- Archive: Valid pattern at the time, might be useful context
+**Remove vs Archive:** Remove obvious mistakes. Archive valid-at-the-time patterns for context.
 
 ### Pattern 4: Restructuring for Clarity
 
@@ -262,54 +229,16 @@ Project/Module/FeatureB/CLAUDE.md (FeatureB)
 ```
 
 2. **Apply standard structure:**
-
-**Required sections (in order):**
-1. `# [Feature] - Quick Orientation` (1-2 sentences)
-2. `## The Weird Parts` (non-obvious behaviors)
-3. `## Critical Mistakes We Made` (bugs/errors fixed)
-4. `## Quick Reference` (5-10 bullet facts)
-
-**Optional sections:**
-- `## Architecture Overview` (if complex)
-- `## Common Pitfalls` (preventive warnings)
-- `## Deprecated Patterns` (historical context)
+   - Required: Quick Orientation → The Weird Parts → Critical Mistakes → Quick Reference
+   - Optional: Architecture Overview, Common Pitfalls, Deprecated Patterns
 
 3. **Apply 80/20 rule:**
+   - Keep: Project-specific oddities, critical mistakes
+   - Remove: Generic patterns, obvious info
 
-Keep 20% of content that provides 80% of value:
-- Project-specific oddities → Keep
-- Critical mistakes → Keep
-- Generic patterns → Remove
-- Obvious info → Remove
+**Example:** 300 lines → 80 lines by removing generic architecture/data layer patterns, keeping only project-specific content.
 
-**Example Before (300 lines):**
-```markdown
-## Feature Documentation
-[100 lines of generic architectural patterns]
-[50 lines of generic data layer patterns]
-[30 lines about 15-second window]
-[120 lines of API documentation]
-```
-
-**Example After (80 lines):**
-```markdown
-## FeatureA - Data Processing with Progress
-
-## The Weird Parts
-### 15-Second Time Window (Bug Fix)
-[30 lines - this is project-specific!]
-
-## Quick Reference
-- 15s window prevents false "not processed"
-- Service combines 5 data sources (prevents cycles)
-- Callback pattern for background operations
-```
-
-**Verification:**
-- [ ] Each section answers: "Is this project-specific?"
-- [ ] Context included (see Core Philosophy)
-- [ ] Quick Reference scannable (bullets)
-- [ ] Total length reasonable (< 500 lines for feature doc)
+**Verify:** Each section project-specific, WHY context included, Quick Reference scannable, <500 lines.
 
 ### Pattern 5: Cross-Referencing Skills
 
@@ -337,98 +266,24 @@ CLAUDE.md:
 - Remove: Generic pattern explanation
 - Add: Reference to skill for details
 
-**Example:**
+**Example:** Remove 50-line streaming pattern explanation, keep feature-specific usage + WHY context, reference skill for details.
 
-```markdown
-BEFORE (CLAUDE.md):
-## Data Streaming Pattern in FeatureA
-ComponentX subscribes to data streams with cancellation...
-[50 lines explaining data streaming pattern]
+3. **Update skill if missing:** Add pattern to existing skill or create new skill if substantial.
 
-AFTER (CLAUDE.md):
-## Data Streaming Pattern
-ComponentX uses callback pattern for background operation completion.
-**Why**: Background completion runs outside main context. Standard direct calls
-don't work. See skill documentation for pattern details.
-```
-
-3. **Update skill if missing:**
-
-If pattern not in any skill but used across features:
-→ Consider adding to existing skill
-→ Or create new skill if substantial
-
-**When to Keep in CLAUDE.md vs Move to Skill:**
-- Keep in CLAUDE.md: Feature-specific usage, local context
-- Move to Skill: Reusable pattern, used by 2+ features
-
----
-
-## What to INCLUDE
-
-### Project-Specific Oddities
-```markdown
-## The 15-Second Time Window
-ComponentHistoryService filters history with 15-second window.
-**Why**: Server takes up to 15s to process. Without window, UI shows
-"not processed" even when operation succeeded. Users complained.
-```
-
-### Real Problems You Hit
-```markdown
-## Resource Lifecycle (Memory Leak Fix)
-Resource owned by LeafComponent, NOT RootComponent.
-**Why**: Previous approach leaked NMB when navigating back.
-Happened in production, caused crashes on devices.
-```
-
-### Critical Mistakes Made
-```markdown
-### Putting Models in Wrong Layer First
-**Problem**: Had to move 8 files when second feature needed them
-**Solution**: If model has potential for reuse → Core module immediately
-```
-
----
-
-## What to EXCLUDE
-
-### Generic Patterns (Claude Knows)
-```markdown
-❌ DON'T INCLUDE:
-
-## Architectural Pattern
-Follows standard architecture pattern...
-
-## Data Layer
-Repositories handle data access...
-
-## Clean Architecture Layers
-Presentation → Business → Data → Models
-```
+**Keep in CLAUDE.md vs Skill:**
+- CLAUDE.md: Feature-specific usage, local context
+- Skill: Reusable pattern, used by 2+ features
 
 ---
 
 ## Writing Style
 
 **Voice:** Direct, concise. Notes to future you with amnesia.
-
-```markdown
-GOOD:
-Resource owned by LeafComponent. Previous approach leaked NMB.
-
-BAD:
-The resource manager is owned and managed by the LeafComponent
-class. This is an important architectural decision that was made after...
-```
-
 **Format:** Bullets + Bold **Why**
 
 ```markdown
-GOOD:
-## Sequential Processing
-After operation completes → move to next item automatically.
-**Why**: Users complained about repetitive navigation (5 taps per item).
+GOOD: Resource owned by LeafComponent. Previous approach leaked NMB.
+BAD: The resource manager is owned and managed by the LeafComponent class...
 ```
 
 ---
@@ -495,110 +350,30 @@ Apply signal-vs-noise:
 
 ## Anti-Patterns (Common Mistakes)
 
-### ❌ Mistake 1: Adding Generic Patterns
+### ❌ Mistake 1: Generic Content Instead of Project-Specific
 
-**Problem:** CLAUDE.md filled with architectural, framework basics
+**Problem:** CLAUDE.md filled with framework basics ("Data Layer handles persistence...")
 
-```markdown
-❌ DON'T ADD:
-## Architectural Pattern
-Standard architecture pattern implementation...
+**Why bad:** Claude knows generic patterns. Wastes space, dilutes signal.
 
-## Data Layer
-Repositories handle data access and provide abstraction over...
-```
+**Fix:** Only document project-specific twists + critical mistakes.
 
-**Why bad:** Claude already knows generic patterns. Just noise.
+### ❌ Mistake 2: Missing WHY Context
 
-**Fix:** Only add project-specific twists or critical mistakes.
-
-### ❌ Mistake 2: Not Explaining WHY
-
-**Problem:** What without WHY is just code duplication
-
-```markdown
-❌ BAD:
-## 15-Second Time Window
-ComponentHistoryService filters history with 15-second window.
-
-✅ GOOD:
-## 15-Second Time Window (Bug Fix)
-ComponentHistoryService filters history with 15-second window.
-**Why**: Server processes operations in up to 15 seconds. Without window,
-UI showed "not processed" even when operation succeeded. 30% of support
-tickets were false alarms. Window fixed 95% of false negatives.
-```
-
-**Why bad:** Future developer doesn't understand importance, might remove.
+**Problem:** Documented WHAT without WHY. Future developer doesn't understand importance, removes pattern, regression.
 
 **Fix:** ALWAYS include WHY (real problem, production incident, user complaint).
 
-### ❌ Mistake 3: Outdated File References
-
-**Problem:** Code moved, CLAUDE.md still references old location
-
 ```markdown
-❌ OUTDATED:
-Resource lifecycle in RootComponent.ext:line 45
-
-✅ UPDATED:
-Resource lifecycle in ComponentFlow/Leaf/LeafComponent.ext:line 23
-(Moved from RootComponent version X - memory leak fix)
+❌ BAD: "ComponentHistoryService filters history with 15-second window."
+✅ GOOD: "**Why**: Server processes in up to 15s. Without window, UI showed errors when operations succeeded."
 ```
 
-**Why bad:** Wastes developer time searching wrong location.
+### ❌ Mistake 3: Outdated References After Refactoring
 
-**Fix:** Update file paths when refactoring. Add migration note if major change.
+**Problem:** Code moved to ComponentFlow/Leaf/LeafComponent.ext, docs still point to old RootComponent.ext. Wasted developer time searching.
 
-### ❌ Mistake 4: No Structure (Wall of Text)
-
-**Problem:** 500-line CLAUDE.md with no sections, hard to scan
-
-```markdown
-❌ BAD:
-# FeatureA
-
-Components are...resource is...data pattern...time window...service combines...
-
-✅ GOOD:
-# FeatureA - Quick Orientation
-
-## The Weird Parts
-### 15-Second Time Window
-### Service Combines 5 Data Sources
-
-## Critical Mistakes We Made
-### ❌ Repository Cycle
-
-## Quick Reference
-- 15s window prevents false negatives
-- Service pattern prevents cycles
-```
-
-**Why bad:** Can't find information quickly. Critical info buried.
-
-**Fix:** Apply standard structure. Use headers. Keep Quick Reference scannable.
-
-### ❌ Mistake 5: Duplicating Skill Content
-
-**Problem:** Same pattern in CLAUDE.md and skill, maintenance burden
-
-```markdown
-❌ DUPLICATE (in CLAUDE.md):
-## Data Streaming Pattern
-Data streaming uses cancellation and retry logic...
-[50 lines of generic streaming pattern]
-
-✅ REFERENCE (in CLAUDE.md):
-## Data Streaming Pattern
-FeatureA uses callback pattern for background operation completion.
-**Why**: Background completion outside main context.
-See skill documentation for pattern details.
-```
-
-**Why bad:** Must update two places. Likely to drift out of sync.
-
-**Fix:** Keep project-specific usage + WHY context. Reference skill for pattern details.
+**Fix:** Update file paths immediately after refactoring. Add migration note for major changes.
 
 ---
 
@@ -680,53 +455,14 @@ Before committing CLAUDE.md:
 
 ## Real Project Example
 
-**Scenario:** Discovered memory leak after production incident
+**Scenario:** Memory leak after production incident
 
-**CLAUDE.md Before:**
-```markdown
-# ComponentFlow - Data Processing
+**What was added:**
+- **The Weird Parts**: Resource lifecycle pattern (why LeafComponent not RootComponent, conditional cleanup)
+- **Critical Mistakes**: Document what failed (root component approach, why it leaked)
+- **Cross-reference**: Link to skill for full pattern details
 
-Flow coordinates scan → process → store phases.
-```
-
-**CLAUDE.md After (added discovery):**
-```markdown
-# ComponentFlow - Data Processing
-
-## The Weird Parts
-
-### Resource Lifecycle (Memory Leak Fix - version X)
-
-Resource owned by LeafComponent, NOT RootComponent.
-
-**Why**: Previous approach leaked NMB per back navigation. Devices
-crashed after 3 navigations in production. Customer complaints escalated.
-
-Conditional cleanup based on navigation direction:
-- Forward nav → `stopResource()` (preserve for return)
-- Back nav → `destroyResource() + nil` (destroy completely)
-
-File: ComponentFlow/Leaf/LeafComponent.ext:line 23
-See skill documentation for full pattern.
-
-## Critical Mistakes We Made
-
-### ❌ Resource in Root Component
-
-**Problem**: RootComponent owned resource → NMB leak per navigation.
-
-**Why it failed**: Root component doesn't know navigation direction (forward vs
-back). Always preserved resource. Leaked on back navigation.
-
-**Fix**: Moved to leaf component (LeafComponent) with conditional
-cleanup. Leak eliminated.
-```
-
-**Result:**
-- Future developers understand resource placement rationale (leaf vs root)
-- Production incident documented (prevents regression)
-- Cross-referenced skill for full pattern details
-- 95 lines added (signal, not noise)
+**Result:** Future developers understand rationale, production incident prevents regression, 95 lines added (pure signal).
 
 ---
 
