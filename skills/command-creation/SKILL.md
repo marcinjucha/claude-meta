@@ -1,29 +1,29 @@
 ---
-name: workflow-creation
-description: Create or refactor workflow commands (multi-phase orchestration). Provides structure pattern, sufficient context principle (agents have isolated context), clarifying questions pattern (3-5 flexible), and section templates. Critical for agents receiving exactly the right information.
-argument-hint: "[workflow-name]"
+name: command-creation
+description: Create or refactor multi-phase commands (multi-agent orchestration). Provides structure pattern, sufficient context principle (agents have isolated context), clarifying questions pattern (3-5 flexible), and section templates. Critical for agents receiving exactly the right information.
+argument-hint: "[command-name]"
 ---
 
-# Workflow Creation - Multi-Agent Orchestration Pattern
+# Command Creation - Multi-Phase Command Pattern
 
 ## Purpose
 
-Guide for creating workflow command files that orchestrate multiple agents across phases. Focus on **workflow structure pattern**, **sufficient context principle** (agents have isolated context), and **clarifying questions pattern** (3-5 questions, flexible). Documents anti-patterns in workflow CREATION process (not for inclusion in workflow files).
+Guide for creating multi-phase command files that orchestrate multiple agents across phases. Focus on **command structure pattern**, **sufficient context principle** (agents have isolated context), and **clarifying questions pattern** (3-5 questions, flexible). Documents anti-patterns in command CREATION process (not for inclusion in command files).
 
-## ⚠️ CRITICAL: FACT-BASED WORKFLOW EXAMPLES ONLY
+## ⚠️ CRITICAL: FACT-BASED COMMAND EXAMPLES ONLY
 
-**Why this rule exists:** Invented rework rates or timing metrics in workflow anti-patterns create false expectations about workflow performance.
+**Why this rule exists:** Invented rework rates or timing metrics in command anti-patterns create false expectations about command performance.
 
 **What to do:**
-- User provides real workflow incident → Document it
+- User provides real command incident → Document it
 - No data → Skip metrics or use placeholder: `[Real metric needed]`
 - During audit → Flag invented content for removal
 
-## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT IN WORKFLOWS
+## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT IN COMMANDS
 
-**Why this rule exists:** Workflow prompts to agents should contain ONLY project-specific context, not generic explanations Claude already knows. Adding AI-known content wastes tokens and dilutes signal.
+**Why this rule exists:** Multi-phase command prompts to agents should contain ONLY project-specific context, not generic explanations Claude already knows. Adding AI-known content wastes tokens and dilutes signal.
 
-**WHEN CREATING WORKFLOWS:**
+**WHEN CREATING COMMANDS:**
 
 - ✅ **Agent context** → ONLY project-specific (decisions, constraints, patterns, rules)
 - ✅ **Skip generic** → Framework basics, standard patterns, architecture 101
@@ -48,7 +48,7 @@ PROJECT RULES:
   - NO Component→Component (use service if 3+ repos)
 ```
 
-**During workflow creation:**
+**During command creation:**
 - Extract DECISIONS from previous phases (not full explanations)
 - List PROJECT CONSTRAINTS (not general best practices)
 - Identify EXISTING PATTERNS to match (not pattern definitions)
@@ -56,17 +56,17 @@ PROJECT RULES:
 
 ## When to Use
 
-- Creating new workflow command (multi-phase orchestration)
-- Refactoring existing workflow (structure inconsistent)
-- Understanding workflow file conventions
+- Creating new multi-phase command (multi-agent orchestration)
+- Refactoring existing command (structure inconsistent)
+- Understanding command file conventions
 - Deciding what context to pass to agents
-- Fixing workflows where agents produce low-quality output
+- Fixing commands where agents produce low-quality output
 
 ---
 
-## Workflow File Structure Pattern
+## Command File Structure Pattern
 
-**Standard workflow file structure** (our convention):
+**Standard multi-phase command file structure** (our convention):
 
 ```markdown
 ---
@@ -122,7 +122,7 @@ NOT needed:
 ```
 
 **Why this structure:**
-- **Phases overview** - orchestrator sees full workflow before starting
+- **Phases overview** - orchestrator sees full command before starting
 - **Orchestrator Instructions** - forces actual Task invocation (anti-pattern: just describing)
 - **Clarifying Questions Pattern** - MANDATORY section with 3-5 flexible questions guidance
 - **Phase Details** - includes "Sufficient context for quality" section (CRITICAL)
@@ -293,7 +293,7 @@ Does this match exactly what you want to achieve? If not, what should I adjust?
 
 **Why clarifying questions pattern:**
 
-Production validation: Workflows WITHOUT this pattern had 40% rework rate (agent produced output, user said "that's not what I wanted", had to redo phase). Workflows WITH pattern had 8% rework rate.
+Production validation: Commands WITHOUT this pattern had 40% rework rate (agent produced output, user said "that's not what I wanted", had to redo phase). Commands WITH pattern had 8% rework rate.
 
 Root cause: User description ambiguous → agent makes assumptions → output doesn't match intent → wasted phase.
 
@@ -319,7 +319,7 @@ Clarifying questions after EVERY phase:
 - ✅ After Phase 0 (inline assessment)
 - ✅ After EVERY agent phase
 - ✅ After inline phases if significant decisions made
-- ❌ NOT after final report (workflow complete)
+- ❌ NOT after final report (command complete)
 
 **Pattern anatomy:**
 
@@ -402,11 +402,11 @@ Output: [format]
 - `stop` - Exit workflow
 ```
 
-**Standard across all workflows.**
+**Standard across all commands.**
 
 ### 7. Sufficient Context Principle (End Section)
 
-**Always include at workflow end:**
+**Always include at command end:**
 
 ```markdown
 ## Sufficient Context Principle
@@ -454,7 +454,7 @@ Output: [format]
 **Fix:** Include constraints, existing patterns, project rules. Test question: "Can agent produce HIGH QUALITY?"
 
 ### ❌ Not Invoking Task Tool
-**Problem:** Orchestrator describes phase instead of invoking. 30% of workflows before fix.
+**Problem:** Orchestrator describes phase instead of invoking. 30% of commands before fix.
 **Fix:** "⚠️ CRITICAL: YOU MUST INVOKE AGENTS" section forces behavior.
 
 ### ❌ No User Checkpoints
@@ -469,7 +469,7 @@ Output: [format]
 
 ## Quick Reference
 
-### Workflow Creation Checklist
+### Command Creation Checklist
 
 **Structure:**
 - [ ] Description in frontmatter (<200 chars, includes usage)
@@ -505,19 +505,19 @@ Output: [format]
 ### Decision Tree: How Many Phases?
 
 ```
-Simple workflow (1 task, 1 agent):
+Simple command (1 task, 1 agent):
   → 3 phases: Phase 0 (inline) + Phase 1 (agent) + Phase 2 (verification inline)
-  → Example: debug workflow (70% faster than multi-agent)
+  → Example: debug command (70% faster than multi-agent)
 
-Standard workflow (feature development):
+Standard command (feature development):
   → 5-6 phases: Phase 0 + Requirements + Architecture + Implementation + Testing + Review
-  → Example: feature workflow (5 phases)
+  → Example: feature command (5 phases)
 
-Complex workflow (granular control):
+Complex command (granular control):
   → 8+ phases: Separate phases for each layer + multiple reviews
-  → Example: full feature workflow (8 phases)
+  → Example: full feature command (8 phases)
 
-Validation workflow (parallel checks):
+Validation command (parallel checks):
   → 4 phases: Phase 0 + Phase 1+2 (parallel) + Phase 3 (merge results)
   → Example: pre-merge check (3 agents, parallel)
 ```
@@ -540,7 +540,7 @@ Validation workflow (parallel checks):
 
 ## Key Principles
 
-**Workflow Structure:** Standard sections (our convention), Phase 0 inline, user checkpoints, clarifying questions mandatory
+**Command Structure:** Standard sections (our convention), Phase 0 inline, user checkpoints, clarifying questions mandatory
 
 **Clarifying Questions (MANDATORY):** After EVERY phase - paraphrase + 3-5 questions (flexible, depends on complexity) + confirmation before commands
 
@@ -560,22 +560,22 @@ Validation workflow (parallel checks):
 
 **This skill includes philosophy reference files:**
 
-- `@resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to include in workflows
+- `@resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to include in commands
 - `@resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context)
-- `@resources/skill-structure-reference.md` - Standard structure and best practices (adaptable to workflow structure)
+- `@resources/skill-structure-reference.md` - Standard structure and best practices (adaptable to command structure)
 
 **Use references for:**
 
 - Signal vs Noise → Filter what context to provide agents (sufficient, not excessive)
-- Why over How → Include rationale for workflow structure decisions (why phases, why checkpoints)
-- Structure → Consistent workflow organization (phase structure, section patterns)
+- Why over How → Include rationale for command structure decisions (why phases, why checkpoints)
+- Structure → Consistent command organization (phase structure, section patterns)
 
 **Why included:**
 
-- Consistent philosophy across all meta skills (skills, agents, workflows)
-- Decision framework for workflow content (what to include, what to skip)
+- Consistent philosophy across all meta skills (skills, agents, commands)
+- Decision framework for command content (what to include, what to skip)
 - Quality guidelines (completeness > brevity, WHY explanations mandatory)
 
 ---
 
-**Key Lesson:** Workflows need standard structure + sufficient context principle + clarifying questions (3-5 flexible) + forced invocation. Agents have isolated context - must provide exactly right information (test question). Clarifying questions after every phase prevent 40% rework rate. Match question count to phase complexity.
+**Key Lesson:** Multi-phase commands need standard structure + sufficient context principle + clarifying questions (3-5 flexible) + forced invocation. Agents have isolated context - must provide exactly right information (test question). Clarifying questions after every phase prevent 40% rework rate. Match question count to phase complexity.

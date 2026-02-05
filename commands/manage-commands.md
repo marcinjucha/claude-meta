@@ -1,18 +1,18 @@
 ---
-description: "Intelligent workflow management - create, audit, or modify workflows based on natural language"
+description: "Intelligent command management - create, audit, or modify commands based on natural language"
 ---
 
-# Manage Workflow - Intelligent Workflow Management
+# Manage Commands - Intelligent Command Management
 
-Automatically detects intent from natural language and executes appropriate workflow management task: CREATE new workflows, AUDIT existing workflows for compliance, or MODIFY workflows to fix issues.
+Automatically detects intent from natural language and executes appropriate command management task: CREATE new commands, AUDIT existing commands for compliance, or MODIFY commands to fix issues.
 
 ## Phases (Adaptive)
 
 **CREATE Mode:**
 ```
 0: Intent Detection + Complexity    (orchestrator - inline + clarifying questions)
-1: Requirements Gathering            (claude-manager with workflow-creation skill)
-2: Plan Creation                     (claude-manager with workflow-creation skill)
+1: Requirements Gathering            (claude-manager with command-creation skill)
+2: Plan Creation                     (claude-manager with command-creation skill)
 3: File Creation                     (orchestrator - inline)
 4: Verification                      (orchestrator - inline + clarifying questions)
 ```
@@ -20,16 +20,16 @@ Automatically detects intent from natural language and executes appropriate work
 **AUDIT Mode:**
 ```
 0: Intent Detection + Scope          (orchestrator - inline + clarifying questions)
-1: Structure Analysis                (claude-manager with workflow-creation, signal-vs-noise skills)
+1: Structure Analysis                (claude-manager with command-creation, signal-vs-noise skills)
 2: Content Audit                     (claude-manager with signal-vs-noise skill)
-3: Recommendations                   (claude-manager with workflow-creation skill)
+3: Recommendations                   (claude-manager with command-creation skill)
 4: Implementation                    (orchestrator - inline if user approves)
 ```
 
 **MODIFY Mode (Dynamic):**
 ```
 0: Intent Detection + Change Scope   (orchestrator - inline + clarifying questions)
-1: Change Analysis                   (claude-manager with workflow-creation skill)
+1: Change Analysis                   (claude-manager with command-creation skill)
 2: Implementation                    (orchestrator - inline)
 3: Verification                      (orchestrator - inline + clarifying questions)
 ```
@@ -122,31 +122,31 @@ Analyze request for keywords and context:
 
 ```yaml
 CREATE indicators:
-  - "create" / "new" / "need workflow"
-  - "workflow for [new functionality]"
-  - Request describes functionality NOT in existing workflows
+  - "create" / "new" / "need command"
+  - "command for [new functionality]"
+  - Request describes functionality NOT in existing commands
 
 AUDIT indicators:
   - "check" / "verify" / "audit" / "validate"
   - "meets requirements" / "compliant" / "follows patterns"
-  - References EXISTING workflow name + quality check
-  - "all workflows" (audit scope)
+  - References EXISTING command name + quality check
+  - "all commands" (audit scope)
 
 MODIFY indicators:
   - "update" / "fix" / "modify" / "change"
   - "add [section]" / "remove [section]" / "improve"
-  - References EXISTING workflow name + specific change
-  - "missing [feature]" / "[workflow] should have"
+  - References EXISTING command name + specific change
+  - "missing [feature]" / "[command] should have"
 
 Ambiguous:
   - Multiple indicators present
-  - Unclear workflow reference
+  - Unclear command reference
   - No clear action verb
 ```
 
-**Step 2: List Existing Workflows (if needed for AUDIT/MODIFY)**
+**Step 2: List Existing Commands (if needed for AUDIT/MODIFY)**
 
-If AUDIT or MODIFY detected, list workflows in `.claude/commands/`:
+If AUDIT or MODIFY detected, list commands in `.claude/commands/`:
 ```bash
 ls .claude/commands/*.md
 ```
@@ -157,9 +157,9 @@ ls .claude/commands/*.md
 Mode: [CREATE / AUDIT / MODIFY]
 
 Scope:
-  CREATE: [workflow name from request or ask]
-  AUDIT: [specific workflow or "all"]
-  MODIFY: [workflow name + changes requested]
+  CREATE: [command name from request or ask]
+  AUDIT: [specific command or "all"]
+  MODIFY: [command name + changes requested]
 
 Confidence: [HIGH / MEDIUM / LOW]
 ```
@@ -171,8 +171,8 @@ Let me verify my understanding:
 [2-3 sentence paraphrase of detected intent]
 
 Clarifying questions:
-1. Intent: Should I [CREATE new / AUDIT existing / MODIFY existing] workflow?
-2. Scope: Which workflow - [detected name or list options]?
+1. Intent: Should I [CREATE new / AUDIT existing / MODIFY existing] command?
+2. Scope: Which command - [detected name or list options]?
 3. Goal: What's the primary objective - [inferred goal]?
 4. Priority: What's most important - [structure / content / both]?
 5. Action: Should I [specific action] or did you mean [alternative]?
@@ -198,9 +198,9 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 0: Complexity Assessment (Inline)
 **You do this - no agent**
 
-**From Universal Phase 0: Mode=CREATE, Workflow name determined**
+**From Universal Phase 0: Mode=CREATE, Command name determined**
 
-Assess workflow complexity:
+Assess command complexity:
 
 ```yaml
 COMPLEXITY:
@@ -208,27 +208,27 @@ COMPLEXITY:
   standard: 5-6 phases (feature development)
   complex: 8+ phases (granular control)
 
-WORKFLOW_TYPE:
+COMMAND_TYPE:
   feature: Full feature implementation
   debug: Bug investigation and fix
   validation: Pre-merge checks (parallel)
   refactor: Code restructuring
 ```
 
-**Output**: Brief complexity note + workflow type
+**Output**: Brief complexity note + command type
 
 **After Phase 0 - MANDATORY clarifying questions**:
 
 ```
 Let me verify my understanding:
-[2-3 sentence paraphrase of complexity assessment and workflow type]
+[2-3 sentence paraphrase of complexity assessment and command type]
 
 Clarifying questions:
-1. What is the primary goal of this workflow - [specific outcome]?
-2. Should this workflow handle [edge case A] or is that out of scope?
+1. What is the primary goal of this command - [specific outcome]?
+2. Should this command handle [edge case A] or is that out of scope?
 3. How many phases do you expect - simple (1-3), standard (5-6), or complex (8+)?
 4. Which agents should be involved - [list potential agents]?
-5. What's the success criterion - what makes this workflow "complete"?
+5. What's the success criterion - what makes this command "complete"?
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -246,21 +246,21 @@ Ready to proceed? (continue/skip/back/stop)
 ```yaml
 Input needed:
   - Mode: CREATE
-  - Workflow name (from user command)
+  - Command name (from user command)
   - Complexity (from Phase 0: simple/standard/complex)
-  - Workflow type (from Phase 0: feature/debug/validation/refactor)
-  - User's description of workflow purpose
+  - Command type (from Phase 0: feature/debug/validation/refactor)
+  - User's description of command purpose
   - Number of phases expected (from Phase 0 clarifying questions)
 
 NOT needed:
   - Full conversation history
-  - Generic workflow theory
-  - Examples from other workflows
+  - Generic command theory
+  - Examples from other commands
 ```
 
 **Prompt to agent**:
 ```
-MODE: CREATE workflow
+MODE: CREATE command
 
 ⚠️ CRITICAL: NEVER INVENT OR HALLUCINATE CONTENT
 - DO NOT make up metrics, numbers, or production incidents
@@ -268,13 +268,13 @@ MODE: CREATE workflow
 - ONLY extract what user actually provided
 - If no production data exists, use placeholder: [User to provide real metric/incident]
 
-WORKFLOW NAME: [name]
+COMMAND NAME: [name]
 COMPLEXITY: [simple/standard/complex from Phase 0]
 TYPE: [feature/debug/validation/refactor]
 PURPOSE: [user's description]
 EXPECTED PHASES: [number from Phase 0]
 
-Task: Gather requirements for new workflow.
+Task: Gather requirements for new command.
 
 Ask clarifying questions to understand:
 1. What phases are needed? (based on complexity)
@@ -283,7 +283,7 @@ Ask clarifying questions to understand:
 4. What context does each agent need from previous phases?
 5. What user checkpoints are needed?
 
-Use your workflow-creation skill for structure patterns.
+Use your command-creation skill for structure patterns.
 
 Output format:
 - Phase breakdown (Phase 0, 1, 2, ...)
@@ -301,11 +301,11 @@ Let me verify my understanding:
 [2-3 sentence paraphrase of phase structure and agent assignments]
 
 Clarifying questions:
-1. The workflow has [N] phases - does this match your expectations from Phase 0?
+1. The command has [N] phases - does this match your expectations from Phase 0?
 2. Phase [X] uses [agent-name] - is this the right agent for [task]?
 3. Should Phase [Y] include [specific context from Phase X], or is that too much?
-4. The workflow assumes [specific constraint] - is this correct?
-5. Success criterion for this workflow: [specific outcome] - does this match your goal?
+4. The command assumes [specific constraint] - is this correct?
+5. Success criterion for this command: [specific outcome] - does this match your goal?
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -324,20 +324,20 @@ Ready to proceed? (continue/skip/back/stop)
 Input needed:
   - Requirements (from Phase 1: phase breakdown, agent assignments, skills, context flow)
   - User confirmations/adjustments from Phase 1 clarifying questions
-  - Workflow name
+  - Command name
   - Complexity level
 
 NOT needed:
   - Full Phase 1 conversation
-  - Generic workflow examples
+  - Generic command examples
   - Detailed user stories
 ```
 
 **Prompt to agent**:
 ```
-MODE: CREATE workflow plan
+MODE: CREATE command plan
 
-WORKFLOW: [name]
+COMMAND: [name]
 COMPLEXITY: [level]
 
 REQUIREMENTS (from Phase 1):
@@ -346,7 +346,7 @@ REQUIREMENTS (from Phase 1):
 USER ADJUSTMENTS (from Phase 1 clarifying questions):
 [Extract: any corrections user made during confirmation]
 
-Task: Create complete workflow plan following workflow-creation skill structure.
+Task: Create complete command plan following command-creation skill structure.
 
 Plan must include:
 1. Frontmatter (description with usage)
@@ -359,10 +359,10 @@ Plan must include:
 8. Commands section
 9. "Sufficient Context Principle" section
 
-Use workflow-creation skill for structure template.
+Use command-creation skill for structure template.
 Apply signal-vs-noise skill to filter context (sufficient, not excessive).
 
-Output: Complete workflow plan (markdown structure)
+Output: Complete command plan (markdown structure)
 ```
 
 **After agent**:
@@ -371,12 +371,12 @@ Present plan structure.
 
 ```
 Let me verify my understanding:
-[2-3 sentence paraphrase of workflow structure and key sections]
+[2-3 sentence paraphrase of command structure and key sections]
 
 Clarifying questions:
 1. The "Sufficient context" section for Phase [X] includes [context items] - is this sufficient for quality output?
 2. Should Phase [Y] include clarifying questions about [specific aspect]?
-3. The workflow forces Task invocation with "⚠️ CRITICAL" section - does this address your needs?
+3. The command forces Task invocation with "⚠️ CRITICAL" section - does this address your needs?
 4. Phases [X, Y] have user checkpoints - are there other phases needing checkpoints?
 5. The Sufficient Context Principle test question appears at [location] - does this make sense?
 
@@ -392,10 +392,10 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 3: File Creation (Inline)
 **You do this - no agent**
 
-Create workflow file at `.claude/commands/[workflow-name].md`:
+Create command file at `.claude/commands/[command-name].md`:
 
 1. Use plan from Phase 2
-2. Apply workflow-creation skill structure
+2. Apply command-creation skill structure
 3. Include all required sections
 4. Verify frontmatter format
 5. Create file
@@ -411,7 +411,7 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 4: Verification (Inline)
 **You do this - no agent**
 
-Verify workflow file against checklist:
+Verify command file against checklist:
 
 ```yaml
 Structure:
@@ -441,17 +441,17 @@ Let me verify my understanding:
 
 Clarifying questions:
 1. Verification found [N] issues - should I fix these automatically or show you first?
-2. Missing section [X] - should this be added now or is it optional for this workflow?
+2. Missing section [X] - should this be added now or is it optional for this command?
 3. "Sufficient context" section for Phase [Y] seems [too verbose/too sparse] - adjust?
-4. Should I create example skills/agents referenced in workflow, or assume they exist?
-5. Workflow is ready at [path] - should I commit this or do you want to review first?
+4. Should I create example skills/agents referenced in command, or assume they exist?
+5. Command is ready at [path] - should I commit this or do you want to review first?
 
 Does this match your expectations? What should I adjust?
 ```
 
 [WAIT for confirmation]
 
-Workflow complete! (or back to fix issues)
+Command complete! (or back to fix issues)
 
 ---
 
@@ -460,22 +460,22 @@ Workflow complete! (or back to fix issues)
 ### Phase 0: Scope Selection (Inline)
 **You do this - no agent**
 
-**From Universal Phase 0: Mode=AUDIT, Scope determined (specific workflow or "all")**
+**From Universal Phase 0: Mode=AUDIT, Scope determined (specific command or "all")**
 
-Determine which workflows to audit:
+Determine which commands to audit:
 
 ```yaml
 SCOPE:
-  specific: User provided workflow name
-  all: Audit all workflows in .claude/commands/
+  specific: User provided command name
+  all: Audit all commands in .claude/commands/
 
-WORKFLOWS_FOUND:
-  - List workflow files
+COMMANDS_FOUND:
+  - List command files
   - Check each has frontmatter
   - Note any structural issues visible
 ```
 
-**Output**: Scope + list of workflows to audit
+**Output**: Scope + list of commands to audit
 
 **After Phase 0 - MANDATORY clarifying questions**:
 
@@ -484,11 +484,11 @@ Let me verify my understanding:
 [2-3 sentence paraphrase of audit scope]
 
 Clarifying questions:
-1. Should I audit [N] workflows found, or exclude some?
+1. Should I audit [N] commands found, or exclude some?
 2. Priority focus - structure compliance, WHY over HOW, or signal vs noise?
 3. If issues found, should I auto-fix or just report?
 4. Should audit check for missing clarifying questions pattern?
-5. What's the success criterion - all workflows compliant, or report only?
+5. What's the success criterion - all commands compliant, or report only?
 
 Does this match what you want? If not, what should I adjust?
 ```
@@ -506,27 +506,27 @@ Ready to proceed? (continue/skip/back/stop)
 ```yaml
 Input needed:
   - Mode: AUDIT
-  - Workflows to audit (names/paths from Phase 0)
+  - Commands to audit (names/paths from Phase 0)
   - Audit focus (from Phase 0: structure/WHY/signal-noise/all)
   - User's priority (from clarifying questions)
 
 NOT needed:
-  - Full workflow file contents (agent will read)
-  - Generic workflow theory
+  - Full command file contents (agent will read)
+  - Generic command theory
   - Conversation history
 ```
 
 **Prompt to agent**:
 ```
-MODE: AUDIT workflows (structure compliance)
+MODE: AUDIT commands (structure compliance)
 
-WORKFLOWS: [list from Phase 0]
+COMMANDS: [list from Phase 0]
 FOCUS: [structure/WHY/signal-noise/all]
 PRIORITY: [from user]
 
-Task: Analyze workflow structure compliance.
+Task: Analyze command structure compliance.
 
-For each workflow, check:
+For each command, check:
 
 1. **Required sections present?**
    - [ ] Description in frontmatter
@@ -551,11 +551,11 @@ For each workflow, check:
 
 5. **Sufficient context sections present?** (for each agent phase)
 
-Use workflow-creation skill for structure reference.
+Use command-creation skill for structure reference.
 
 Output format:
-Per-workflow report:
-- Workflow name
+Per-command report:
+- Command name
 - Structure compliance score (N/9 required sections)
 - Missing sections (list)
 - Issues found (specific)
@@ -570,9 +570,9 @@ Let me verify my understanding:
 [2-3 sentence paraphrase of compliance results]
 
 Clarifying questions:
-1. Found [N] workflows with missing sections - should I fix these or just report?
-2. Workflow [X] missing "Clarifying Questions Pattern" - critical or optional?
-3. Some workflows have Phase 0 as agent (should be inline) - auto-fix?
+1. Found [N] commands with missing sections - should I fix these or just report?
+2. Command [X] missing "Clarifying Questions Pattern" - critical or optional?
+3. Some commands have Phase 0 as agent (should be inline) - auto-fix?
 4. Priority for fixes: [missing sections / wrong structure / content quality]?
 5. Should I proceed to content audit (Phase 2) or fix structure issues first?
 
@@ -593,7 +593,7 @@ Ready to proceed? (continue/skip/back/stop)
 Input needed:
   - Structure analysis results (from Phase 1)
   - User decisions (auto-fix or report, priorities)
-  - Workflows to audit
+  - Commands to audit
 
 NOT needed:
   - Full Phase 1 conversation
@@ -602,23 +602,23 @@ NOT needed:
 
 **Prompt to agent**:
 ```
-MODE: AUDIT workflows (content quality)
+MODE: AUDIT commands (content quality)
 
 ⚠️ CRITICAL: FLAG INVENTED CONTENT
 Flag invented metrics/incidents for removal. Recommend placeholders or deletion.
 
-WORKFLOWS: [list]
-STRUCTURE RESULTS: [from Phase 1 - which workflows passed/failed]
+COMMANDS: [list]
+STRUCTURE RESULTS: [from Phase 1 - which commands passed/failed]
 USER DECISIONS: [auto-fix or report, priorities]
 
-Task: Audit workflow content for WHY over HOW and Signal vs Noise violations.
+Task: Audit command content for WHY over HOW and Signal vs Noise violations.
 
-For each workflow, check:
+For each command, check:
 
 1. **WHY over HOW violations:**
-   - Does workflow explain domain patterns? (should reference skill)
-   - Does workflow include implementation steps? (should delegate to agent)
-   - Does workflow contain testing patterns? (should reference skill)
+   - Does command explain domain patterns? (should reference skill)
+   - Does command include implementation steps? (should delegate to agent)
+   - Does command contain testing patterns? (should reference skill)
 
    Example violation:
    ```markdown
@@ -628,8 +628,8 @@ For each workflow, check:
 
 2. **Signal vs Noise violations:**
    - Does "Sufficient context" pass full YAML outputs? (should extract decisions)
-   - Does workflow explain generic concepts? (should be cut)
-   - Does workflow include user stories? (should extract requirements)
+   - Does command explain generic concepts? (should be cut)
+   - Does command include user stories? (should extract requirements)
 
    Example violation:
    ```markdown
@@ -645,8 +645,8 @@ For each workflow, check:
 Use signal-vs-noise skill for 3-question filter.
 
 Output format:
-Per-workflow report:
-- Workflow name
+Per-command report:
+- Command name
 - WHY over HOW violations (quote section, explain issue, suggest fix)
 - Signal vs Noise violations (quote section, explain issue, suggest fix)
 - Missing WHY context (list sections)
@@ -663,10 +663,10 @@ Let me verify my understanding:
 
 Clarifying questions:
 1. Found [N] WHY over HOW violations - should domain knowledge move to skills?
-2. Workflow [X] passes full YAML in "Sufficient context" - extract to [specific decisions]?
-3. Some workflows missing production context - add placeholder or skip?
+2. Command [X] passes full YAML in "Sufficient context" - extract to [specific decisions]?
+3. Some commands missing production context - add placeholder or skip?
 4. Priority: Fix critical violations first, or all violations?
-5. Should I create skills for domain knowledge found in workflows?
+5. Should I create skills for domain knowledge found in commands?
 
 Does this match your expectations? What should I adjust?
 ```
@@ -700,9 +700,9 @@ STRUCTURE RESULTS: [Phase 1 - missing sections, issues]
 CONTENT RESULTS: [Phase 2 - violations found]
 USER DECISIONS: [priorities, preferences]
 
-Task: Create actionable recommendations for workflow improvements.
+Task: Create actionable recommendations for command improvements.
 
-For each workflow with issues:
+For each command with issues:
 
 1. **Structure fixes** (from Phase 1)
    - Missing sections to add
@@ -721,15 +721,15 @@ For each workflow with issues:
 
 4. **Migration plan**
    - Priority order (critical first)
-   - Dependencies (skill before workflow)
+   - Dependencies (skill before command)
    - Verification steps
 
-Use workflow-creation skill for structure guidance.
+Use command-creation skill for structure guidance.
 Use signal-vs-noise skill for filtering decisions.
 
 Output format:
-Per-workflow recommendations:
-- Workflow name
+Per-command recommendations:
+- Command name
 - Priority (critical/high/medium/low)
 - Structure fixes (specific)
 - Content refactoring (specific)
@@ -747,8 +747,8 @@ Let me verify my understanding:
 
 Clarifying questions:
 1. Recommendations suggest creating [N] new skills - should I do this in Phase 4?
-2. Priority order: [workflow A] → [workflow B] → [workflow C] - correct?
-3. Some fixes require breaking changes (workflow structure) - proceed anyway?
+2. Priority order: [command A] → [command B] → [command C] - correct?
+3. Some fixes require breaking changes (command structure) - proceed anyway?
 4. Estimated time for fixes: [duration] - acceptable?
 5. Should I implement all recommendations or just critical ones?
 
@@ -772,13 +772,13 @@ Apply recommended changes:
 2. **Fix structure issues** (add missing sections)
 3. **Refactor content** (extract to skills, simplify context)
 4. **Add WHY context** (production incidents, rationale)
-5. **Verify each workflow** (run checklist)
+5. **Verify each command** (run checklist)
 
-**For each workflow:**
+**For each command:**
 
 ```yaml
 Fix structure:
-  - Add missing sections (use workflow-creation template)
+  - Add missing sections (use command-creation template)
   - Fix Phase 0 (make inline if agent)
   - Add clarifying questions pattern (if missing)
   - Add "Sufficient context" sections (if missing)
@@ -790,23 +790,23 @@ Refactor content:
   - Apply signal-vs-noise filter
 
 Verify:
-  - Run checklist from workflow-creation skill
+  - Run checklist from command-creation skill
   - Test structure compliance
   - Confirm content quality
 ```
 
-**Output**: Summary of changes per workflow
+**Output**: Summary of changes per command
 
 ```
 Let me verify my understanding:
 [2-3 sentence paraphrase of changes made]
 
 Clarifying questions:
-1. Made [N] changes to [M] workflows - should I commit these?
+1. Made [N] changes to [M] commands - should I commit these?
 2. Created [X] new skills - are these in correct location (.claude/skills/)?
-3. Some workflows still have minor issues [list] - fix now or later?
+3. Some commands still have minor issues [list] - fix now or later?
 4. Should I create pull request with changes or just local commit?
-5. Verification passed for [N] workflows - what about remaining [M]?
+5. Verification passed for [N] commands - what about remaining [M]?
 
 Does this match your expectations? What should I adjust?
 ```
@@ -822,12 +822,12 @@ Audit complete!
 ### Phase 0: Change Scope (Inline)
 **You do this - no agent**
 
-**From Universal Phase 0: Mode=MODIFY, Workflow name and changes determined**
+**From Universal Phase 0: Mode=MODIFY, Command name and changes determined**
 
 Analyze requested changes:
 
 ```yaml
-WORKFLOW: [name from Universal Phase 0]
+COMMAND: [name from Universal Phase 0]
 CHANGES_REQUESTED: [from user's natural language]
 
 CHANGE_CATEGORIES:
@@ -846,7 +846,7 @@ Let me verify my understanding:
 [2-3 sentence paraphrase of changes to make]
 
 Clarifying questions:
-1. Scope: Should changes affect [specific sections] or entire workflow?
+1. Scope: Should changes affect [specific sections] or entire command?
 2. Priority: What's most important - [change A] or [change B]?
 3. Approach: Should I [approach A] or [approach B] for [specific change]?
 4. Verification: After changes, should I verify against full checklist or just changed sections?
@@ -868,33 +868,33 @@ Ready to proceed? (continue/skip/back/stop)
 ```yaml
 Input needed:
   - Mode: MODIFY
-  - Workflow name and path
+  - Command name and path
   - Changes requested (from Phase 0)
   - User confirmations/adjustments (from Phase 0 clarifying questions)
 
 NOT needed:
-  - Full workflow content (agent will read)
+  - Full command content (agent will read)
   - Generic modification theory
   - Conversation history
 ```
 
 **Prompt to agent**:
 ```
-MODE: MODIFY workflow
+MODE: MODIFY command
 
-WORKFLOW: [name and path]
+COMMAND: [name and path]
 CHANGES REQUESTED: [from Phase 0]
 USER ADJUSTMENTS: [from Phase 0 clarifying questions]
 
-Task: Analyze current workflow and plan modifications.
+Task: Analyze current command and plan modifications.
 
-Read workflow file and analyze:
+Read command file and analyze:
 1. Current structure (sections present, organization)
 2. Requested changes (what needs to change)
 3. Impact (what sections affected, dependencies)
 4. Approach (how to implement changes while maintaining quality)
 
-Use workflow-creation skill for structure reference.
+Use command-creation skill for structure reference.
 Use signal-vs-noise skill for content quality.
 
 Output format:
@@ -918,7 +918,7 @@ Clarifying questions:
 2. Change order: [A] → [B] → [C] - correct priority?
 3. Section [X] will be [modified/removed/added] - is this what you want?
 4. Approach for [specific change]: [description] - does this make sense?
-5. After changes, workflow will [outcome] - matches your goal?
+5. After changes, command will [outcome] - matches your goal?
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -937,13 +937,13 @@ Apply modifications from Phase 1 plan:
 1. **Backup current version** (if requested in Phase 0)
 2. **Apply changes** (section by section from plan)
 3. **Verify consistency** (structure intact, references valid)
-4. **Update cross-references** (if workflow name or sections changed)
+4. **Update cross-references** (if command name or sections changed)
 
 **For each modification:**
 
 ```yaml
 Structural changes:
-  - Add sections (use workflow-creation template)
+  - Add sections (use command-creation template)
   - Remove sections (preserve content in comments if valuable)
   - Reorder sections (maintain logical flow)
 
@@ -1014,9 +1014,9 @@ Let me verify my understanding:
 Clarifying questions:
 1. Made [N] changes to [sections] - all correct?
 2. Verification found [N] issues - should I fix automatically or show you?
-3. Modified workflow ready at [path] - should I commit or let you review?
+3. Modified command ready at [path] - should I commit or let you review?
 4. Changes improve [aspect] - does this achieve your goal?
-5. Should I test workflow by running it, or just structural verification?
+5. Should I test command by running it, or just structural verification?
 
 Does this match your expectations? What should I adjust?
 ```
@@ -1033,7 +1033,7 @@ Modification complete!
 - `skip` - Skip current phase
 - `back` - Previous phase
 - `status` - Show progress (current phase, mode)
-- `stop` - Exit workflow
+- `stop` - Exit command
 
 ---
 
@@ -1051,7 +1051,7 @@ Modification complete!
 
 - ❌ Full previous YAML outputs (extract decisions only)
 - ❌ Entire conversation history (conclusions only)
-- ❌ Generic workflow theory (claude-manager has skills)
+- ❌ Generic command theory (claude-manager has skills)
 - ❌ Detailed examples (skills provide these)
 
 **Test question**:
@@ -1065,13 +1065,13 @@ Modification complete!
 
 ## Key Principles
 
-**Modes:** CREATE (new workflow) vs AUDIT (check compliance)
+**Modes:** CREATE (new command) vs AUDIT (check compliance)
 
 **Clarifying Questions:** MANDATORY after Phase 0 and EVERY agent phase (paraphrase + 5 questions + confirmation)
 
 **Sufficient Context:** claude-manager gets extracted decisions, not full conversation
 
-**WHY over HOW:** AUDIT checks for domain knowledge in workflows (should be in skills)
+**WHY over HOW:** AUDIT checks for domain knowledge in commands (should be in skills)
 
 **Signal vs Noise:** AUDIT checks for full YAML outputs in context (should extract decisions)
 

@@ -1,6 +1,6 @@
 ## Core Principles
 
-**Signal vs Noise:** Apply to comments, tests, documentation, skills, agents, workflows.
+**Signal vs Noise:** Apply to comments, tests, documentation, skills, agents, commands.
 - Komentarze: tylko non-obvious decisions, skip obvious ("set loading to true")
 - Unit testy: holistyczne pokrycie najważniejszych ścieżek biznesowych/deweloperskich, pomijaj trywialne case'y
 - Content quality > line count: 600 lines of signal > 300 lines with noise
@@ -25,11 +25,18 @@
 - No historical narratives ("Critical Mistakes We Made")
 - Preserve: WHY context, production incidents, project-specific patterns
 
-**Meta-Skills Principle (embedded in skill-creator, skill-fine-tuning, workflow-creation, signal-vs-noise):**
+**Meta-Skills Principle (embedded in skill-creator, skill-fine-tuning, command-creation, signal-vs-noise):**
 - ⚠️ AVOID AI-KNOWN CONTENT: "If Claude already knows it, it's NOISE"
 - Self-check: "Would Claude know this without documentation?" → YES = remove
 - Focus: project-specific decisions, critical bugs, non-obvious patterns
 - Skip: framework basics, architecture 101, standard syntax
+
+**🚨 CRITICAL: NO INVENTED CONTENT**
+- **NEVER fabricate metrics** without user-provided source ("40% improvement", "15 minutes saved")
+- **NEVER invent production incidents** without real examples from user
+- **If no data available:** Use placeholders `[User to provide: real metric]` OR delete entirely
+- **Why this matters:** Invented content corrupts knowledge base, undermines trust in artifacts
+- **Red flags:** Specific numbers (percentages, time savings) without attribution or "production validation"
 
 **Results (Feb 2026 cleanup):**
 - 7 skills: 5377 → 3325 lines (38% reduction)

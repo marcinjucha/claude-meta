@@ -943,13 +943,13 @@ For each agent, verify:
 1. Skills exist (all referenced skills are available)
 2. Tools valid (allowed/disallowed tools are real tool names)
 3. Description triggers (clear when to delegate)
-4. Cross-references (commands/workflows reference this agent)
+4. Cross-references (commands reference this agent)
 
 Integration checks:
 - Skills in frontmatter actually exist in .claude/skills/
 - Tools in frontmatter are valid tool names (Read, Write, Edit, Grep, Glob, Bash, etc.)
 - Description enables auto-delegation (contains trigger keywords)
-- Agent referenced in commands/workflows (if applicable)
+- Agent referenced in commands (if applicable)
 
 Output format (YAML per agent):
 ```yaml
@@ -965,7 +965,7 @@ integration_audit:
         valid: [yes/no]
     description_triggers: [enables auto-delegation?]
     referenced_by:
-      - type: [command/workflow/agent]
+      - type: [command/agent]
         name: [name]
   issues:
     - type: [missing_skill/invalid_tool/weak_description/not_referenced]
@@ -997,7 +997,7 @@ Clarifying questions:
 1. Should missing skill [name] be created, or removed from agent reference?
 2. Are invalid tool names [list] typos, or should different tools be used?
 3. Does the agent description need rewriting to enable auto-delegation?
-4. Should this agent be referenced in any commands/workflows?
+4. Should this agent be referenced in any commands?
 5. Which integration issues are critical vs nice-to-have?
 
 Does this match exactly what you want? If not, what should I adjust?
@@ -1319,7 +1319,7 @@ change_analysis:
   impact:
     thin_router_maintained: [yes/no]
     related_updates_needed:
-      - type: [skill/command/workflow]
+      - type: [skill/command]
         name: [name]
         change: [what needs updating]
   verification:
@@ -1415,7 +1415,7 @@ implementation:
         field: [field name]
         change: [what was changed]
   related_updated:
-    - type: [skill/command/workflow]
+    - type: [skill/command]
       path: [path]
       change: [what was updated]
   verification:
@@ -1553,7 +1553,7 @@ Does this match exactly what you want? If not, what should I adjust?
 - `back` - Previous phase
 - `popraw` - Correct understanding (during clarifying questions)
 - `status` - Show progress
-- `stop` - Exit workflow
+- `stop` - Exit command
 
 ---
 
