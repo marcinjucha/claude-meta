@@ -1,11 +1,44 @@
-dodawanie komentarzy powinno być na zasadzie - signal vs noise.
-Dodanie unit testów powinno być na zasadzie - signal vs noise. Zależy mi na holistycznym podejściu w pokryciu najważniejszych ścieżek biznesowych i deweloperskich, pomijając trywialne case'y.
+## Core Principles
 
-signal vs noise, why over how, but content quality is important
-Agents have an isolated context, so we need to provide everything that they need to know before we invoke them.
-They load all skills’ metadata, including name and description, so it’s important for a skill’s description to precisely and descriptively explain what it does.
-Agents (Thin router) - operating system; Skills - applications (capabilities)
-Agenty nie powinny powielać tego, co mają w skillach. 
+**Signal vs Noise:** Apply to comments, tests, documentation, skills, agents, workflows.
+- Komentarze: tylko non-obvious decisions, skip obvious ("set loading to true")
+- Unit testy: holistyczne pokrycie najważniejszych ścieżek biznesowych/deweloperskich, pomijaj trywialne case'y
+- Content quality > line count: 600 lines of signal > 300 lines with noise
+
+**WHY over HOW:** Always explain rationale, not just implementation. Include production context.
+
+**Agents (Thin Router) - Skills (Thick Applications):**
+- Agents = operating system, infrastructure, routing only
+- Skills = applications, domain knowledge, patterns
+- Agents have isolated context → provide everything they need before invocation
+- Skills' descriptions must precisely explain WHEN to use (not first-person "I help")
+- Agenty nie powinny powielać tego, co mają w skillach
+
+---
+
+## Artifact Architecture (Applied Feb 2026)
+
+**Condensed Pattern (consistent across all artifacts):**
+- Anti-Patterns: Problem/Fix format, 16-40 lines max, critical markers only
+- No verbose examples with full code blocks
+- No generic content AI already knows (framework explanations, standard patterns)
+- No historical narratives ("Critical Mistakes We Made")
+- Preserve: WHY context, production incidents, project-specific patterns
+
+**Meta-Skills Principle (embedded in skill-creator, skill-fine-tuning, workflow-creation, signal-vs-noise):**
+- ⚠️ AVOID AI-KNOWN CONTENT: "If Claude already knows it, it's NOISE"
+- Self-check: "Would Claude know this without documentation?" → YES = remove
+- Focus: project-specific decisions, critical bugs, non-obvious patterns
+- Skip: framework basics, architecture 101, standard syntax
+
+**Results (Feb 2026 cleanup):**
+- 7 skills: 5377 → 3325 lines (38% reduction)
+- All artifacts follow same condensed pattern
+- Token budget optimized, faster processing, maintained functionality
+
+---
+
+## Workflow
 
 zawsze pytaj na koniec pracy czy nie powinienem zaktualizowac CLAUDE.md files i skills
 
