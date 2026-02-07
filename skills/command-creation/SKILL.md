@@ -558,11 +558,10 @@ Validation command (parallel checks):
 
 ## Resources (Tier 3 - Philosophy)
 
-**This skill includes philosophy reference files:**
-
-- `@resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to include in commands
-- `@resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context)
-- `@resources/skill-structure-reference.md` - Standard structure and best practices (adaptable to command structure)
+**Shared resources** (`@../resources/`) - Common across meta-skills:
+- `@../resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to include in commands
+- `@../resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context)
+- `@../resources/skill-structure-reference.md` - Standard structure and best practices (adaptable to command structure)
 
 **Use references for:**
 

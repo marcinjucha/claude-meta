@@ -1,10 +1,10 @@
 ---
-description: "Intelligent command management - create, audit, or modify commands based on natural language"
+description: "Intelligent command management - create, audit, or modify multi-phase commands based on natural language"
 ---
 
 # Manage Commands - Intelligent Command Management
 
-Automatically detects intent from natural language and executes appropriate command management task: CREATE new commands, AUDIT existing commands for compliance, or MODIFY commands to fix issues.
+Automatically detects intent from natural language and executes appropriate command management task: CREATE new multi-phase commands, AUDIT existing commands for compliance, or MODIFY commands to fix issues.
 
 ## Phases (Adaptive)
 
@@ -274,7 +274,7 @@ TYPE: [feature/debug/validation/refactor]
 PURPOSE: [user's description]
 EXPECTED PHASES: [number from Phase 0]
 
-Task: Gather requirements for new command.
+Task: Gather requirements for new multi-phase command.
 
 Ask clarifying questions to understand:
 1. What phases are needed? (based on complexity)
@@ -282,6 +282,13 @@ Ask clarifying questions to understand:
 3. What skills should agents load?
 4. What context does each agent need from previous phases?
 5. What user checkpoints are needed?
+
+ANY NO = NOISE → Cut immediately.
+
+DO NOT include:
+- Generic command theory (orchestration basics)
+- Standard phase patterns (AI knows workflow structure)
+- Obvious agent usage
 
 Use your command-creation skill for structure patterns.
 
@@ -361,6 +368,7 @@ Plan must include:
 
 Use command-creation skill for structure template.
 Apply signal-vs-noise skill to filter context (sufficient, not excessive).
+Apply Signal vs Noise: No generic orchestration, only project-specific command design
 
 Output: Complete command plan (markdown structure)
 ```
@@ -431,6 +439,11 @@ Content:
   - [ ] User checkpoints after confirmation
   - [ ] Test question in Sufficient Context Principle
   - [ ] No full YAML outputs in context sections
+
+Content verification - Signal vs Noise per section:
+  - [ ] Phases: No generic "what is a phase"
+  - [ ] Critical Rules: Project-specific enforcement only
+  - [ ] No standard clarifying questions pattern (AI knows this)
 ```
 
 **Output**: Verification results + recommendations
@@ -612,6 +625,8 @@ STRUCTURE RESULTS: [from Phase 1 - which commands passed/failed]
 USER DECISIONS: [auto-fix or report, priorities]
 
 Task: Audit command content for WHY over HOW and Signal vs Noise violations.
+
+Apply "ANY NO = NOISE" to existing command content.
 
 For each command, check:
 
@@ -1065,7 +1080,7 @@ Modification complete!
 
 ## Key Principles
 
-**Modes:** CREATE (new command) vs AUDIT (check compliance)
+**Modes:** CREATE (new multi-phase command) vs AUDIT (check compliance)
 
 **Clarifying Questions:** MANDATORY after Phase 0 and EVERY agent phase (paraphrase + 5 questions + confirmation)
 

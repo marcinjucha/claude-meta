@@ -428,10 +428,10 @@ Before committing CLAUDE.md:
 
 ## Resources
 
-**Philosophy and Guidelines:**
-- `@resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to include
-- `@resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context)
-- `@resources/skill-structure-reference.md` - Standard structure and best practices (adaptable to CLAUDE.md)
+**Shared resources** (`@../resources/`) - Common across meta-skills:
+- `@../resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to include
+- `@../resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context)
+- `@../resources/skill-structure-reference.md` - Standard structure and best practices (adaptable to CLAUDE.md)
 
 **Use references for:**
 - Signal vs Noise → Filter what to document (project-specific only, not generic)

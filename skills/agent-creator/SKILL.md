@@ -480,8 +480,8 @@ EOF
 
 ### Internal (Shared Philosophy)
 
-- `@resources/signal-vs-noise-reference.md` - Signal vs Noise philosophy (3-question filter, what to include/exclude in agent docs)
-- `@resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context for agent configuration)
+- `@../resources/signal-vs-noise-reference.md` - Signal vs Noise philosophy (3-question filter, what to include/exclude in agent docs)
+- `@resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context for agent configuration) - **Agent-specific version** covering tool restrictions, permission modes, model selection
 
 ### Supporting Files
 

@@ -43,6 +43,12 @@
 - All artifacts follow same condensed pattern
 - Token budget optimized, faster processing, maintained functionality
 
+**Shared Resources Pattern (Feb 2026):**
+- Common Tier 3 resources in `skills/resources/` (signal-vs-noise, why-over-how, skill-structure, skill-ecosystem)
+- Meta-skills reference shared via `@../resources/`, skill-specific via `@resources/`
+- Eliminates duplication (27→15 resource files), single source of truth
+- Exception: agent-creator keeps agent-specific why-over-how-reference.md
+
 ---
 
 ## Workflow

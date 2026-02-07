@@ -43,7 +43,7 @@ Commit messages explain WHY, git diff shows HOW.
 - HOW implementation (code shows this)
 - Risk assessments (belongs in PR review)
 
-**See:** `@resources/signal-vs-noise-reference.md` for complete filter and examples.
+**See:** `@../resources/signal-vs-noise-reference.md` for complete filter and examples.
 
 ---
 
@@ -348,9 +348,11 @@ git log --oneline develop..HEAD
 
 ## Resources
 
-**Philosophy and Patterns:**
-- `@resources/signal-vs-noise-reference.md` - Signal vs Noise filter for commit messages (3-question test, what to include/exclude)
-- `@resources/why-over-how-reference.md` - WHY over HOW philosophy (business context, technical rationale, bug context)
+**Shared resources** (`@../resources/`) - Common across meta-skills:
+- `@../resources/signal-vs-noise-reference.md` - Signal vs Noise filter for commit messages (3-question test, what to include/exclude)
+- `@../resources/why-over-how-reference.md` - WHY over HOW philosophy (business context, technical rationale, bug context)
+
+**Skill-specific resources** (`@resources/`) - Unique to git-commit-patterns:
 - `@resources/commit-message-examples.md` - Structure patterns (template vs natural prose, transformation examples)
 
 **Use resources for:** Signal vs Noise (3-question filter), Why over How (business context), transformation examples (template → natural prose)

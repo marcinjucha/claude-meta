@@ -56,6 +56,32 @@ Launching claude-manager...
 ```
 [IMMEDIATELY invoke Task tool with subagent_type="claude-manager"]
 
+---
+
+## 🚫 ZERO HALLUCINATIONS POLICY
+
+**ABSOLUTE REQUIREMENT - NO EXCEPTIONS:**
+
+When creating or modifying skills, claude-manager must **NEVER invent:**
+- ❌ Production metrics without user-provided data ("30% faster", "reduced by 50%")
+- ❌ Production incidents without real examples from user
+- ❌ Anti-patterns without user-verified mistakes
+- ❌ Numbers, percentages, time measurements without source
+- ❌ Team statistics or user impact claims
+- ❌ Specific technical details not from source material
+
+**ONLY include:**
+- ✅ Content extracted from user-provided source material
+- ✅ Real production incidents with user-verified context
+- ✅ Patterns from actual codebase (files, commits, documentation)
+- ✅ Placeholders when data missing: `[User to provide: real metric/incident]`
+
+**ANY NO = HALLUCINATION → Use placeholder or skip section entirely.**
+
+**Why this matters:** Invented content corrupts knowledge base, undermines trust in skills, causes wrong decisions.
+
+---
+
 ### Critical Rules
 
 1. **INVOKE with Task tool** - Every phase requires actual Task tool call (except Phase 0 and inline phases)
@@ -63,7 +89,7 @@ Launching claude-manager...
 3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 5 questions + confirmation
 4. **User checkpoints** - Get approval after confirmation before proceeding
 5. **Track phase** - Remember current position and mode (CREATE/AUDIT/MODIFY)
-6. **Use only user-provided data** - Extract from source material, no invented metrics/incidents
+6. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
 
 ### Phase Execution Pattern
 
@@ -199,7 +225,7 @@ Apply 3-question filter to determine if skill should be created:
 ```yaml
 DECISION_FRAMEWORK:
   Question 1: Is this project-specific (not generic skill)?
-    - YES: StepStone iOS patterns, BUS architecture specifics, KMP integration
+    - YES: Project-specific architecture patterns, domain-specific integration logic, custom frameworks
     - NO: Generic coding, well-known frameworks, standard practices
 
   Question 2: Is this timeless knowledge (won't change frequently)?
@@ -277,10 +303,17 @@ Apply filter to EVERY piece of content:
 - Impactful? (Does this prevent bugs, save time, or improve quality?)
 - Non-obvious? (Is this project-specific, not generic knowledge?)
 
+ANY NO = NOISE → Cut from skill content immediately.
+
+DO NOT include:
+- Generic explanations (Claude already knows frameworks)
+- Standard syntax examples (available in official docs)
+- Obvious practices (basic coding standards)
+- Historical evolution (focus on current state)
+
 Extract categories:
 1. **Core patterns** (SKILL.md content):
    - Decision frameworks (when/how to use)
-   - Anti-patterns with WHY (what to avoid + why it's wrong)
    - Integration patterns (how layers connect)
    - Production context (real incidents, root causes, impact)
 
@@ -381,10 +414,11 @@ Task: Design skill structure including Tier 2/3 decision and resource organizati
 **Structure decisions:**
 
 1. **Tier 2 (SKILL.md):**
-   - Required sections: Purpose, When to Use, Core Patterns, Anti-Patterns, Quick Reference
+   - Required sections: Purpose, When to Use, Core Patterns
    - Target: ~500 lines (150-600 acceptable)
    - Interconnected content (needs context)
    - Decision-focused (helps Claude choose)
+   - Apply Signal vs Noise: No generic explanations, no standard practices, only project-specific decisions
 
 2. **Tier 3 (resources/):**
    - Detailed examples >50 lines
@@ -405,7 +439,7 @@ Task: Design skill structure including Tier 2/3 decision and resource organizati
 
 **Design output:**
 1. SKILL.md structure:
-   - Section breakdown (Purpose, When to Use, Core Patterns, Anti-Patterns, Quick Reference)
+   - Section breakdown (Purpose, When to Use, Core Patterns)
    - Content allocation per section (~line count)
    - Cross-references to resources/ and scripts/
 
@@ -478,7 +512,7 @@ Create skill files at `.claude/skills/[skill-name]/`:
 **2. Create SKILL.md:**
 - Use structure from Phase 2 (sections, content allocation)
 - Include frontmatter (description from Phase 2)
-- Add required sections: Purpose, When to Use, Core Patterns, Anti-Patterns, Quick Reference
+- Add required sections: Purpose, When to Use, Core Patterns
 - Include references to Tier 3: `@resources/filename.md`
 - Include script usage if applicable
 - Apply skill-creator templates
@@ -513,14 +547,17 @@ Verify skill file(s) against quality checklist:
 Structure verification:
   - [ ] SKILL.md created at correct path
   - [ ] Frontmatter with description present
-  - [ ] Required sections present (Purpose, When to Use, Core Patterns, Anti-Patterns, Quick Reference)
+  - [ ] Required sections present (Purpose, When to Use, Core Patterns)
   - [ ] resources/ directory created (if Tier 3 needed)
   - [ ] scripts/ directory created (if scripts needed)
 
-Content verification:
-  - [ ] Signal-focused (no generic content that Claude knows)
-  - [ ] WHY over HOW (patterns explain problem/rationale/impact)
-  - [ ] WHY context in anti-patterns (what to avoid + why it's wrong)
+Content verification - Signal vs Noise per section:
+  - [ ] Purpose: No generic technology explanation
+  - [ ] When to Use: Decision framework (not generic "use when X")
+  - [ ] Core Patterns: WHY over HOW (problem/rationale/impact)
+  - [ ] No standard syntax examples (available in official docs)
+  - [ ] No obvious practices (basic coding standards)
+  - [ ] No invented metrics/incidents (only user-provided data)
   - [ ] Production context included (real incidents, root causes)
   - [ ] Examples are project-specific (not generic tutorials)
 
@@ -654,21 +691,19 @@ For each skill, check:
    - [ ] Purpose section
    - [ ] When to Use section
    - [ ] Core Patterns section
-   - [ ] Anti-Patterns section
-   - [ ] Quick Reference section
 
-3. **Tier 3 organization correct?**
+4. **Tier 3 organization correct?**
    - [ ] resources/ files referenced from SKILL.md (`@resources/filename.md`)
    - [ ] No orphaned resources/ files (unreferenced)
    - [ ] ONE LEVEL DEEP: No nested @resources/ → @resources/ references
    - [ ] resources/ content is detailed (>50 lines or comprehensive)
 
-4. **Scripts organized correctly?**
+5. **Scripts organized correctly?**
    - [ ] scripts/ files have proper shebang
    - [ ] Executable permissions set
    - [ ] Referenced from SKILL.md with usage examples
 
-5. **References valid?**
+6. **References valid?**
    - [ ] All @resources/ references point to existing files
    - [ ] Cross-references to other skills valid (if present)
    - [ ] No broken references
@@ -757,16 +792,10 @@ For each skill, check:
    - Rationale (why this approach over alternatives?)
    - Impact (what happens if not followed?)
 
-3. **WHY context missing in anti-patterns:**
-   Anti-patterns must explain:
-   - WHAT to avoid (specific mistake)
-   - WHY it's wrong (problem caused)
-   - Impact (production incident if available)
-
-4. **Current state vs historical timeline:**
+3. **Current state vs historical timeline:**
    Skills should show HOW TO USE NOW, not history.
 
-5. **Tier 3 content in SKILL.md:**
+4. **Tier 3 content in SKILL.md:**
    Check if detailed examples >50 lines should move to resources/.
 
 Use signal-vs-noise and skill-creator skills.
@@ -793,9 +822,9 @@ Let me verify my understanding:
 Clarifying questions:
 1. Found [N] Signal vs Noise violations - should generic content be cut completely?
 2. Skill [X] has patterns without WHY - add placeholders or skip?
-3. Anti-patterns in [skill Y] missing WHY context - priority to fix?
-4. Some skills have historical timeline sections - replace with current state?
-5. [Skill Z] has detailed examples in SKILL.md - move to resources/?
+3. Some skills have historical timeline sections - replace with current state?
+4. [Skill Z] has detailed examples in SKILL.md - move to resources/?
+5. Tier 3 organization needs fixing for [N] skills - proceed now or defer?
 
 Does this match your expectations? What should I adjust?
 ```
@@ -842,7 +871,6 @@ For each skill with issues:
 2. **Content refactoring** (from Phase 2)
    - Noise to cut (generic explanations, obvious practices)
    - WHY to add (patterns needing problem/rationale/impact)
-   - Anti-patterns to fix (add WHY context)
    - Historical timeline to replace (current state focus)
 
 3. **Priority order**
@@ -913,7 +941,6 @@ Apply recommended changes per skill:
    - Cut noise (generic explanations, obvious practices)
    - Add WHY context:
      * Patterns: problem statement + rationale + impact
-     * Anti-patterns: WHAT to avoid + WHY it's wrong + impact
    - Replace historical timeline with current state
    - Apply Signal vs Noise 3-question filter
 
@@ -1115,11 +1142,6 @@ Clarification improvements:
   - Add WHY context where missing (problem/rationale/impact)
   - Simplify complex explanations
 
-Anti-pattern additions/updates:
-  - Add WHAT to avoid + WHY it's wrong
-  - Include production impact if available
-  - Focus on current state (what's wrong NOW)
-
 Drift fixes:
   - UPDATE existing content (replace wrong information)
   - Replace outdated patterns with current patterns
@@ -1173,7 +1195,6 @@ Content verification:
 Quality verification:
   - [ ] 3-question filter passed (Actionable? Impactful? Non-obvious?)
   - [ ] WHY over HOW (problem/rationale/impact for patterns)
-  - [ ] Anti-patterns have WHY (WHAT + WHY)
   - [ ] Production context included (if applicable)
 
 Tier 3 verification (if reorganized):
@@ -1260,13 +1281,11 @@ Modification complete!
 
 **Signal vs Noise is GATE:** 3-question filter (Actionable? Impactful? Non-obvious?) applied before any content. ANY NO = NOISE.
 
-**WHY > HOW:** Patterns need problem/rationale/impact. Anti-patterns need WHAT to avoid + WHY it's wrong.
+**WHY > HOW:** Patterns need problem/rationale/impact.
 
 **Nothing AI knows:** Cut generic explanations, frameworks, standard practices.
 
 **Current state focus:** Skills show HOW TO USE NOW. Update existing content.
-
-**WHY context in anti-patterns:** Explain WHAT to avoid + WHY it's wrong.
 
 **Production context:** Real incidents, root causes, impact statements.
 

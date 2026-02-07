@@ -346,6 +346,13 @@ Apply signal vs noise filter:
 - Include: Task approach, tool restrictions rationale, when to delegate
 - Exclude: Domain patterns (those go in skills), generic explanations
 
+ANY NO = NOISE → Cut immediately.
+
+DO NOT include:
+- Generic agent patterns (thin router principle covers this)
+- Standard tool use (AI knows Tool API)
+- Obvious delegation (basic orchestration)
+
 Output format (YAML):
 ```yaml
 signal_extraction:
@@ -442,6 +449,7 @@ Apply quality standards:
 - Description: third-person, triggers delegation, <1024 chars
 - System prompt: 50-200 lines (approach, not patterns)
 - Skills referenced (not duplicated)
+- Apply Signal vs Noise: No generic explanations, only project-specific agent design
 
 Output format (YAML):
 ```yaml
@@ -625,6 +633,11 @@ Verification checklist:
 - [ ] Tool restrictions: Only what's needed
 - [ ] Skills: Referenced (not duplicated in body)
 - [ ] Thin router: Infrastructure only, patterns in skills
+
+Content verification - Signal vs Noise per section:
+  - [ ] Purpose: No generic "what is an agent" explanation
+  - [ ] Agent Design: Thin router validation (no thick logic)
+  - [ ] No invented tool restrictions
 
 Output format (YAML):
 ```yaml
@@ -847,6 +860,8 @@ STRUCTURE ISSUES (from Phase 1):
 TASK:
 Phase 2 - Content Quality
 
+Apply "ANY NO = NOISE" to existing agent content.
+
 For each agent, check:
 1. Thin router principle (infrastructure only, no domain patterns)
 2. Domain knowledge in system prompt (should be in skills instead)
@@ -943,13 +958,13 @@ For each agent, verify:
 1. Skills exist (all referenced skills are available)
 2. Tools valid (allowed/disallowed tools are real tool names)
 3. Description triggers (clear when to delegate)
-4. Cross-references (commands reference this agent)
+4. Cross-references (commands/workflows reference this agent)
 
 Integration checks:
 - Skills in frontmatter actually exist in .claude/skills/
 - Tools in frontmatter are valid tool names (Read, Write, Edit, Grep, Glob, Bash, etc.)
 - Description enables auto-delegation (contains trigger keywords)
-- Agent referenced in commands (if applicable)
+- Agent referenced in commands/workflows (if applicable)
 
 Output format (YAML per agent):
 ```yaml
@@ -965,7 +980,7 @@ integration_audit:
         valid: [yes/no]
     description_triggers: [enables auto-delegation?]
     referenced_by:
-      - type: [command/agent]
+      - type: [command/workflow/agent]
         name: [name]
   issues:
     - type: [missing_skill/invalid_tool/weak_description/not_referenced]
@@ -997,7 +1012,7 @@ Clarifying questions:
 1. Should missing skill [name] be created, or removed from agent reference?
 2. Are invalid tool names [list] typos, or should different tools be used?
 3. Does the agent description need rewriting to enable auto-delegation?
-4. Should this agent be referenced in any commands?
+4. Should this agent be referenced in any commands/workflows?
 5. Which integration issues are critical vs nice-to-have?
 
 Does this match exactly what you want? If not, what should I adjust?
@@ -1319,7 +1334,7 @@ change_analysis:
   impact:
     thin_router_maintained: [yes/no]
     related_updates_needed:
-      - type: [skill/command]
+      - type: [skill/command/workflow]
         name: [name]
         change: [what needs updating]
   verification:
@@ -1415,7 +1430,7 @@ implementation:
         field: [field name]
         change: [what was changed]
   related_updated:
-    - type: [skill/command]
+    - type: [skill/command/workflow]
       path: [path]
       change: [what was updated]
   verification:

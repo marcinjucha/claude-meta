@@ -29,7 +29,7 @@ When you see "**Agent**: claude-manager" in a phase:
 7. **Current state focus** - CLAUDE.md shows HOW IT WORKS NOW
 8. **Cross-reference integrity** - All references valid, bidirectional when appropriate
 9. **CLAUDE.md vs Skill** - Folder-specific → CLAUDE.md; Project-wide → Skill
-10. **Use only user-provided data** - Extract from source material, no invented metrics/incidents
+10. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, patterns, or numbers. ONLY use user-provided data.
 11. **Minimal core** - Only Overview + Weird Parts required; everything else optional
 
 ---
@@ -278,6 +278,13 @@ Apply filter to EVERY piece of content:
 - Non-obvious? (would cause bugs or waste time if not documented)
 - Critical? (production impact, frequent reference, weird behavior)
 
+ANY NO = NOISE → Cut immediately.
+
+DO NOT include:
+- Generic CLAUDE.md theory (AI knows format)
+- Standard markdown (basic syntax)
+- Obvious best practices
+
 Extract categories with minimalist approach:
 
 1. **Overview** (REQUIRED) - Folder/module description
@@ -360,6 +367,7 @@ MINIMAL CORE STRUCTURE:
 - Always include: Overview, Weird Parts/Key Patterns
 - Conditionally include (only if extracted in Phase 1): Critical Mistakes, Quick Reference, Cross-References
 - Add custom sections only if user specifically requested
+- Apply Signal vs Noise: Only critical project-specific patterns
 
 Use claude-md skill for structure patterns.
 
@@ -439,6 +447,11 @@ Commands: continue | skip | back | stop
 - [ ] No generic architecture explanations
 - [ ] All content passes 3-question filter
 - [ ] Content is folder-specific
+
+**Content verification - Signal vs Noise per section:**
+  - [ ] Overview: No generic "what is CLAUDE.md"
+  - [ ] Weird Parts: Project-specific edge cases only
+  - [ ] No standard markdown formatting rules
 
 **WHY over HOW:**
 - [ ] Every pattern has WHY context
@@ -613,6 +626,8 @@ STRUCTURE RESULTS: [Phase 1 summary]
 USER DECISIONS: [from Phase 1]
 
 Task: Audit CLAUDE.md content for Signal vs Noise, WHY over HOW, and folder-specific knowledge.
+
+Apply "ANY NO = NOISE" to existing CLAUDE.md content.
 
 Use signal-vs-noise and claude-md skills for quality standards.
 

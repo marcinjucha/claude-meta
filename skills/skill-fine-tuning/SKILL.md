@@ -36,7 +36,7 @@ Before updating a skill, apply Signal vs Noise filter:
 - Obvious clarifications (already clear to reader)
 - Time-sensitive info (version numbers, dates)
 
-**See:** `@resources/signal-vs-noise-reference.md` for complete 3-question filter and detailed examples.
+**See:** `@../resources/signal-vs-noise-reference.md` for complete 3-question filter and detailed examples.
 
 ## ⚠️ CRITICAL: FACT-BASED UPDATES ONLY
 
@@ -159,7 +159,7 @@ LeafComponent {
 ```
 ```
 
-**See:** `@resources/why-over-how-reference.md` for philosophy and more examples.
+**See:** `@../resources/why-over-how-reference.md` for philosophy and more examples.
 
 ## Core Patterns
 
@@ -664,10 +664,15 @@ Complete replacement? → Keep old in "Deprecated Patterns", add new
 - Examples must compile
 
 **Reference Materials:**
-- `@resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to update
-- `@resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW)
-- `@resources/skill-structure-reference.md` - Standard structure and best practices
-- `@resources/skill-ecosystem-reference.md` - Skill locations, sharing, and permissions (where skills live, how to distribute)
+
+**Shared resources** (`@../resources/`) - Common across meta-skills:
+- `@../resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to update
+- `@../resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW)
+- `@../resources/skill-structure-reference.md` - Standard structure and best practices
+- `@../resources/skill-ecosystem-reference.md` - Skill locations, sharing, and permissions (where skills live, how to distribute)
+
+**Skill-specific resources** (`@resources/`) - Unique to skill-fine-tuning:
+- `@resources/advanced-features.md` - Complete implementation guide for frontmatter patterns (context: fork, dynamic injection, tool restrictions)
 
 ## Integration with Other Skills
 

@@ -99,7 +99,7 @@ Before including ANY content in a skill, ask:
 - ✅ SIGNAL: "Never query same table in RLS policy → causes infinite recursion → crashed prod"
 - ❌ NOISE: "Data access layer handles persistence" (Claude knows)
 
-See `@resources/signal-vs-noise-reference.md` for extended examples (optional deep-dive).
+See `@../resources/signal-vs-noise-reference.md` for extended examples (optional deep-dive).
 
 ### WHY Over HOW Principle
 
@@ -124,7 +124,7 @@ Code syntax (HOW) is obvious to Claude. Context (WHY) is not.
 **Alternative considered:** Manual weak capture → Why rejected: Easy to forget
 ```
 
-See `@resources/why-over-how-reference.md` for complete philosophy (optional deep-dive).
+See `@../resources/why-over-how-reference.md` for complete philosophy (optional deep-dive).
 
 ### Standard Skill Structure
 
@@ -137,7 +137,7 @@ See `@resources/why-over-how-reference.md` for complete philosophy (optional dee
 
 **Optional sections:** Decision Trees, Parameter Tuning, Integration, Examples
 
-See `@resources/skill-structure-reference.md` for detailed guidelines (optional deep-dive).
+See `@../resources/skill-structure-reference.md` for detailed guidelines (optional deep-dive).
 
 ## Decision Framework
 
@@ -447,19 +447,23 @@ cp .claude/skills/skill-creator/skill-template.md .claude/skills/my-skill-name/S
 
 **Example skills:** data-access-patterns, signal-vs-noise, claude-md (see `.claude/skills/`)
 
-**Advanced patterns:** See `@resources/forked-execution.md` (context: fork), `@resources/skill-ecosystem-reference.md` (dynamic injection, scripts)
+**Advanced patterns:** See `@resources/forked-execution.md` (context: fork), `@../resources/skill-ecosystem-reference.md` (dynamic injection, scripts)
 
 ---
 
 ## Resources
 
 ### Internal (Tier 3 Resources)
-- `@resources/signal-vs-noise-reference.md` - Signal vs Noise philosophy (3-question filter, what to include/exclude)
-- `@resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context)
-- `@resources/skill-structure-reference.md` - Standard structure and best practices (required sections, organization)
+
+**Shared resources** (`@../resources/`) - Common across meta-skills:
+- `@../resources/signal-vs-noise-reference.md` - Signal vs Noise philosophy (3-question filter, what to include/exclude)
+- `@../resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context)
+- `@../resources/skill-structure-reference.md` - Standard structure and best practices (required sections, organization)
+- `@../resources/skill-ecosystem-reference.md` - Skill locations, sharing, permissions, and resources (where to put skills, how to distribute, access control)
+
+**Skill-specific resources** (`@resources/`) - Unique to skill-creator:
 - `@resources/skills-guide.md` - Complete official guide to creating skills (moved from .claude/)
 - `@resources/skill-template.md` - Copy-paste ready templates for all skill types
-- `@resources/skill-ecosystem-reference.md` - Skill locations, sharing, permissions, and resources (where to put skills, how to distribute, access control)
 - `@resources/forked-execution.md` - Advanced pattern: skills with `context: fork` for isolated subagent execution
 - **Existing skills** - `.claude/skills/` directory for working examples
 

@@ -182,9 +182,9 @@ func testButtonTapSendsAction()
 
 ## Resources
 
-**Philosophy and Extended Examples:**
-- `@resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context mandatory)
-- `@resources/skill-structure-reference.md` - Standard structure and best practices (quality > brevity)
+**Shared resources** (`@../resources/`) - Common across meta-skills:
+- `@../resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context mandatory)
+- `@../resources/skill-structure-reference.md` - Standard structure and best practices (quality > brevity)
 
 **Use references for:**
 - Why over How → Philosophy of including production context and rationale in all content
