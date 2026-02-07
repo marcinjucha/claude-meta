@@ -28,6 +28,32 @@ Guide the creation of high-quality custom subagents that delegate to task-specif
 - User provides example → Use it
 - No example available → Skip or use placeholder: `[Real example needed]`
 
+## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT
+
+**Core principle:** If Claude already knows it, it's NOISE.
+
+**Why this matters:** Generic agent patterns (system prompt basics, tool API, standard orchestration) waste token budget and dilute agent-specific decisions. Focus on project-specific agent design, not generic knowledge.
+
+**Self-check question:**
+> "Would Claude know this without documentation?"
+> - **YES** → It's noise, remove it (generic tool use, basic agent patterns)
+> - **NO** → It's signal, keep it (tool restriction rationale, project-specific hooks)
+
+**Example:**
+```markdown
+❌ NOISE (AI-known): "Agents route tasks to specialized handlers"
+✅ SIGNAL (project-specific): "Read-only agent prevents accidental edits during analysis (incident: deleted production config)"
+
+❌ NOISE (AI-known): "Use Bash tool for shell commands"
+✅ SIGNAL (project-specific): "PreToolUse hook validates SQL queries against schema (blocked 3 DROP TABLE commands)"
+```
+
+**When creating agents:**
+- Generic agent theory → NOISE (remove)
+- Project-specific tool restrictions + WHY → SIGNAL (keep)
+- Standard tool API → NOISE (remove)
+- Custom hooks with rationale → SIGNAL (keep)
+
 ## Core Philosophy
 
 **Agents are Thin Routers, Skills are Thick Applications**

@@ -82,6 +82,34 @@ When creating or modifying skills, claude-manager must **NEVER invent:**
 
 ---
 
+## ⚠️ AVOID AI-KNOWN CONTENT
+
+**Core principle for skill creation:** If Claude already knows it, it's NOISE.
+
+**Why this matters:** Generic explanations (framework basics, standard patterns, architecture 101) waste token budget and dilute project-specific insights. Skills must contain project-specific content only.
+
+**Self-check question:**
+> "Would Claude know this without the skill?"
+> - **YES** → It's noise, remove it (React hooks basics, standard design patterns)
+> - **NO** → It's signal, keep it (project-specific bugs, non-obvious decisions)
+
+**Example:**
+```markdown
+❌ NOISE (AI-known): "Repository pattern separates data access from business logic"
+✅ SIGNAL (project-specific): "Never query same table in RLS policy → infinite recursion (crashed prod)"
+
+❌ NOISE (AI-known): "Use meaningful variable names"
+✅ SIGNAL (project-specific): "Use weak ref in subscription hooks → prevents NMB leak (production incident)"
+```
+
+**When creating skills, claude-manager must:**
+- Skip generic framework knowledge → NOISE
+- Document project-specific application → SIGNAL
+- Skip standard syntax examples → NOISE
+- Document critical project bugs → SIGNAL
+
+---
+
 ### Critical Rules
 
 1. **INVOKE with Task tool** - Every phase requires actual Task tool call (except Phase 0 and inline phases)
@@ -319,7 +347,7 @@ Extract categories:
 
 2. **Detailed examples** (resources/ if >50 lines):
    - Complete code examples with context
-   - Comprehensive guides
+   - Sufficient guides (focused, not exhaustive)
    - Reference documentation
 
 3. **Utility scripts** (scripts/ if needed):
@@ -328,7 +356,7 @@ Extract categories:
 
 Categorize content by destination:
 - Tier 2 (SKILL.md): Interconnected patterns, decision guidance
-- Tier 3 (resources/): Detailed examples >50 lines, comprehensive guides
+- Tier 3 (resources/): Detailed examples >50 lines, sufficient guides (focused, not exhaustive)
 - Scripts (scripts/): Utility automation
 
 Use skill-creator and signal-vs-noise skills.
@@ -416,13 +444,14 @@ Task: Design skill structure including Tier 2/3 decision and resource organizati
 1. **Tier 2 (SKILL.md):**
    - Required sections: Purpose, When to Use, Core Patterns
    - Target: ~500 lines (150-600 acceptable)
+   - **Note:** Content quality > line count. 600 lines of pure signal > 300 lines with 50% noise.
    - Interconnected content (needs context)
    - Decision-focused (helps Claude choose)
    - Apply Signal vs Noise: No generic explanations, no standard practices, only project-specific decisions
 
 2. **Tier 3 (resources/):**
    - Detailed examples >50 lines
-   - Comprehensive guides (step-by-step)
+   - Sufficient guides (focused, not exhaustive) (step-by-step)
    - Reference documentation
    - Move if: modular, detailed (>50 lines), separate concern
    - Reference syntax: `@resources/filename.md`
@@ -563,7 +592,7 @@ Content verification - Signal vs Noise per section:
 
 Tier 3 verification (if resources/ exists):
   - [ ] resources/ files referenced from SKILL.md (`@resources/filename.md`)
-  - [ ] resources/ content is detailed (>50 lines or comprehensive guides)
+  - [ ] resources/ content is detailed (>50 lines or sufficient guides)
   - [ ] resources/ can reference other skills (cross-references if needed)
   - [ ] ONE LEVEL DEEP: No nested @resources/ → @resources/ references
   - [ ] resources/ files are self-contained (complete within file)
@@ -696,7 +725,7 @@ For each skill, check:
    - [ ] resources/ files referenced from SKILL.md (`@resources/filename.md`)
    - [ ] No orphaned resources/ files (unreferenced)
    - [ ] ONE LEVEL DEEP: No nested @resources/ → @resources/ references
-   - [ ] resources/ content is detailed (>50 lines or comprehensive)
+   - [ ] resources/ content is detailed (>50 lines or sufficient)
 
 5. **Scripts organized correctly?**
    - [ ] scripts/ files have proper shebang

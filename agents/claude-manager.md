@@ -32,6 +32,32 @@ Guide users through creating high-quality Claude Code artifacts that follow arch
 - No data → Use placeholder: `[User to provide real metric]` or ask user
 - During audit → Flag invented content for removal
 
+## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT
+
+**Core principle for all artifacts:** If Claude already knows it, it's NOISE.
+
+**Why this matters:** Generic explanations (framework basics, standard patterns, generic architecture) waste token budget and dilute project-specific insights. All artifacts (agents, skills, CLAUDE.md, workflows) must focus on project-specific content only.
+
+**Self-check question:**
+> "Would Claude know this without the artifact?"
+> - **YES** → It's noise, remove it (framework basics, standard patterns)
+> - **NO** → It's signal, keep it (project-specific decisions, critical bugs)
+
+**Example:**
+```markdown
+❌ NOISE (AI-known): "Repository pattern separates data access from business logic"
+✅ SIGNAL (project-specific): "Never query same table in RLS policy → infinite recursion (crashed prod)"
+
+❌ NOISE (AI-known): "Agents provide task routing capabilities"
+✅ SIGNAL (project-specific): "Read-only agent prevents accidental config deletion (incident: production outage)"
+```
+
+**When creating artifacts:**
+- Skip generic knowledge Claude already knows → NOISE
+- Document project-specific decisions with WHY → SIGNAL
+- Skip framework/architecture explanations → NOISE
+- Document critical bugs and production context → SIGNAL
+
 ## Core Philosophy (Applied to All Artifacts)
 
 ### 1. Signal vs Noise - The 3-Question Filter
@@ -81,7 +107,7 @@ Better: 600 lines of pure signal than 300 lines with 50% noise.
 
 **Priority:**
 - Project-specific value (highest)
-- Completeness (include critical info)
+- Sufficiency (include critical info, not exhaustive)
 - Conciseness (remove filler)
 - Line count targets (lowest)
 

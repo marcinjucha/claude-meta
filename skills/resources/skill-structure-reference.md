@@ -289,9 +289,12 @@ Pattern feature-specific? → Keep in local documentation
 
 **Philosophy:** Quality > Line Count
 
+**Sufficient > Comprehensive:**
+- Focus on necessary signal, not exhaustive coverage
+- Sufficiency matters more than brevity
+
 **Guidelines:**
 - 500 lines is a TARGET, not a CONSTRAINT
-- Completeness matters more than brevity
 - 600 lines of pure signal > 300 lines with missing context
 - Only move content to Tier 3 if truly modular and self-contained
 - Never cut WHY context to meet line count
@@ -590,11 +593,11 @@ Component patterns for this project with architecture integration. Focuses on pr
 **Standard structure ensures:**
 - Consistency across all skills
 - Easy navigation (know where to look)
-- Complete information (required sections force completeness)
+- Sufficient information (required sections force sufficiency, not exhaustive coverage)
 - Signal-focused (structure guides content quality)
 
 **Quality First:**
 - Structure supports content, not constrains it
-- Complete > Brief
+- Sufficient > Brief (focused, not exhaustive)
 - Signal-focused > Generic
 - WHY context > HOW implementation

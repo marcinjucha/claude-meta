@@ -79,6 +79,33 @@ Launching claude-manager...
 4. **Track phase** - Remember current position (user can skip/back)
 5. **Clarifying questions** - After EVERY phase, paraphrase + 5 questions + confirmation
 6. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
+7. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic agent patterns Claude already knows. Focus on project-specific tool restrictions, hooks, and agent design decisions with WHY context.
+
+### ⚠️ AVOID AI-KNOWN CONTENT
+
+**Core principle for agent creation:** If Claude already knows it, it's NOISE.
+
+**Why this matters:** Generic agent patterns (system prompt basics, tool API usage, standard orchestration) waste token budget. Agent docs should focus on project-specific decisions: WHY these tools, WHY these restrictions, WHY these hooks.
+
+**Self-check question:**
+> "Would Claude know this without agent documentation?"
+> - **YES** → It's noise, remove it (basic tool use, generic agent theory)
+> - **NO** → It's signal, keep it (custom hooks, tool restriction rationale)
+
+**Example:**
+```markdown
+❌ NOISE (AI-known): "Agents route tasks to specialized execution contexts"
+✅ SIGNAL (project-specific): "Read-only agent prevents accidental edits during code review (incident: deleted config file)"
+
+❌ NOISE (AI-known): "Use Bash tool to run shell commands"
+✅ SIGNAL (project-specific): "PreToolUse hook validates SQL against schema before execution (blocked 3 DROP TABLE attempts)"
+```
+
+**When creating agents, claude-manager must:**
+- Skip generic agent theory → NOISE
+- Document project-specific tool restrictions + WHY → SIGNAL
+- Skip standard tool API patterns → NOISE
+- Document custom hooks with rationale → SIGNAL
 
 ### Clarifying Questions Pattern
 
@@ -448,6 +475,7 @@ Apply quality standards:
 - Name: lowercase-with-hyphens, max 64 chars
 - Description: third-person, triggers delegation, <1024 chars
 - System prompt: 50-200 lines (approach, not patterns)
+  - **Note:** Content quality > line count. Complete approach > arbitrary brevity.
 - Skills referenced (not duplicated)
 - Apply Signal vs Noise: No generic explanations, only project-specific agent design
 
@@ -778,6 +806,7 @@ Structure requirements:
 - model: sonnet/opus/haiku/inherit
 - skills: valid skill names
 - System prompt: 50-200 lines
+  - **Note:** Content quality > line count. Complete approach > arbitrary brevity.
 
 Output format (YAML per agent):
 ```yaml

@@ -65,14 +65,14 @@ Risk Assessment:
 ```
 <type>: <subject>
 
-[Paragraph 1: Business context - why this change matters]
-
-[Paragraph 2: Technical decision with rationale - why this approach]
-
-[Paragraph 3: Additional context - bug fixes, edge cases, constraints]
-
-[Paragraph 4 (optional): Cross-cutting concerns - platform alignment, migration notes]
+[1-2 sentences describing affected areas/layers and WHY context. Max 500 chars.]
 ```
+
+**Body constraints:**
+- **Length:** 250-500 characters total
+- **Structure:** 1-2 sentences covering all affected areas
+- **Content:** Mention specific layers/areas changed (db, business logic, presentation, API, etc.)
+- **Focus:** WHY context + area identification (not exhaustive HOW)
 
 ### Why This is Better
 
@@ -136,30 +136,15 @@ Risk Assessment:
 - Rollback Plan: Revert commit, users fall back to password auth
 ```
 
-### After: Natural Prose Version
+### After: Natural Prose Version (Concise, 250-500 chars)
 
 ```
 feat: Implement OAuth Authentication Flow
 
-OAuth authentication required because third-party identity providers (Google,
-Microsoft, etc.) don't expose passwords to apps. Delegating authentication to
-providers improves security (no password storage/management) and reduces user
-friction (single sign-on across services).
-
-Authorization code flow with PKCE chosen over implicit flow because implicit
-flow deprecated for security reasons (token exposure in browser history).
-PKCE prevents authorization code interception without adding server-side
-complexity.
-
-Token refresh 5 minutes before expiry prevents authentication failures during
-long-running operations. Without proactive refresh, operations spanning token
-lifetime would fail mid-execution, forcing user to re-authenticate and lose
-progress.
-
-Keychain storage with biometric protection ensures tokens survive app
-reinstalls while preventing unauthorized access. Access tokens in user
-defaults or in-memory storage would expose credentials to backups or memory
-dumps.
+OAuth authentication required for third-party provider integration without
+password storage. Updated authentication layer (AuthService), presentation
+layer (LoginView), and token storage (keychain) with PKCE flow to prevent
+authorization code interception. (252 chars)
 ```
 
 ### What Changed
@@ -170,129 +155,129 @@ dumps.
 - ❌ "Changes:" list (git diff shows)
 - ❌ Performance metrics (trivial, belongs in PR if critical)
 - ❌ Risk assessment (PR review concern)
+- ❌ Verbose explanations (reduced from 4 paragraphs to 2 sentences)
 
 **Added SIGNAL:**
 - ✅ Why OAuth needed (providers don't expose passwords)
-- ✅ Why authorization code flow (implicit flow deprecated)
+- ✅ Specific areas/layers affected (authentication, presentation, token storage)
 - ✅ Why PKCE (prevents code interception)
-- ✅ Why proactive token refresh (prevents mid-operation failures)
-- ✅ Why keychain with biometric (survives reinstall, prevents unauthorized access)
+- ✅ Concise WHY context within 250-500 char limit
 
 **Improved structure:**
-- ✅ Natural paragraphs (business → technical → operational → security)
+- ✅ Concise 1-2 sentences (252 chars vs 600+ chars)
+- ✅ Area/layer identification (AuthService, LoginView, keychain)
 - ✅ WHY-focused (rationale, not mechanics)
-- ✅ Non-obvious insights (not clear from reading code)
+- ✅ Sufficient context without verbose explanations
 
 ---
 
-## Pattern: WHY-Focused Paragraphs
+## Pattern: Concise Body (1-2 Sentences, 250-500 chars)
 
-### Paragraph 1: Business Context
+### Goal
 
-**What to include:**
-- Why feature/fix needed from user/business perspective
-- Problem being solved
-- Impact if not addressed
+Pack WHY context + area identification into 1-2 sentences within 250-500 character limit.
 
-**Template:**
+### Structure Options
+
+**Option 1: Single sentence (single area or tightly related areas):**
 ```
-[Feature/Fix name] [needed/required] because [business reason].
-[Expanded context on user impact or business requirement].
+[Business WHY]. [Technical approach with areas mentioned] [to achieve outcome].
 ```
 
-**Example:**
+**Option 2: Two sentences (multiple areas or complex change):**
 ```
-OAuth authentication required because third-party identity providers don't
-expose passwords to apps. Delegating authentication improves security (no
-password storage) and reduces user friction (single sign-on).
-```
-
-### Paragraph 2: Technical Decision with Rationale
-
-**What to include:**
-- Technical approach chosen
-- Why this approach over alternatives
-- Trade-offs considered
-
-**Template:**
-```
-[Technical approach] chosen over [alternative] because [rationale].
-[Expanded context on trade-offs or constraints].
+[Business WHY or problem statement]. [Technical approach] [area 1], [area 2],
+and [area 3] [to achieve outcome or rationale].
 ```
 
-**Example:**
+### Examples by Change Type
+
+**Feature (multiple areas):**
 ```
-Authorization code flow with PKCE chosen over implicit flow because implicit
-flow deprecated for security reasons (token exposure in browser history).
-PKCE prevents authorization code interception without adding server-side
-complexity.
+OAuth authentication required for third-party provider integration without
+password storage. Updated authentication layer (AuthService), presentation
+layer (LoginView), and token storage (keychain) with PKCE flow to prevent
+authorization code interception. (252 chars)
 ```
 
-### Paragraph 3: Operational/Bug Context
-
-**What to include:**
-- Bug root cause (if fixing bug)
-- Edge cases handled
-- Operational requirements (timing, caching, cleanup)
-
-**Template:**
+**Bug fix (single area):**
 ```
-[Operational decision] prevents [problem]. Without [this approach],
-[negative consequence].
+Row-level security policy queried same table it protected, causing infinite
+recursion. Updated policy logic to use cached role check instead of
+re-querying user_roles table. (188 chars)
 ```
 
-**Example:**
+**Refactor (multiple areas, two sentences):**
 ```
-Token refresh 5 minutes before expiry prevents authentication failures during
-long-running operations. Without proactive refresh, operations spanning token
-lifetime would fail mid-execution, forcing user re-authentication.
-```
-
-### Paragraph 4 (Optional): Cross-Cutting Concerns
-
-**What to include:**
-- Platform alignment (if applicable)
-- Migration notes (if breaking change)
-- Security considerations
-- Performance implications (if significant)
-
-**Template:**
-```
-[Implementation detail] ensures [quality attribute]. [Expanded context on
-why this matters for maintainability/security/performance].
+600-line UploadService mixed business logic, file validation, and API calls.
+Extracted validation layer (FileValidator), storage layer (S3Adapter), and
+business logic (UploadOrchestrator) to separate concerns and enable
+independent testing. (276 chars)
 ```
 
-**Example:**
+**Performance optimization (specific areas):**
 ```
-Keychain storage with biometric protection ensures tokens survive app
-reinstalls while preventing unauthorized access. Access tokens in user
-defaults would expose credentials to backups or memory dumps.
+N+1 queries in activity feed caused 3-second load times. Added eager loading
+in FeedRepository and query result caching in ActivityService to reduce
+database roundtrips from 50+ to 3. (187 chars)
 ```
+
+### Template Patterns
+
+**Business WHY + Technical approach + Areas:**
+```
+[Feature/fix name] [required/needed] because [business reason]. [Updated/Added/
+Modified] [layer/area 1] ([Component]), [layer/area 2] ([Component]), and
+[layer/area 3] ([Component]) [with/using] [technical approach] to [outcome].
+```
+
+**Problem statement + Solution with areas:**
+```
+[Problem description with impact]. [Updated/Fixed/Extracted] [technical
+approach] in [layer/area 1] ([Component]) and [layer/area 2] ([Component])
+[to achieve outcome or prevent issue].
+```
+
+### Area/Layer Naming
+
+**Common layers to mention:**
+- **Database:** db layer, schema, migration, RLS policy, query logic
+- **Business logic:** service layer, domain logic, orchestrator, validator
+- **Presentation:** UI layer, view, component, screen
+- **API:** endpoint, controller, route handler, middleware
+- **Storage:** file storage, cache layer, token storage, session store
+- **Integration:** external API client, webhook handler, third-party adapter
+
+**Format:** `[layer/area] ([specific component if helpful])`
+
+**Examples:**
+- "authentication layer (AuthService)"
+- "database schema (user_roles table)"
+- "presentation layer (LoginView)"
+- "API endpoints (/oauth/callback)"
+- "business logic (UploadOrchestrator)"
 
 ---
 
-## Decision Framework: What to Include
+## Decision Framework: What to Include (Within 250-500 chars)
 
 ### Always Include (SIGNAL)
 
-✅ **Business context**
-- Why feature/fix needed
-- User/business impact
-- Problem being solved
+✅ **Business context (condensed)**
+- Why feature/fix needed (1 clause)
+- Problem being solved (brief)
 
-✅ **Technical rationale**
-- Why this approach chosen
-- Alternatives considered
-- Trade-offs evaluated
+✅ **Affected areas/layers**
+- Which layers/components changed
+- Format: `[layer] ([Component])`
+- Examples: "authentication layer (AuthService)", "database schema (users table)"
 
-✅ **Non-obvious decisions**
-- Architecture choices requiring explanation
-- Edge case handling
-- Timing/sequencing requirements
+✅ **Technical rationale (condensed)**
+- Why this approach (brief phrase)
+- Key decision rationale (not exhaustive)
 
-✅ **Bug context (if applicable)**
-- Root cause analysis
-- Why bug occurred
+✅ **Bug context (if applicable, brief)**
+- Root cause (1 clause)
 - Why fix prevents recurrence
 
 ### Never Include (NOISE)
@@ -306,8 +291,9 @@ defaults would expose credentials to backups or memory dumps.
 ❌ **"Changes:" lists**
 - Git diff shows exact changes
 
-❌ **HOW implementation**
+❌ **HOW implementation (exhaustive)**
 - Code shows implementation mechanics
+- Brief technical approach OK if non-obvious
 
 ❌ **Risk assessment**
 - Belongs in PR review template
@@ -315,26 +301,27 @@ defaults would expose credentials to backups or memory dumps.
 ❌ **Rollback plans**
 - Usually obvious (revert commit)
 
-❌ **Performance metrics (unless critical)**
-- Belongs in PR description or docs
+❌ **Performance metrics**
+- Belongs in PR description (unless critical context)
 
-### Consider Including (Context-Dependent)
+❌ **Verbose explanations**
+- 250-500 char limit forces brevity
 
-⚠️ **Platform alignment**
-- Include if coordinating across platforms
-- Skip if platform-specific implementation
+### Prioritization Within 500-Char Limit
 
-⚠️ **Migration notes**
-- Include if breaking change
-- Skip if backward compatible
+**Priority 1 (Must have):**
+1. Business WHY (1 sentence or clause)
+2. Affected areas/layers (components list)
 
-⚠️ **Security implications**
-- Include if security-critical decision
-- Skip if standard secure practice
+**Priority 2 (Should have if space):**
+3. Technical rationale (brief phrase)
+4. Key outcome or prevention (brief phrase)
 
-⚠️ **Performance implications**
-- Include if significant impact (>10% change)
-- Skip if negligible or optimization
+**Priority 3 (Nice to have if space):**
+5. Edge case handling (if critical)
+6. Platform alignment note (if coordinating)
+
+**Strategy:** Start with Priority 1, add Priority 2, check char count, add Priority 3 only if under 400 chars.
 
 ---
 

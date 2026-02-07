@@ -493,6 +493,8 @@ Present implementation with rationale for design choices.
 - **Maximum:** 200 lines
 - **If longer:** Move content to skills
 
+**Note:** Content quality > line count. Complete approach within limits > incomplete guidance for brevity.
+
 **Comparison:**
 ```
 Agent system prompt: 50-150 lines (approach)

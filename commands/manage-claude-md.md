@@ -31,6 +31,35 @@ When you see "**Agent**: claude-manager" in a phase:
 9. **CLAUDE.md vs Skill** - Folder-specific → CLAUDE.md; Project-wide → Skill
 10. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, patterns, or numbers. ONLY use user-provided data.
 11. **Minimal core** - Only Overview + Weird Parts required; everything else optional
+12. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic architectural explanations or framework basics. Focus on folder-specific weird behaviors, critical bugs, non-obvious patterns with WHY context.
+
+---
+
+## ⚠️ AVOID AI-KNOWN CONTENT
+
+**Core principle for CLAUDE.md:** If Claude already knows it, it's NOISE.
+
+**Why this matters:** Generic architectural explanations (layered architecture, MVC patterns, framework basics) waste token budget. CLAUDE.md should document folder-specific weird behaviors and decisions that differ from standard approaches.
+
+**Self-check question:**
+> "Would Claude know this without CLAUDE.md?"
+> - **YES** → It's noise, remove it (standard patterns, framework explanations)
+> - **NO** → It's signal, keep it (folder-specific bugs, non-obvious behaviors)
+
+**Example:**
+```markdown
+❌ NOISE (AI-known): "This module handles data persistence using repository pattern"
+✅ SIGNAL (folder-specific): "Never query same table in RLS policy → infinite recursion (crashed prod, fixed in commit abc123)"
+
+❌ NOISE (AI-known): "Use dependency injection for testability"
+✅ SIGNAL (folder-specific): "Singleton leaks NMB per instance → use weak refs in observers (20+ crash reports, devices < 2GB RAM)"
+```
+
+**When creating CLAUDE.md, claude-manager must:**
+- Skip generic module explanations → NOISE
+- Document folder-specific weird behaviors + WHY → SIGNAL
+- Skip framework architecture basics → NOISE
+- Document critical bugs with production context → SIGNAL
 
 ---
 
@@ -715,7 +744,7 @@ FILES: [list]
 STRUCTURE RESULTS: [Phase 1 summary]
 CONTENT RESULTS: [Phase 2 summary]
 
-Task: Audit cross-references for validity and completeness.
+Task: Audit cross-references for validity and sufficiency.
 
 Use claude-md skill for cross-reference patterns.
 

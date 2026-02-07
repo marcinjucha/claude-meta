@@ -4,6 +4,7 @@
 - Komentarze: tylko non-obvious decisions, skip obvious ("set loading to true")
 - Unit testy: holistyczne pokrycie najważniejszych ścieżek biznesowych/deweloperskich, pomijaj trywialne case'y
 - Content quality > line count: 600 lines of signal > 300 lines with noise
+- **Sufficient > Comprehensive:** Focus on necessary signal, not exhaustive coverage
 
 **WHY over HOW:** Always explain rationale, not just implementation. Include production context.
 
@@ -24,6 +25,7 @@
 - No generic content AI already knows (framework explanations, standard patterns)
 - No historical narratives ("Critical Mistakes We Made")
 - Preserve: WHY context, production incidents, project-specific patterns
+- **Philosophy:** Sufficient signal > comprehensive coverage (focused, not exhaustive)
 
 **Meta-Skills Principle (embedded in skill-creator, skill-fine-tuning, command-creation, signal-vs-noise):**
 - ⚠️ AVOID AI-KNOWN CONTENT: "If Claude already knows it, it's NOISE"
@@ -38,9 +40,11 @@
 - **Why this matters:** Invented content corrupts knowledge base, undermines trust in artifacts
 - **Red flags:** Specific numbers (percentages, time savings) without attribution or "production validation"
 
-**Results (Feb 2026 cleanup):**
-- 7 skills: 5377 → 3325 lines (38% reduction)
-- All artifacts follow same condensed pattern
+**Results (Feb 2026 cleanup + audit):**
+- 7 skills: 5377 → 3325 lines (38% reduction in Feb)
+- Feb 2026 audit: Removed 6 invented metrics, added concise no-hallucination checklists
+- Content quality: 97% → 100% fact-based (0 invented metrics remaining)
+- All artifacts follow same condensed pattern + explicit RED FLAGS guidance
 - Token budget optimized, faster processing, maintained functionality
 
 **Shared Resources Pattern (Feb 2026):**

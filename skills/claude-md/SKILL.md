@@ -34,7 +34,6 @@ Create and maintain focused, actionable CLAUDE.md documentation that Claude actu
 **What to do:**
 - User describes discovery → Document it with real details
 - No real data → Use placeholder: `[Real incident details needed]` or ask user
-**Why**: Server processes in 15s. Without window, 95% fewer false-positive tickets.
 
 ✅ CORRECT (FACT-BASED):
 ## 15-Second Time Window
@@ -55,13 +54,31 @@ Better:
 Than:
   300 lines with 50% noise (generic patterns Claude knows)
 
-### The Test Question
+### ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT
 
-**Before including ANY information, ask:**
+**Core principle for CLAUDE.md:** If Claude already knows it, it's NOISE.
 
-> "Is this something Claude already knows?"
-> - YES → Cut it
-> - NO → Keep it (with WHY)
+**Why this matters:** Generic architectural explanations (layered architecture, design patterns, framework basics) waste token budget and dilute folder-specific insights. CLAUDE.md should document folder/module weird behaviors and critical bugs only.
+
+**Self-check question:**
+> "Would Claude know this without CLAUDE.md?"
+> - **YES** → It's noise, remove it (standard patterns, framework explanations)
+> - **NO** → It's signal, keep it (folder-specific bugs, non-obvious behaviors)
+
+**Example:**
+```markdown
+❌ NOISE (AI-known): "This module handles data persistence using repository pattern"
+✅ SIGNAL (folder-specific): "Never query same table in RLS policy → infinite recursion (crashed prod, commit abc123)"
+
+❌ NOISE (AI-known): "Use dependency injection for testability"
+✅ SIGNAL (folder-specific): "Singleton leaks NMB per instance → use weak refs in observers (20+ crash reports, devices < 2GB RAM)"
+```
+
+**When writing CLAUDE.md:**
+- Skip generic module explanations → NOISE
+- Document folder-specific weird behaviors + WHY → SIGNAL
+- Skip framework/architecture basics → NOISE
+- Document critical bugs with production context → SIGNAL
 
 ### WHY > HOW
 
@@ -94,8 +111,7 @@ Than:
 ```markdown
 ## 15-Second Time Window (Bug Fix)
 ComponentHistoryService filters history with 15-second time window.
-**Why**: Server processes in up to 15s. Without window, UI showed "not processed"
-even when succeeded. 95% fewer false-positive tickets after fix.
+**Why**: Server processes in up to 15s. Without window, UI showed errors when operations succeeded.
 ```
 
 #### Structure for Critical Mistake
@@ -441,7 +457,7 @@ Before committing CLAUDE.md:
 **Why included:**
 - Consistent philosophy across all meta skills (skills, agents, workflows, docs)
 - Decision framework for documentation content (what to include, what to skip)
-- Quality guidelines (completeness > brevity, WHY mandatory - see Core Philosophy)
+- Quality guidelines (sufficiency > brevity, WHY mandatory - see Core Philosophy)
 
 ---
 

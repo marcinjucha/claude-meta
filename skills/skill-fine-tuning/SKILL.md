@@ -47,6 +47,19 @@ Before updating a skill, apply Signal vs Noise filter:
 - No data available → Ask user: "Do you have real metrics for this?" or use placeholder
 - Found invented content → Flag for removal
 
+**RED FLAGS - NEVER invent:**
+- ❌ Metrics/percentages without source ("30% faster", "50% reduction")
+- ❌ Production incidents without user verification
+- ❌ Team statistics or timing data
+- ❌ Anti-patterns without real examples
+
+**GREEN LIGHT - ONLY include:**
+- ✅ User-provided data and incidents
+- ✅ Real patterns from codebase
+- ✅ Placeholder when missing: `[User to provide: real metric]`
+
+**Quick test:** Can you verify with user/codebase? NO → Use placeholder or skip.
+
 **WHEN UPDATING SKILLS:**
 
 - ✅ **ONLY add metrics/incidents if user provided them**
@@ -277,12 +290,9 @@ NOT when:
 
 **Why 1000 lines threshold:**
 
-Production validation: Skills >1000 lines took 2-3 minutes to find patterns vs <30 seconds for <600 line skills.
+Skills >1000 lines are harder to navigate and take longer to find patterns.
 
-Pattern discovery time:
-- <600 lines: ~20-30 seconds
-- 600-1000 lines: ~45-90 seconds
-- >1000 lines: 2-3 minutes
+**Note:** Content quality > line count. After split, each skill should be 400-600 lines of pure signal, not reduced for brevity.
 
 **Action:**
 - Multiple distinct domains → Split into separate skills (400-600 lines each)
@@ -307,7 +317,7 @@ Pattern discovery time:
 - Just provides knowledge (not actionable task)
 
 **Why fork matters:**
-Production validation: Research skills without fork consumed 40% of main context with verbose output → subsequent responses degraded quality. Forked research skills isolated output → main context stayed clean → 15% quality improvement.
+Research skills without fork can consume significant main context with verbose output, degrading subsequent response quality. Forked research skills isolate output, keeping main context clean.
 
 **Key decision:**
 - YES if: (1) Complete task with steps, (2) Don't need conversation context, (3) Verbose output expected

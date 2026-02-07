@@ -50,6 +50,19 @@ argument-hint: "[content-type]"
 - ✅ **Real incidents** user described (not hypothetical scenarios)
 - ✅ **Actual numbers** user provided (not made-up metrics)
 
+**RED FLAGS - NEVER invent:**
+- ❌ Metrics/percentages without source ("30% faster", "50% reduction")
+- ❌ Production incidents without user verification
+- ❌ Team statistics or timing data
+- ❌ Anti-patterns without real examples
+
+**GREEN LIGHT - ONLY include:**
+- ✅ User-provided data and incidents
+- ✅ Real patterns from codebase
+- ✅ Placeholder when missing: `[User to provide: real metric]`
+
+**Quick test:** Can you verify with user/codebase? NO → Use placeholder or skip.
+
 **If no real data available:**
 
 - Ask user: "Do you have real metrics/incidents for this?"
@@ -196,5 +209,13 @@ func testButtonTapSendsAction()
 - Complete context for applying filter to all content types
 
 ---
+
+## Content Philosophy
+
+**Sufficient > Comprehensive:**
+- Focus on necessary signal, not exhaustive coverage
+- 600 lines of focused signal > 300 lines missing critical info
+- Include what's needed, skip what's known
+- Sufficient patterns > comprehensive documentation
 
 **Remember:** 100 lines of project-specific content > 50 lines of generic patterns.

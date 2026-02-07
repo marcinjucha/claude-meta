@@ -19,6 +19,19 @@ Guide for creating multi-phase command files that orchestrate multiple agents ac
 - No data → Skip metrics or use placeholder: `[Real metric needed]`
 - During audit → Flag invented content for removal
 
+**RED FLAGS - NEVER invent:**
+- ❌ Metrics/percentages without source ("30% faster", "50% reduction")
+- ❌ Production incidents without user verification
+- ❌ Team statistics or timing data
+- ❌ Anti-patterns without real examples
+
+**GREEN LIGHT - ONLY include:**
+- ✅ User-provided data and incidents
+- ✅ Real patterns from codebase
+- ✅ Placeholder when missing: `[User to provide: real metric]`
+
+**Quick test:** Can you verify with user/codebase? NO → Use placeholder or skip.
+
 ## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT IN COMMANDS
 
 **Why this rule exists:** Multi-phase command prompts to agents should contain ONLY project-specific context, not generic explanations Claude already knows. Adding AI-known content wastes tokens and dilutes signal.
@@ -248,7 +261,7 @@ Ready to proceed? (continue/skip/popraw/back/stop)
 ```
 
 **WHY this section:**
-- **Anti-pattern prevention**: Orchestrator describing instead of invoking (happened 30% of time without this section)
+- **Anti-pattern prevention**: Orchestrator describing instead of invoking
 - **Force behavior**: Explicit DO/DON'T forces actual Task tool use
 - **User checkpoints**: Prevents wasting phases if direction wrong
 
@@ -293,25 +306,15 @@ Does this match exactly what you want to achieve? If not, what should I adjust?
 
 **Why clarifying questions pattern:**
 
-Production validation: Commands WITHOUT this pattern had 40% rework rate (agent produced output, user said "that's not what I wanted", had to redo phase). Commands WITH pattern had 8% rework rate.
-
-Root cause: User description ambiguous → agent makes assumptions → output doesn't match intent → wasted phase.
-
-Clarifying questions after EVERY phase:
+Clarifying questions after EVERY phase prevent misunderstandings:
 1. **Paraphrase** forces orchestrator to demonstrate understanding (not just repeat)
 2. **3-5 questions** (flexible) uncover hidden constraints, edge cases, priorities user didn't mention
 3. **Confirmation loop** ensures alignment before proceeding (prevents wasted work)
 
 **Question count flexibility:**
 - **Simple phases** (Context Analysis, Manual Testing, Review): 3 questions
-  - Less complexity, fewer unknowns
-  - Example: Phase 0 context categorization
 - **Standard phases** (Requirements, Data Flow, Single Tests): 3-4 questions
-  - Moderate complexity, standard patterns
-  - Example: Requirements gathering
 - **Complex phases** (Architecture, Multi-layer Implementation): 4-5 questions
-  - High complexity, many integration points
-  - Example: Architecture design with module placement
 
 **Principle**: Ask enough questions to uncover hidden constraints, not more. Quality over quantity.
 
@@ -454,7 +457,7 @@ Output: [format]
 **Fix:** Include constraints, existing patterns, project rules. Test question: "Can agent produce HIGH QUALITY?"
 
 ### ❌ Not Invoking Task Tool
-**Problem:** Orchestrator describes phase instead of invoking. 30% of commands before fix.
+**Problem:** Orchestrator describes phase instead of invoking.
 **Fix:** "⚠️ CRITICAL: YOU MUST INVOKE AGENTS" section forces behavior.
 
 ### ❌ No User Checkpoints
@@ -462,8 +465,8 @@ Output: [format]
 **Fix:** Get approval after EACH phase. Commands: continue/skip/back/stop.
 
 ### ❌ No Clarifying Questions
-**Problem:** 40% rework rate. Agent assumes, user doesn't notice until later phases.
-**Fix:** MANDATORY clarifying questions after every phase. Paraphrase + 3-5 questions + confirmation. Reduced to 8% rework rate.
+**Problem:** Agent assumes, user doesn't notice misalignment until later phases.
+**Fix:** MANDATORY clarifying questions after every phase. Paraphrase + 3-5 questions + confirmation.
 
 ---
 
@@ -550,7 +553,7 @@ Validation command (parallel checks):
 
 **WHY Explanations:**
 - Phase 0 inline (WHY: avoids wasting agent)
-- Clarifying questions (WHY: 40% → 8% rework rate, prevents misunderstandings)
+- Clarifying questions (WHY: prevents misunderstandings, ensures alignment)
 - Flexible question count (WHY: match complexity, quality over rigid count)
 - User checkpoints (WHY: prevents wasted phases)
 
@@ -573,8 +576,8 @@ Validation command (parallel checks):
 
 - Consistent philosophy across all meta skills (skills, agents, commands)
 - Decision framework for command content (what to include, what to skip)
-- Quality guidelines (completeness > brevity, WHY explanations mandatory)
+- Quality guidelines (sufficiency > brevity, WHY explanations mandatory)
 
 ---
 
-**Key Lesson:** Multi-phase commands need standard structure + sufficient context principle + clarifying questions (3-5 flexible) + forced invocation. Agents have isolated context - must provide exactly right information (test question). Clarifying questions after every phase prevent 40% rework rate. Match question count to phase complexity.
+**Key Lesson:** Multi-phase commands need standard structure + sufficient context principle + clarifying questions (3-5 flexible) + forced invocation. Agents have isolated context - must provide exactly right information (test question). Clarifying questions after every phase prevent misunderstandings. Match question count to phase complexity.

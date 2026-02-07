@@ -309,7 +309,7 @@ Total: 120 (agent) + 1462 (skills) = 1582 lines
 
 3. **Clarity** - Clear separation (routing vs patterns)
    - Agent: ~120 lines (easy to understand workflow)
-   - Skills: ~400-600 lines (comprehensive patterns)
+   - Skills: ~400-600 lines (sufficient patterns, focused not exhaustive)
 
 4. **Scalability** - Add patterns without modifying agents
    - Before: Modify agent to add pattern (risk breaking workflow)
@@ -428,18 +428,16 @@ You format code.
 
 ---
 
-## Key Metrics
+## Refactoring Benefits
 
-**Optimal numbers from production:**
+**Improvements from thick-to-thin transformation:**
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Total agents | 12 | 5 | -58% |
-| Agent avg size | 350 lines | 130 lines | -63% |
-| Skills created | 0 | 18 | +18 |
-| Skill avg size | N/A | 480 lines | N/A |
-| Pattern updates | 3-6 agents | 1 skill | -75% effort |
-| Duplication | High | None | -100% |
+- **Consolidation:** Multiple specialized agents → Fewer general-purpose agents
+- **Size reduction:** Large agent files → Smaller routing layers
+- **Knowledge extraction:** Patterns embedded in agents → Separate skills
+- **Reusability:** Duplicate patterns → Single skill used by multiple agents
+- **Maintenance:** Update pattern once in skill, all agents benefit
+- **Clarity:** Mixed routing and patterns → Clear separation of concerns
 
 ---
 

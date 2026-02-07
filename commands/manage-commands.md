@@ -70,6 +70,33 @@ Launching claude-manager...
 4. **User checkpoints** - Get approval after confirmation before proceeding
 5. **Track phase** - Remember current position and mode (CREATE or AUDIT)
 6. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
+7. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic multi-phase patterns Claude already knows. Focus on project-specific command design, sufficient context principles, and orchestration decisions with WHY context.
+
+### ⚠️ AVOID AI-KNOWN CONTENT
+
+**Core principle for command creation:** If Claude already knows it, it's NOISE.
+
+**Why this matters:** Generic multi-phase orchestration patterns (basic agent invocation, standard phase structure) waste token budget. Command docs should focus on project-specific decisions: WHY these phases, WHY this context structure, WHY these clarifying questions.
+
+**Self-check question:**
+> "Would Claude know this without command documentation?"
+> - **YES** → It's noise, remove it (basic orchestration, generic agent patterns)
+> - **NO** → It's signal, keep it (sufficient context rationale, project-specific phases)
+
+**Example:**
+```markdown
+❌ NOISE (AI-known): "Commands orchestrate multiple agents across phases"
+✅ SIGNAL (project-specific): "Extract decisions only (50 lines), not full conversation (500 lines) - agents have isolated context"
+
+❌ NOISE (AI-known): "Use Task tool to invoke agents"
+✅ SIGNAL (project-specific): "Clarifying questions MANDATORY after Phase 0 and EVERY agent phase (prevents rework)"
+```
+
+**When creating commands, claude-manager must:**
+- Skip generic orchestration theory → NOISE
+- Document project-specific phase structure + WHY → SIGNAL
+- Skip standard agent invocation patterns → NOISE
+- Document sufficient context principles → SIGNAL
 
 ### Phase Execution Pattern
 
@@ -1016,7 +1043,7 @@ Compliance verification:
 Quality verification:
   - [ ] Signal-focused (no generic content)
   - [ ] Clear and unambiguous
-  - [ ] Complete (no missing critical info)
+  - [ ] Sufficient (has critical info, not exhaustive)
   - [ ] Scannable (headers, bullets, tables)
 ```
 

@@ -85,7 +85,7 @@ description: TCA state management patterns specific to Digital Shelf iOS. Use wh
 
 ### Body Content Guidelines
 
-**Quality > Line Count:** Aim for ~500 lines, but prioritize completeness over brevity. Better to have 600 lines of pure signal than 300 lines missing critical information. Move detailed content to Tier 3 files only if modular and self-contained.
+**Quality > Line Count:** Aim for ~500 lines, but prioritize sufficiency over brevity. Better to have 600 lines of pure signal than 300 lines missing critical information. Move detailed content to Tier 3 files only if modular and self-contained.
 
 **Structure:**
 1. **Purpose** - What problem does this solve?
@@ -489,4 +489,4 @@ Use this checklist before finalizing a skill:
 
 ---
 
-**Key Lesson:** The best skills are signal-focused, complete, and project-specific. Quality matters more than brevity - better to have comprehensive content (600 lines of pure signal) than incomplete content (300 lines missing critical information). Focus on what Claude can't infer from the codebase alone.
+**Key Lesson:** The best skills are signal-focused, sufficient, and project-specific. Quality matters more than brevity - better to have sufficient content (600 lines of pure signal) than incomplete content (300 lines missing critical information). Focus on what Claude can't infer from the codebase alone.

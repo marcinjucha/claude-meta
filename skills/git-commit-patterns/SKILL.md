@@ -23,6 +23,34 @@ description: Organize commits and write messages for PRs. Use when deciding comm
 
 ---
 
+## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT
+
+**Core principle for commit messages:** If Claude already knows it, it's NOISE.
+
+**Why this matters:** Generic git/commit explanations waste message space. Commit messages should focus on project-specific WHY context, not explaining what commits are or basic version control concepts.
+
+**Self-check question:**
+> "Would reviewer know this without commit message?"
+> - **YES** → It's noise, remove it (git basics, file change lists)
+> - **NO** → It's signal, keep it (business context, technical rationale)
+
+**Example:**
+```markdown
+❌ NOISE (AI-known): "This commit updates files to fix a bug in the system"
+✅ SIGNAL (project-specific): "Fix infinite recursion in RLS policy (crashed prod)"
+
+❌ NOISE (AI-known): "Made changes to improve code quality"
+✅ SIGNAL (project-specific): "Extract 300-line function → 3 focused handlers (reviewer requested)"
+```
+
+**When writing commit messages:**
+- Skip git/version control basics → NOISE
+- Document business context + technical rationale → SIGNAL
+- Skip file change descriptions → NOISE (git diff shows this)
+- Document WHY decisions made → SIGNAL
+
+---
+
 ## Core Philosophy
 
 **Signal vs Noise: WHY > HOW**
@@ -116,14 +144,14 @@ git branch --show-current | grep -oE '[A-Z]+-[0-9]+'
 ```
 [TICKET-NUM] <type>: <subject>
 
-[Paragraph 1: Business context - why this change matters]
-
-[Paragraph 2: Technical decision with rationale - why this approach]
-
-[Paragraph 3: Additional context - bug fixes, edge cases, constraints]
-
-[Paragraph 4 (optional): Cross-cutting concerns - platform alignment, migration notes]
+[1-2 sentences describing affected areas/layers and WHY context. Max 500 chars.]
 ```
+
+**Body constraints:**
+- **Length:** 250-500 characters total
+- **Structure:** 1-2 sentences covering all affected areas
+- **Content:** Mention specific layers/areas changed (db, business logic, presentation, API, etc.)
+- **Focus:** WHY context + area identification (not exhaustive HOW)
 
 **Ticket prefix examples:**
 ```
@@ -162,24 +190,38 @@ git branch --show-current | grep -oE '[A-Z]+-[0-9]+'
 
 ### Body: Natural Prose > Template
 
-**✅ Good (Natural prose, WHY-focused, with ticket):**
+**Body must be 250-500 characters with 1-2 sentences covering affected areas.**
+
+**✅ Good (Concise, WHY-focused, areas mentioned, 250-500 chars):**
 ```
 [SHELF-5678] feat: Implement OAuth Authentication Flow
 
-OAuth authentication required because third-party identity providers don't
-expose passwords to apps. Delegating authentication improves security (no
-password storage) and reduces user friction (single sign-on).
-
-Authorization code flow with PKCE chosen over implicit flow because implicit
-flow deprecated for security reasons. PKCE prevents authorization code
-interception without adding server-side complexity.
-
-Token refresh 5 minutes before expiry prevents authentication failures during
-long-running operations. Without proactive refresh, operations spanning token
-lifetime would fail mid-execution, forcing user re-authentication.
+OAuth authentication required for third-party provider integration without
+password storage. Updated authentication layer (AuthService), presentation
+layer (LoginView), and token storage (keychain) with PKCE flow to prevent
+authorization code interception. (252 chars)
 ```
 
-**❌ Bad (Template with sections, NOISE, missing ticket):**
+**✅ Good (Single area, bug fix):**
+```
+[SHELF-1234] fix: Prevent infinite recursion in RLS policy
+
+Row-level security policy queried same table it protected, causing infinite
+recursion. Updated policy logic to use cached role check instead of
+re-querying user_roles table. (188 chars - note: under 250 is OK if complete)
+```
+
+**✅ Good (Multiple areas, two sentences):**
+```
+[SHELF-9999] refactor: Extract upload logic from monolithic service
+
+600-line UploadService mixed business logic, file validation, and API calls.
+Extracted validation layer (FileValidator), storage layer (S3Adapter), and
+business logic (UploadOrchestrator) to separate concerns and enable
+independent testing. (276 chars)
+```
+
+**❌ Bad (Template sections, NOISE, too long, missing ticket):**
 ```
 feat: Implement OAuth Authentication Flow
 
@@ -200,8 +242,9 @@ Breaking Changes: NO
 ```
 
 **Why bad:** Template sections add NOISE. Git already shows files, line counts.
-Message should focus on WHY (business context, decisions), not WHAT (git shows).
-Missing ticket number from branch name.
+Body exceeds 500 chars. Message should focus on WHY (business context,
+decisions) and specific areas affected, not WHAT (git shows). Missing ticket
+number from branch name.
 
 ### Footer (Rarely Used)
 
@@ -291,15 +334,12 @@ Organized history:
 - Review time: 30-45 minutes (clear separation)
 - Each commit reviewable independently
 
-**Production example:**
+**Impact of organized history:**
 
-Team X before organizing:
-- Average PR review time: 3 hours
-- 40% of PRs required "can you clean up commits?" feedback
-
-Team X after organizing:
-- Average PR review time: 45 minutes (75% faster)
-- Clean commit history became standard practice
+Organized commits reduce review time:
+- Reviewer sees clear separation (not mixed WIP commits)
+- Each commit reviewable independently
+- Fewer requests to clean up history
 
 ### How to Organize (Step-by-Step)
 
@@ -359,4 +399,4 @@ git log --oneline develop..HEAD
 
 ---
 
-**Remember:** Module boundaries = highest priority for commit separation. Squash WIP/fixup commits always. Breaking changes = separate commit + flagged. Commit messages = natural prose with WHY focus (not template sections). NO footer by default (no Co-Authored-By, no Signed-off-by).
+**Remember:** Module boundaries = highest priority for commit separation. Squash WIP/fixup commits always. Breaking changes = separate commit + flagged. Commit messages = natural prose with WHY focus (not template sections). Body = 250-500 chars, 1-2 sentences covering affected areas/layers (db, business logic, presentation, API, etc.). NO footer by default (no Co-Authored-By, no Signed-off-by).

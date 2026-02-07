@@ -40,8 +40,9 @@ Code syntax (HOW) is obvious to Claude. Context (WHY) is not.
 
 **Right approach:** Keep all critical WHY context, even if longer
 
-**Example:**
-- 600 lines with complete WHY context > 300 lines missing critical information
+**Sufficient > Comprehensive:**
+- Focus on necessary WHY context, not exhaustive documentation
+- 600 lines with sufficient WHY context > 300 lines missing critical information
 - Signal-focused content matters more than brevity
 - Line count is a guideline, not a constraint
 

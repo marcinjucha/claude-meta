@@ -29,7 +29,7 @@ The 500-line guideline is a target, not a hard limit. If high-quality, signal-fo
 - ✅ Scannable structure (easy to find what you need)
 - ❌ NOT arbitrary line count compliance
 
-**Trade-off:** More comprehensive content (600 lines) vs splitting to Tier 3 files (300 + 300)
+**Trade-off:** More sufficient content (600 lines of signal) vs splitting to Tier 3 files (300 + 300)
 - **Keep together** if content is interconnected and needs context
 - **Split to Tier 3** if content is modular and self-contained
 
@@ -41,6 +41,19 @@ The 500-line guideline is a target, not a hard limit. If high-quality, signal-fo
 - User provides real data → Use it
 - No data available → Placeholder: `[User to provide real metric]` or skip section
 - During audit → Flag invented content for removal
+
+**RED FLAGS - NEVER invent:**
+- ❌ Metrics/percentages without source ("30% faster", "50% reduction")
+- ❌ Production incidents without user verification
+- ❌ Team statistics or timing data
+- ❌ Anti-patterns without real examples
+
+**GREEN LIGHT - ONLY include:**
+- ✅ User-provided data and incidents
+- ✅ Real patterns from codebase
+- ✅ Placeholder when missing: `[User to provide: real metric]`
+
+**Quick test:** Can you verify with user/codebase? NO → Use placeholder or skip.
 
 **Example:**
 ```markdown
@@ -252,7 +265,7 @@ Tier 3 files: Optional detailed examples
 - WHY included: Explain purpose, rationale, production impact
 
 ### Step 4: Create Supporting Files (Optional)
-Move detailed examples (>50 lines), comprehensive guides, or utility scripts to separate files.
+Move detailed examples (>50 lines), sufficient guides (focused, not exhaustive), or utility scripts to separate files.
 
 ### Step 4a: Advanced Frontmatter Patterns (Optional)
 
