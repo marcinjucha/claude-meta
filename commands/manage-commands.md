@@ -67,8 +67,9 @@ Launching claude-manager...
 3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
 4. **User checkpoints** - Get approval after confirmation before proceeding
 5. **Track phase** - Remember current position and mode (CREATE/AUDIT/MODIFY)
-6. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
-7. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic multi-phase patterns Claude already knows. Focus on project-specific command design, sufficient context principles, and orchestration decisions with WHY context. Example: ❌ "Commands orchestrate multiple agents across phases" → ✅ "Extract decisions only (50 lines), not full conversation (500 lines) - agents have isolated context"
+6. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
+7. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
+8. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic multi-phase patterns Claude already knows. Focus on project-specific command design, sufficient context principles, and orchestration decisions with WHY context. Example: ❌ "Commands orchestrate multiple agents across phases" → ✅ "Extract decisions only (50 lines), not full conversation (500 lines) - agents have isolated context"
 
 ---
 

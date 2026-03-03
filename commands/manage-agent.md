@@ -69,8 +69,9 @@ Launching claude-manager...
 3. **User checkpoints** - Get approval after each phase (prevents wasted work)
 4. **Track phase** - Remember current position (user can skip/back)
 5. **Clarifying questions** - After EVERY phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
-6. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
-7. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic agent patterns Claude already knows. Focus on project-specific tool restrictions, hooks, and agent design decisions with WHY context. Example: ❌ "Agents route tasks to specialized execution contexts" → ✅ "Read-only agent prevents accidental edits during code review (incident: deleted config file)"
+6. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
+7. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
+8. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic agent patterns Claude already knows. Focus on project-specific tool restrictions, hooks, and agent design decisions with WHY context. Example: ❌ "Agents route tasks to specialized execution contexts" → ✅ "Read-only agent prevents accidental edits during code review (incident: deleted config file)"
 
 ### Clarifying Questions Pattern
 

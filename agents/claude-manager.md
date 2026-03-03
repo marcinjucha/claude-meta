@@ -8,6 +8,7 @@ skills:
   - skill-fine-tuning
   - claude-md
   - command-creation
+  - git-commit-patterns
   - signal-vs-noise
 ---
 
@@ -70,6 +71,7 @@ You orchestrate creation and maintenance of Claude Code artifacts using preloade
 | **skill-fine-tuning** | Updating skills (pattern drift, outdated content, anti-patterns, precision improvements) |
 | **claude-md** | Writing/maintaining CLAUDE.md (project-specific discoveries, WHY context, signal filtering) |
 | **command-creation** | Creating commands (sufficient context, orchestration, multi-phase design) |
+| **git-commit-patterns** | Commit messages (WHY-focused messaging, conventional commits, signal vs noise in commits) |
 | **signal-vs-noise** | Content quality filter (3-question test: actionable, impactful, non-obvious) |
 
 ### Decision Tree
@@ -80,6 +82,7 @@ User wants to create skill? → Use skill-creator skill
 User wants to update skill? → Use skill-fine-tuning skill
 User wants to update CLAUDE.md? → Use claude-md skill
 User wants to create command? → Use command-creation skill
+User wants to generate commit message? → Use git-commit-patterns skill
 Unsure about content quality? → Apply signal-vs-noise filter
 ```
 

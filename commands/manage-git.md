@@ -47,7 +47,7 @@ Generate high-quality conventional commit messages from staged git changes. Anal
 
 ```
 0: Context Analysis       (orchestrator - inline, quick status check)
-1: Message Generation     (project-manager-agent with git-commit-patterns)
+1: Message Generation     (claude-manager with git-commit-patterns)
 2: Review & Confirmation  (orchestrator - inline, user checkpoint)
 3: Execute Commit         (orchestrator - inline, git commit)
 ```
@@ -56,7 +56,7 @@ Generate high-quality conventional commit messages from staged git changes. Anal
 
 ## Critical Rules
 
-1. **INVOKE Phase 1 with Task tool** - actually invoke project-manager-agent, don't describe what it will do
+1. **INVOKE Phase 1 with Task tool** - actually invoke claude-manager, don't describe what it will do
 2. **Read entire modified files** - Agent needs file contents, not just diff
 3. **Phase 2 is only user checkpoint** - User accepts/edits/regenerates here
 4. **Abort if nothing staged** - Stop workflow gracefully
@@ -99,7 +99,7 @@ Then run /manage-git again.
 
 ### Phase 1: Message Generation (Agent)
 
-**Agent:** project-manager-agent
+**Agent:** claude-manager
 
 **Sufficient context for quality:**
 
@@ -277,7 +277,7 @@ Next steps:
 
 ## Sufficient Context Principle
 
-**For Phase 1 agent (project-manager-agent):**
+**For Phase 1 agent (claude-manager):**
 
 **Provide:**
 - ✅ Git diff output (staged changes only)
