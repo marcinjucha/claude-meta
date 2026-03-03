@@ -168,8 +168,6 @@ REQUIREMENTS:
 
 4. NO footer (exception: only BREAKING: footer if breaking change)
 
-Skills: Use git-commit-patterns (WHY-focused messaging, Signal vs Noise)
-
 Output: Full commit message (title + body)
 - Focus on OUTCOME not list of changes
 - Be direct and concise
@@ -284,7 +282,7 @@ Next steps:
 - ✅ Modified file contents (entire files, not just diff sections)
 - ✅ Change categorization (type, ticket number)
 - ✅ Recent commits (for style consistency)
-- ✅ git-commit-patterns skill (preloaded)
+- ✅ Commit message skills (preloaded via agent)
 
 **Do NOT provide:**
 - ❌ Full git history (just recent 5 commits)

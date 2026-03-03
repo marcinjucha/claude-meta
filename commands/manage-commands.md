@@ -67,7 +67,7 @@ Launching claude-manager...
 3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
 4. **User checkpoints** - Get approval after confirmation before proceeding
 5. **Track phase** - Remember current position and mode (CREATE/AUDIT/MODIFY)
-6. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
+6. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
 7. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
 8. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic multi-phase patterns Claude already knows. Focus on project-specific command design, sufficient context principles, and orchestration decisions with WHY context. Example: ❌ "Commands orchestrate multiple agents across phases" → ✅ "Extract decisions only (50 lines), not full conversation (500 lines) - agents have isolated context"
 
@@ -287,7 +287,7 @@ Plan must include:
 
 Apply Signal vs Noise: No generic orchestration, only project-specific command design.
 
-Use command-creation skill for structure template.
+Apply command structure template and sufficient context patterns.
 
 Output: Complete command plan (markdown structure)
 ```
@@ -447,7 +447,7 @@ For each command, check:
 
 4. **User checkpoints present?** (continue/skip/back/stop)
 
-Use command-creation skill for structure reference.
+Apply command structure patterns and multi-phase orchestration reference.
 
 Output format:
 Per-command report:
@@ -513,7 +513,7 @@ For each command, check:
    - Patterns without rationale
    - Rules without explanation
 
-Use signal-vs-noise skill for 3-question filter.
+Apply signal vs noise 3-question filter (actionable, impactful, non-obvious).
 
 Output per command:
 - WHY over HOW violations (quote, issue, fix)
@@ -564,7 +564,7 @@ For each command with issues:
 3. **New artifacts needed** - skills to create, agents to create
 4. **Migration plan** - priority order (critical first), dependencies (skill before command)
 
-Use command-creation skill for structure guidance.
+Apply command structure and orchestration patterns.
 
 Output per command:
 - Priority (critical/high/medium/low)
@@ -693,8 +693,8 @@ Read command file and analyze:
 3. Impact (what sections affected, dependencies)
 4. Approach (how to implement while maintaining quality)
 
-Use command-creation skill for structure reference.
-Use signal-vs-noise skill for content quality.
+Apply command structure patterns and multi-phase orchestration reference.
+Apply signal vs noise filter for content quality.
 
 Output:
 - Current state summary
