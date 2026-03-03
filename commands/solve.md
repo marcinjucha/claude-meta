@@ -24,10 +24,6 @@ Executes non-technical tasks through 5 phases: Requirements, Solution Design, Im
 4: Verification                (orchestrator - inline quality check)
 ```
 
-**Speed**: 5-15 min depending on task complexity
-
-**Checkpoints**: Before phases 1, 2, 3, 4 (4 approval points)
-
 ---
 
 ## Orchestrator Instructions
@@ -58,7 +54,7 @@ Launching general-purpose agent...
 
 ### Critical Rules
 
-1. **Clarifying questions before EVERY phase** - Paraphrase + 5 questions BEFORE Phase 1, 2, 3, 4 (mandatory approval points)
+1. **Clarifying questions before EVERY phase** - Paraphrase + 3-5 questions (scale with complexity) BEFORE Phase 1, 2, 3, 4 (mandatory approval points)
 2. **INVOKE with Task tool** - Phases 1-2 require actual Task tool call to general-purpose agent
 3. **Context compression** - Agent provides executive summary at end (max 300 lines for next phase)
 4. **User approval required** - Get explicit confirmation after clarifying questions before proceeding
@@ -72,12 +68,12 @@ Launching general-purpose agent...
 Let me verify my understanding:
 [2-3 sentence paraphrase of what was produced/decided in this phase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with task complexity):
 1. [Question about scope/constraint from this phase]
 2. [Question about edge case/requirement]
 3. [Question about priority/approach]
-4. [Question about integration point]
-5. [Question about validation criteria]
+[4. Optional: Question about integration point]
+[5. Optional: Question about validation criteria]
 
 Does this match exactly what you want to achieve? If not, what should I adjust?
 ```
@@ -85,46 +81,10 @@ Does this match exactly what you want to achieve? If not, what should I adjust?
 **Wait for user response.** If user says corrections needed:
 - Apply corrections
 - Paraphrase updated understanding
-- Ask 5 NEW clarifying questions about updated version
+- Ask 3-5 NEW clarifying questions about updated version
 - Repeat until user confirms "dokładnie to co chcę" / "exactly what I want"
 
 **Only after confirmation**, proceed with: "Ready to proceed? (continue/skip/back/stop)"
-
-### Phase Execution Pattern
-
-```
-═══════════════════════════════════════════════
-Phase N/4: [Name]
-═══════════════════════════════════════════════
-
-Launching [agent]...
-```
-
-[Invoke Task tool]
-
-```
-**Phase N Complete** ✅
-
-[Present agent output clearly]
-
-───────────────────────────────────────────────
-Let me verify my understanding:
-[2-3 sentence paraphrase of what was produced/decided]
-
-Clarifying questions:
-1. [Question about scope/constraint]
-2. [Question about edge case/requirement]
-3. [Question about priority/approach]
-4. [Question about integration point]
-5. [Question about validation criteria]
-
-Does this match exactly what you want? If not, what should I adjust?
-───────────────────────────────────────────────
-
-[Wait for user confirmation]
-
-Ready to proceed? (continue/skip/back/stop)
-```
 
 ---
 
@@ -132,9 +92,7 @@ Ready to proceed? (continue/skip/back/stop)
 
 ### Phase 0: Quick Analysis
 
-**Execution**: Orchestrator inline (2-3 minutes)
-
-**Purpose**: Understand user request and confirm understanding
+**Execution**: Orchestrator inline
 
 **Task**:
 1. Read user's task description
@@ -149,44 +107,13 @@ Key Elements: [bullet list of 3-5 main elements]
 Initial Understanding: [2-3 sentences]
 ```
 
-**After Phase 0**:
-
-Apply clarifying questions pattern:
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of task]
-
-Clarifying questions:
-1. [Question about scope - what's included/excluded?]
-2. [Question about audience/stakeholders]
-3. [Question about deliverable format]
-4. [Question about constraints - timeline, length, style]
-5. [Question about success criteria - what makes this "done"?]
-
-Does this match exactly what you want? If not, what should I adjust?
-```
-
-Wait for confirmation, then: "Ready to proceed? (continue/skip/back/stop)"
+Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
 
 ---
 
 ### Phase 1: Requirements & Success Criteria
 
 **Agent**: general-purpose
-
-**Purpose**: Gather detailed requirements and define success criteria ("what is done")
-
-**Sufficient context for quality**:
-```yaml
-Input needed:
-  - User's original task description (full context)
-  - Phase 0 understanding (task type, key elements)
-  - User responses to Phase 0 clarifying questions (constraints, audience, format)
-
-NOT needed:
-  - Generic task planning theory (agent knows)
-  - How to gather requirements (agent knows)
-```
 
 **Prompt to agent**:
 ```
@@ -213,46 +140,13 @@ CRITICAL: At end, provide EXECUTIVE SUMMARY (max 300 lines) with:
 Output format: YAML structure
 ```
 
-**After agent completes**:
-
-Present agent output, then apply clarifying questions pattern:
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of requirements + success criteria]
-
-Clarifying questions:
-1. [Question about requirement completeness]
-2. [Question about success criteria clarity]
-3. [Question about missing constraints]
-4. [Question about context sufficiency]
-5. [Question about priorities among requirements]
-
-Does this match exactly what you want? If not, what should I adjust?
-```
-
-Wait for confirmation, then: "Ready to proceed? (continue/skip/back/stop)"
+Present agent output, apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
 
 ---
 
 ### Phase 2: Solution Design
 
 **Agent**: general-purpose
-
-**Purpose**: Design solution approach and structure
-
-**Sufficient context for quality**:
-```yaml
-Input needed:
-  - Requirements (from Phase 1 executive summary - max 300 lines)
-  - Success criteria (how to validate deliverable)
-  - Constraints (format, length, style boundaries)
-  - Context (purpose, goals, background)
-
-NOT needed:
-  - Full Phase 1 YAML output (use compressed executive summary)
-  - Generic design theory (agent knows)
-  - Detailed user stories (agent needs conclusions)
-```
 
 **Prompt to agent**:
 ```
@@ -276,45 +170,13 @@ CRITICAL: At end, provide EXECUTIVE SUMMARY (max 300 lines) with:
 Output format: YAML structure
 ```
 
-**After agent completes**:
-
-Present agent output, then apply clarifying questions pattern:
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of design approach + structure]
-
-Clarifying questions:
-1. [Question about structure completeness]
-2. [Question about approach suitability]
-3. [Question about missing design elements]
-4. [Question about implementation clarity]
-5. [Question about integration feasibility]
-
-Does this match exactly what you want? If not, what should I adjust?
-```
-
-Wait for confirmation, then: "Ready to proceed? (continue/skip/back/stop)"
+Present agent output, apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
 
 ---
 
 ### Phase 3: Implementation
 
 **Execution**: Orchestrator inline
-
-**Purpose**: Create deliverable files based on design
-
-**Sufficient context for quality**:
-```yaml
-Input needed:
-  - Design structure (from Phase 2 executive summary)
-  - Key decisions (approach, style, tone)
-  - Implementation guidance (what to include)
-  - Requirements (from Phase 1 executive summary - for reference)
-
-NOT needed:
-  - Full Phase 1/2 YAML outputs (use compressed summaries)
-  - Generic content creation theory (you know)
-```
 
 **Task**:
 1. Create deliverable files following Phase 2 design structure
@@ -324,45 +186,13 @@ NOT needed:
 
 **Output**: Created files with clear file paths
 
-**After implementation**:
-
-Present created files and paths, then apply clarifying questions pattern:
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of what was created]
-
-Clarifying questions:
-1. [Question about content completeness]
-2. [Question about structure adherence]
-3. [Question about missing elements]
-4. [Question about format correctness]
-5. [Question about requirement coverage]
-
-Does this match exactly what you want? If not, what should I adjust?
-```
-
-Wait for confirmation, then: "Ready to proceed? (continue/skip/back/stop)"
+Present created files and paths, apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
 
 ---
 
 ### Phase 4: Verification
 
 **Execution**: Orchestrator inline
-
-**Purpose**: Verify deliverable meets requirements and follows design
-
-**Sufficient context for quality**:
-```yaml
-Input needed:
-  - Deliverable files (from Phase 3)
-  - Requirements (from Phase 1 executive summary)
-  - Success criteria (from Phase 1)
-  - Design structure (from Phase 2 executive summary)
-
-NOT needed:
-  - Full Phase 1/2 YAML outputs (use compressed summaries)
-  - Generic verification theory (you know)
-```
 
 **Verification checks**:
 1. **Completeness**: All requirements from Phase 1 addressed
@@ -411,29 +241,3 @@ Summary:
 - `back` - Previous phase
 - `status` - Show progress
 - `stop` - Exit workflow
-
----
-
-## Sufficient Context Principle
-
-**For each agent, provide:**
-- ✅ Critical decisions from previous phases
-- ✅ Requirements and success criteria
-- ✅ Constraints (format, length, style, audience)
-- ✅ Context compression (executive summary max 300 lines)
-
-**Do NOT provide:**
-- ❌ Full previous YAML outputs (extract decisions only)
-- ❌ Detailed user stories (agent needs requirements)
-- ❌ Generic explanations (agent knows)
-- ❌ Intermediate analysis (agent needs conclusions)
-
-**Test question**:
-> "Can agent produce HIGH QUALITY output with this context alone?"
-> If YES → sufficient
-> If NO → add missing critical info (not everything)
-
-**Context compression strategy**:
-- Agent provides executive summary at end (max 300 lines)
-- Orchestrator passes compressed summary to next phase
-- Prevents context window bloat from multi-phase execution

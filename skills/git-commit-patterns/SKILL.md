@@ -1,77 +1,17 @@
 ---
 name: git-commit-patterns
-description: Organize commits and write messages for PRs. Use when deciding commit structure, squashing strategy, or writing messages. Applies Signal vs Noise (WHY > HOW, natural prose). Critical for clean git history and efficient reviews.
+description: Write commit messages and organize commits before PR merge. Use when: writing a commit message (extracts ticket from branch, applies WHY > HOW, 250-500 char body), deciding commit separation (module boundaries, breaking changes), squashing WIP commits, or creating PR description.
 ---
 
 # Git Commit Patterns
 
 **Purpose:** Commit organization and message writing for clean git history. Covers commit separation logic, squashing decisions, and commit message conventions with Signal vs Noise philosophy.
 
-## ⚠️ CRITICAL: COMMIT MESSAGES MUST BE FACT-BASED
-
-**ABSOLUTE RULE:**
-
-- ❌ **NEVER invent production incidents** in commit message examples
-- ❌ **Don't make up bug impact** or statistics in examples
-- ❌ **Example commit messages should be generic** or based on real user scenarios
-
-**For commit message examples:**
-
-- ✅ Use generic placeholders: "Fixed bug", "Improved performance"
-- ✅ Ask user for real scenario if specific example needed
-- ✅ Don't invent specific numbers or incidents in examples
-
----
-
-## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT
-
-**Core principle for commit messages:** If Claude already knows it, it's NOISE.
-
-**Why this matters:** Generic git/commit explanations waste message space. Commit messages should focus on project-specific WHY context, not explaining what commits are or basic version control concepts.
-
-**Self-check question:**
-> "Would reviewer know this without commit message?"
-> - **YES** → It's noise, remove it (git basics, file change lists)
-> - **NO** → It's signal, keep it (business context, technical rationale)
-
-**Example:**
-```markdown
-❌ NOISE (AI-known): "This commit updates files to fix a bug in the system"
-✅ SIGNAL (project-specific): "Fix infinite recursion in RLS policy (crashed prod)"
-
-❌ NOISE (AI-known): "Made changes to improve code quality"
-✅ SIGNAL (project-specific): "Extract 300-line function → 3 focused handlers (reviewer requested)"
-```
-
-**When writing commit messages:**
-- Skip git/version control basics → NOISE
-- Document business context + technical rationale → SIGNAL
-- Skip file change descriptions → NOISE (git diff shows this)
-- Document WHY decisions made → SIGNAL
-
----
-
 ## Core Philosophy
 
-**Signal vs Noise: WHY > HOW**
+Commit messages explain WHY, git diff shows HOW. Body = 250-500 chars, natural prose, no template sections.
 
-Commit messages explain WHY, git diff shows HOW.
-
-**SIGNAL (Keep):**
-- Business context (why feature/fix needed)
-- Technical rationale (why this approach over alternatives)
-- Non-obvious decisions (architecture choices, edge cases)
-- Bug context (root cause, why fix correct)
-- Cross-platform alignment (if applicable)
-
-**NOISE (Remove):**
-- File names (git stat shows)
-- Line counts (git diff shows)
-- "Changes:" lists (redundant with git)
-- HOW implementation (code shows this)
-- Risk assessments (belongs in PR review)
-
-**See:** `@../resources/signal-vs-noise-reference.md` for complete filter and examples.
+**See:** `@../resources/signal-vs-noise-reference.md` for complete filter.
 
 ---
 
@@ -312,35 +252,6 @@ EOF
 
 ## Pre-Merge Commit Organization Workflow
 
-### When to Use This Workflow
-
-Organize commits before merge when:
-- **Multiple WIP commits** need cleanup (squashing opportunity)
-- **Mixed module changes** in history (separation needed per Factor 1)
-- **Breaking changes** not flagged (visibility needed)
-- **PR review blocked** by messy history ("can't review this")
-
-### Why Organize Commits
-
-**Impact on review efficiency:**
-
-Disorganized history:
-- Reviewer sees 15 commits: "WIP", "fix", "temp", "revert", "fix again"
-- Review time: 2-3 hours (must understand 15 commits)
-- Questions: "What's the actual change?"
-
-Organized history:
-- Reviewer sees 3 commits: "feat: Add FeatureX", "refactor: Extract module", "fix: Edge case"
-- Review time: 30-45 minutes (clear separation)
-- Each commit reviewable independently
-
-**Impact of organized history:**
-
-Organized commits reduce review time:
-- Reviewer sees clear separation (not mixed WIP commits)
-- Each commit reviewable independently
-- Fewer requests to clean up history
-
 ### How to Organize (Step-by-Step)
 
 **Step 1:** Review current history
@@ -362,30 +273,6 @@ git log --oneline develop..HEAD
 
 ---
 
-## Examples
-
-### Good vs Bad Commit Structure
-
-**✅ Good:** 3 separate commits (module boundaries + feature scope)
-- feat: Add DataAccessLayer to Core module
-- feat: Add filtering UI in FeatureX
-- test: Add integration tests for data filtering
-
-**❌ Bad:** Mixed modules + WIP commits
-- WIP, Add filtering, Fix Core changes, Update FeatureA + FeatureB, Fix tests, Debug logging
-
-**Fix:** Squash WIP commits, separate Core vs App, separate FeatureA vs FeatureB.
-
----
-
-## Integration Notes
-
-**Related skills:** clean-architecture (module boundaries), signal-vs-noise (commit message detail)
-
-**Use when:** Pre-merge organization, writing messages, squashing decisions, PR preparation
-
----
-
 ## Resources
 
 **Shared resources** (`@../resources/`) - Common across meta-skills:
@@ -396,7 +283,3 @@ git log --oneline develop..HEAD
 - `@resources/commit-message-examples.md` - Structure patterns (template vs natural prose, transformation examples)
 
 **Use resources for:** Signal vs Noise (3-question filter), Why over How (business context), transformation examples (template → natural prose)
-
----
-
-**Remember:** Module boundaries = highest priority for commit separation. Squash WIP/fixup commits always. Breaking changes = separate commit + flagged. Commit messages = natural prose with WHY focus (not template sections). Body = 250-500 chars, 1-2 sentences covering affected areas/layers (db, business logic, presentation, API, etc.). NO footer by default (no Co-Authored-By, no Signed-off-by).

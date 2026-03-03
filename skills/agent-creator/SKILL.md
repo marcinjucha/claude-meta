@@ -1,58 +1,10 @@
 ---
 name: agent-creator
-description: >
-  Use when creating custom subagents for specialized tasks. Provides decision framework,
-  creation process, and best practices based on official agent documentation. Critical
-  for proper agent architecture (thin routing layer vs thick skill patterns).
+description: Create and evaluate custom subagents. Use when: creating a new agent with specific tool restrictions or isolation needs, deciding whether to use agent vs skill vs command, refactoring thick agents to thin routers, or adding hooks for validation.
 argument-hint: "[agent-name]"
 ---
 
-# Agent Creator - Meta Skill for Creating Subagents
-
-## Purpose
-
-Guide the creation of high-quality custom subagents that delegate to task-specific agents with focused capabilities. Ensures consistency with agent-skill architecture (Agents as thin routers, Skills as thick domain knowledge).
-
-## When to Use
-
-- **Creating new agent** - Need specialized task execution with specific tools/permissions
-- **Evaluating if agent needed** - Unsure whether to create agent vs skill vs command
-- **Refactoring workflows** - Converting complex workflows to agent-based approach
-- **Reviewing agent quality** - Verifying agent follows best practices
-
-## ⚠️ CRITICAL: FACT-BASED EXAMPLES ONLY
-
-**Why this rule exists:** Invented production examples in agent documentation create false assumptions about when/how to use the agent.
-
-**What to do:**
-- User provides example → Use it
-- No example available → Skip or use placeholder: `[Real example needed]`
-
-## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT
-
-**Core principle:** If Claude already knows it, it's NOISE.
-
-**Why this matters:** Generic agent patterns (system prompt basics, tool API, standard orchestration) waste token budget and dilute agent-specific decisions. Focus on project-specific agent design, not generic knowledge.
-
-**Self-check question:**
-> "Would Claude know this without documentation?"
-> - **YES** → It's noise, remove it (generic tool use, basic agent patterns)
-> - **NO** → It's signal, keep it (tool restriction rationale, project-specific hooks)
-
-**Example:**
-```markdown
-❌ NOISE (AI-known): "Agents route tasks to specialized handlers"
-✅ SIGNAL (project-specific): "Read-only agent prevents accidental edits during analysis (incident: deleted production config)"
-
-❌ NOISE (AI-known): "Use Bash tool for shell commands"
-✅ SIGNAL (project-specific): "PreToolUse hook validates SQL queries against schema (blocked 3 DROP TABLE commands)"
-```
-
-**When creating agents:**
-- Generic agent theory → NOISE (remove)
-- Project-specific tool restrictions + WHY → SIGNAL (keep)
-- Standard tool API → NOISE (remove)
-- Custom hooks with rationale → SIGNAL (keep)
+# Agent Creator
 
 ## Core Philosophy
 
@@ -151,16 +103,6 @@ Skills needed:
   - code-quality-patterns
   - security-patterns
 ```
-
-**Red flags (don't create agent):**
-- ❌ "I need to document API patterns" → Use skill instead
-- ❌ "I need to orchestrate multi-step workflow" → Use command instead
-- ❌ "I need standard tool access" → Use skill inline instead
-
-**Create agent:**
-- ✅ "I need read-only codebase analysis" → Agent with tool restrictions
-- ✅ "I need to run tests in isolation" → Agent with context isolation
-- ✅ "I need to validate SQL queries" → Agent with PreToolUse hooks
 
 ### Step 2: Choose Agent Scope
 
@@ -385,33 +327,6 @@ hooks:
 
 ---
 
-## Anti-Patterns (CRITICAL)
-
-### ❌ Domain Knowledge in Agent Body
-**Fix:** Move patterns to skills, reference skills in frontmatter
-
-### ❌ Too Many Tool Restrictions
-**Fix:** Allow all needed tools (Read, Grep, Glob, Bash for read-only, not just Read)
-
-### ❌ Generic Agent Name
-**Fix:** Domain-specific: `code-reviewer`, not `helper`
-
-### ❌ First-Person Description
-**Fix:** Third-person: "Review code..." not "I help you..."
-
-### ❌ Missing WHY in Description
-**Fix:** Include trigger: "Use proactively after code changes"
-
----
-
-## Integration
-
-**Agent references skills:** Full skill content injected at startup
-**Command uses agent:** Command orchestrates, agents execute
-**Skill forks to agent:** Skill content becomes agent task (`context: fork`)
-
----
-
 ## Troubleshooting
 
 **Agent not triggering:** Check description matches user language, add "Use proactively"
@@ -513,27 +428,3 @@ EOF
 
 - `@scripts/validate-readonly.sh` - Example PreToolUse hook script for SQL validation (blocks write operations)
 
-### External
-
-- **Official Agent Documentation** - https://code.claude.com/docs/agents (complete reference)
-- **Agent Skills Spec** - https://agentskills.io (open standard)
-
----
-
-## Key Principles
-
-**Thin routers** - Agents provide infrastructure, not knowledge
-
-**Reference skills** - Domain knowledge lives in skills, not agents
-
-**Tool restrictions** - Only restrict when necessary for safety/focus
-
-**Third-person** - Describe WHEN to delegate, not HOW agent helps
-
-**Isolation** - Use agents when context isolation benefits performance
-
-**Proactive triggers** - Include "Use proactively" for auto-delegation
-
----
-
-**Key Lesson:** The best agents are thin routing layers with focused tool access. All domain knowledge belongs in skills, not agent system prompts.

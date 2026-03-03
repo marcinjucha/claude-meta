@@ -1,6 +1,6 @@
 ---
 name: claude-md
-description: Write and maintain CLAUDE.md documentation files. Use when creating new CLAUDE.md, updating existing documentation (adding patterns, fixing outdated info, restructuring), or removing obsolete sections. Critical for keeping documentation accurate as codebase evolves.
+description: Create and maintain CLAUDE.md files with project-specific signal. Use when: creating new CLAUDE.md for a feature, updating outdated patterns after refactoring, removing obsolete sections, or deciding what belongs in CLAUDE.md vs a skill.
 argument-hint: ""
 ---
 
@@ -364,71 +364,6 @@ Apply signal-vs-noise:
 
 ---
 
-## Anti-Patterns (Common Mistakes)
-
-### ❌ Mistake 1: Generic Content Instead of Project-Specific
-
-**Problem:** CLAUDE.md filled with framework basics ("Data Layer handles persistence...")
-
-**Why bad:** Claude knows generic patterns. Wastes space, dilutes signal.
-
-**Fix:** Only document project-specific twists + critical mistakes.
-
-### ❌ Mistake 2: Missing WHY Context
-
-**Problem:** Documented WHAT without WHY. Future developer doesn't understand importance, removes pattern, regression.
-
-**Fix:** ALWAYS include WHY (real problem, production incident, user complaint).
-
-```markdown
-❌ BAD: "ComponentHistoryService filters history with 15-second window."
-✅ GOOD: "**Why**: Server processes in up to 15s. Without window, UI showed errors when operations succeeded."
-```
-
-### ❌ Mistake 3: Outdated References After Refactoring
-
-**Problem:** Code moved to ComponentFlow/Leaf/LeafComponent.ext, docs still point to old RootComponent.ext. Wasted developer time searching.
-
-**Fix:** Update file paths immediately after refactoring. Add migration note for major changes.
-
----
-
-## Quick Reference
-
-**Creating new CLAUDE.md:**
-- Voice: Direct, concise (notes to future you with amnesia)
-- Format: Bullets + Bold **Why**
-- Template: Orientation → Weird Parts → Mistakes → Quick Ref
-- Test: "Is this something Claude already knows?" → YES = Cut
-
-**Adding Content:**
-- New weird part → "The Weird Parts" section
-- Bug fix → "Critical Mistakes We Made" section
-- Frequent fact → "Quick Reference" section
-- Include WHY context (see Core Philosophy)
-
-**Updating Content:**
-- Code changed → Update file paths, examples, numbers
-- Pattern replaced → Update description + add migration note
-- Major change → Add deprecation date to old pattern
-
-**Removing Content:**
-- Pattern obsolete → Remove or archive in "Deprecated Patterns"
-- Generic pattern → Remove entirely (Claude knows)
-- Duplicates skill → Remove, add cross-reference
-
-**Structure:**
-- Standard sections: Orientation → Weird Parts → Mistakes → Quick Ref
-- 80/20 rule: Keep 20% content providing 80% value
-- Max ~500 lines per feature (split if larger)
-
-**Cross-Referencing:**
-- Pattern in skill → Reference skill from CLAUDE.md
-- Keep feature-specific context in CLAUDE.md
-- Update skill if pattern missing
-
----
-
 ## Self-Check
 
 Before committing CLAUDE.md:
@@ -469,17 +404,3 @@ Before committing CLAUDE.md:
 
 ---
 
-## Real Project Example
-
-**Scenario:** Memory leak after production incident
-
-**What was added:**
-- **The Weird Parts**: Resource lifecycle pattern (why LeafComponent not RootComponent, conditional cleanup)
-- **Critical Mistakes**: Document what failed (root component approach, why it leaked)
-- **Cross-reference**: Link to skill for full pattern details
-
-**Result:** Future developers understand rationale, production incident prevents regression, 95 lines added (pure signal).
-
----
-
-**Key Lesson:** CLAUDE.md is living documentation. Update after every significant discovery, production incident, or refactoring. Project-specific + WHY context + Real incident = Good documentation. Good CLAUDE.md = Notes to future you with amnesia.

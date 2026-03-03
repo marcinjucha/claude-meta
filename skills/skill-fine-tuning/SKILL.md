@@ -1,23 +1,9 @@
 ---
 name: skill-fine-tuning
-description: Use when skills contain outdated information, imprecise patterns, or missing critical details. Fine-tune existing skills to maintain accuracy as codebase evolves. Critical for preventing skill drift and ensuring Claude has correct patterns.
+description: Maintain and update existing Agent Skills. Use when: skill references outdated pattern or wrong file paths after refactoring, skill instructions cause agent confusion, production bug reveals missing documentation, or skill needs advanced features (context: fork, dynamic injection, tool restrictions, arguments).
 ---
 
-# Skill Fine-Tuning - Maintain Pattern Accuracy
-
-## Purpose
-
-Keep skills accurate as codebase evolves. Update patterns when implementation changes, clarify imprecise instructions, add missing anti-patterns. Prevent skill drift.
-
-## When to Use
-
-- Skill references outdated pattern (code changed since skill written)
-- Skill instructions imprecise (causes confusion or wrong implementation)
-- Skill missing critical anti-pattern (production bug not documented)
-- Skill file paths wrong (refactoring moved files)
-- Skill examples no longer compile
-- Agent complains "skill unclear" or "pattern doesn't work"
-- Production incident reveals skill gap
+# Skill Fine-Tuning
 
 ## Decision Framework: What to Update
 
@@ -38,141 +24,6 @@ Before updating a skill, apply Signal vs Noise filter:
 
 **See:** `@../resources/signal-vs-noise-reference.md` for complete 3-question filter and detailed examples.
 
-## ⚠️ CRITICAL: FACT-BASED UPDATES ONLY
-
-**Why this rule exists:** Adding invented metrics during skill updates corrupts existing knowledge base. Claude trusts skill content for decisions.
-
-**What to do:**
-- User provides data → Add it
-- No data available → Ask user: "Do you have real metrics for this?" or use placeholder
-- Found invented content → Flag for removal
-
-**RED FLAGS - NEVER invent:**
-- ❌ Metrics/percentages without source ("30% faster", "50% reduction")
-- ❌ Production incidents without user verification
-- ❌ Team statistics or timing data
-- ❌ Anti-patterns without real examples
-
-**GREEN LIGHT - ONLY include:**
-- ✅ User-provided data and incidents
-- ✅ Real patterns from codebase
-- ✅ Placeholder when missing: `[User to provide: real metric]`
-
-**Quick test:** Can you verify with user/codebase? NO → Use placeholder or skip.
-
-**WHEN UPDATING SKILLS:**
-
-- ✅ **ONLY add metrics/incidents if user provided them**
-- ✅ **Ask user for real data**: "Do you have actual metrics for this?"
-- ✅ **Use placeholders** if no data: `[User to provide real metric]`
-- ✅ **Remove invented content** if found during audit
-
-**IF YOU FIND HALLUCINATED CONTENT:**
-
-- 🚨 **Flag it**: "This looks like invented data (e.g., 'NMB memory leak', '95% improvement')"
-- 🚨 **Ask user**: "Is this real or should I remove it?"
-- 🚨 **Replace or remove**: Either get real data or delete the made-up content
-
-**Example of proper update:**
-```markdown
-❌ WRONG (ADDING INVENTED DATA):
-**Production impact:** 12MB memory leak → 80% crash reduction after fix
-
-✅ CORRECT (FACT-BASED):
-**Production impact:** [User to provide real incident details]
-OR (if user gave data):
-**Production impact:** Memory leak confirmed by user, specific measurements to be added
-```
-
-## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT
-
-**Why this rule exists:** Adding generic content that Claude already knows wastes token budget and dilutes signal. Skills should contain ONLY project-specific patterns, not framework basics.
-
-**WHEN UPDATING SKILLS:**
-
-- ✅ **Before adding content** → Ask: "Does AI already know this?"
-- ✅ **Remove AI-known content** if found during updates
-- ✅ **Keep project-specific** decisions, critical bugs, non-obvious patterns
-- ✅ **Self-check**: "Would Claude know this without the skill?" → If YES, remove
-
-**IF YOU FIND AI-KNOWN CONTENT:**
-
-- 🚨 **Flag it**: "This is generic framework explanation (e.g., 'What is dependency injection')"
-- 🚨 **Ask user**: "Should I remove this generic content?"
-- 🚨 **Replace with project-specific**: Focus on HOW YOU USE pattern, not what pattern is
-
-**Example of proper update:**
-```markdown
-❌ WRONG (AI-KNOWN CONTENT):
-## Dependency Injection
-Dependency injection is a design pattern where dependencies are provided to a class
-rather than created inside the class. Benefits include testability and flexibility.
-
-✅ CORRECT (PROJECT-SPECIFIC):
-## Dependency Injection: Service Pattern Only
-**Why service pattern:** Prevents circular dependencies (hit this in DataLayer + UILayer)
-**Production incident:** Direct injection caused cycle → 15MB leak
-**Fix:** Use service layer between components
-
-**When NOT to use:** Single repository access (that's Use Case pattern)
-```
-
-**During skill updates:**
-- Focus on updating PROJECT-SPECIFIC content (decisions, bugs, patterns)
-- Remove GENERIC content (framework explanations, architecture 101)
-- Ask user: "Is there anything specific about how YOU use this that differs from standard?"
-
-## Content Quality: Why over How
-
-**Priority:** WHY explanation > HOW implementation
-
-When updating patterns, ALWAYS include:
-- **Why pattern exists** (problem it solves)
-- **Why approach chosen** (alternatives considered)
-- **Why it matters** (production impact)
-
-**Example transformation:**
-
-❌ **Without WHY (HOW only):**
-```markdown
-## Pattern: Resource in Feature
-
-Resource owned by LeafComponent:
-```
-ComponentA {
-    var resource: Resource?
-}
-```
-```
-
-✅ **With WHY (Context + Impact):**
-```markdown
-## Pattern: Resource in Feature (Not Root)
-
-**Why feature ownership:**
-- Leaf node knows navigation direction (forward vs back)
-- Conditional cleanup prevents memory leak
-- Root component can't distinguish navigation context
-
-**Production impact:**
-- Before: NMB leak per navigation → crashes on devices
-- After: 0MB leak, stable memory
-
-**Implementation:**
-```
-LeafComponent {
-    var resource: Resource?
-
-    case .onDisappear where !isNavigatingBack:
-        resource?.pause()  // Forward navigation
-    case .onDisappear:
-        resource?.cleanup()  // Back navigation
-        resource = nil
-}
-```
-```
-
-**See:** `@../resources/why-over-how-reference.md` for philosophy and more examples.
 
 ## Core Patterns
 
@@ -533,11 +384,6 @@ Options:
    - Link from regular anti-pattern
 ```
 
-**Production validation:**
-- `error-patterns`: 6 mental models added after framework bugs
-- ROI: Prevented 8/10 future test failures (same mental models)
-- New developers: 1st attempt pass rate (was 3-5 iterations before)
-
 **Example: Before vs After**
 
 **BEFORE (regular anti-pattern):**
@@ -616,96 +462,11 @@ Breaking change (new approach)? → Update pattern + add "Pattern Migration" not
 Complete replacement? → Keep old in "Deprecated Patterns", add new
 ```
 
-## Anti-Patterns (Common Mistakes)
+## Resources
 
-### ❌ Not Updating After Refactoring
-**Problem:** Code refactored, skill still references old structure
-**Why bad:** Wastes time, erodes trust in skills
-**Fix:** Update immediately after refactoring, add migration note
-
-### ❌ Vague Instructions
-**Problem:** "Use appropriate value" without defining "appropriate"
-**Why bad:** Agent must guess, might guess wrong
-**Fix:** Replace vague terms with specific values/decision trees
-
-### ❌ Missing Production Context
-**Problem:** Pattern added without WHY or real incident
-**Why bad:** Future developer might remove/change without understanding importance
-**Fix:** Include production context (incident, bug report, user complaint)
-
-### ❌ Outdated Examples
-**Problem:** Code examples don't compile with current codebase
-**Why bad:** Breaks trust, agent generates non-compiling code
-**Fix:** Verify examples compile after refactoring
-
-### ❌ Wrong context: fork Usage
-**Problem:** Added `context: fork` to reference skill (guidelines only)
-**Why bad:** Returns nothing useful - fork requires explicit task
-**Fix:** Only use fork for actionable tasks, not reference material
-
-### ❌ Skill Bloat
-**Problem:** Skill covers too many unrelated patterns (>1000 lines)
-**Why bad:** Hard to navigate, can't find patterns quickly
-**Fix:** Split into focused skills (400-600 lines each)
-
-## Quick Reference
-
-**Detecting Drift:**
-- Code differs from skill → Update pattern
-- File paths wrong → Update paths
-- Agent confused → Clarify instructions
-- Production bug → Add anti-pattern
-
-**Updating Process:**
-1. Identify what changed (code, pattern, numbers, location)
-2. Update relevant sections (patterns, anti-patterns, examples, quick ref)
-3. Add migration note if breaking change
-4. Verify examples compile
-
-**When to Update:**
-- Immediately after refactoring (file moves, pattern changes)
-- After production incident (add anti-pattern)
-- After threshold tuning (update numbers)
-- When agent confused (clarify instructions)
-
-**Structure:**
-- Standard sections: Purpose → When to Use → Patterns → Anti-Patterns → Quick Ref
-- Max ~600 lines per skill (split if larger)
-- Examples must compile
-
-**Reference Materials:**
-
-**Shared resources** (`@../resources/`) - Common across meta-skills:
+**Shared resources** (`@../resources/`):
 - `@../resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to update
-- `@../resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW)
-- `@../resources/skill-structure-reference.md` - Standard structure and best practices
-- `@../resources/skill-ecosystem-reference.md` - Skill locations, sharing, and permissions (where skills live, how to distribute)
+- `@../resources/why-over-how-reference.md` - WHY > HOW philosophy
 
-**Skill-specific resources** (`@resources/`) - Unique to skill-fine-tuning:
-- `@resources/advanced-features.md` - Complete implementation guide for frontmatter patterns (context: fork, dynamic injection, tool restrictions)
-
-## Integration with Other Skills
-
-- **claude-md-maintenance** - Update CLAUDE.md when skill changes
-- **signal-vs-noise** - Filter updates (project-specific only)
-- **agent-creator** - Follow agent architecture (thin routers, reference skills)
-- **skill-creator** - Follow skill structure (thick patterns, self-contained)
-
-## Real Project Example
-
-**Scenario:** Resource lifecycle pattern changed after memory leak
-
-**Before:** Resource in RootComponent → leaked NMB per navigation
-
-**Updated skill includes:**
-- Code example (LeafComponent with conditional cleanup)
-- WHY context (leaf knows navigation direction, root doesn't)
-- Production incident (memory leak, devices crashed)
-- Migration note (what changed, why changed)
-- Anti-pattern entry (prevents regression)
-
-**Result:** Future developers understand WHY pattern exists, won't regress.
-
----
-
-**Key Lesson:** Skills drift without maintenance. Update immediately after refactoring, production incidents, or pattern changes. Always add WHY (production context). Verify examples compile.
+**Skill-specific resources** (`@resources/`):
+- `@resources/advanced-features.md` - Complete guide: context: fork, dynamic injection, tool restrictions

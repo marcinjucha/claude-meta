@@ -1,6 +1,6 @@
 ---
 name: signal-vs-noise
-description: Signal vs Noise philosophy for filtering information and making decisions. Use when evaluating what to include in documentation, tests, code comments, or any content creation.
+description: Filter content to keep only project-specific signal. Use when deciding what to include in CLAUDE.md, documentation, code comments, or tests. Core rule: if Claude already knows it, it's noise - only document project-specific decisions with WHY context.
 argument-hint: "[content-type]"
 ---
 
@@ -83,82 +83,15 @@ argument-hint: "[content-type]"
 
 ---
 
-## SIGNAL (Keep)
+## Application
 
-- Project-specific weird stuff + WHY explanation
-- Critical crashes/bugs prevention
-- Non-obvious patterns with context
-- Real mistakes made + fix
-- Impact numbers (NMB memory leak, X% error rate, $Y/week cost)
+**Documentation:** Project-specific decisions with WHY. Nie tłumacz jak działa framework (Claude wie) - dokumentuj co robisz inaczej i dlaczego.
 
-## NOISE (Cut)
+**Code Comments:** Tylko non-obvious decisions. `// Use reactive value directly, not cached - stale during reactive emission`. Pomijaj oczywiste (`// Set loading to true`).
 
-- Generic patterns Claude already knows (frameworks, architectures)
-- HOW explanations without WHY
-- Standard syntax examples
-- Architecture 101 explanations
-- Obvious comments ("Set loading to true")
+**Tests:** Kompletne user journey z business outcome (`testUserCompletesWorkflowAndOperationSucceeds`). Pomijaj trywialne (`testButtonTapSendsAction`).
 
----
-
-## Application: Documentation
-
-**SIGNAL:**
-```markdown
-## Resource Lifecycle (Memory Leak Fix)
-Resource owned by LeafComponent, NOT RootComponent.
-**Why**: Previous approach leaked NMB per navigation. Devices crashed.
-```
-
-**NOISE:**
-```markdown
-## Data Access Pattern
-Data access layer handles persistence. It can use different strategies...
-[Claude already knows this]
-```
-
----
-
-## Application: Code Comments
-
-**SIGNAL:**
-```
-// Critical: Use reactive value directly, not cached property
-// Cached property may be stale during reactive emission
-guard let contextId = newContextId else { return }
-```
-
-**NOISE:**
-```
-// Set loading state to true
-state.isLoading = true
-```
-
----
-
-## Application: Tests
-
-**SIGNAL:** Complete user journey with business outcome
-```
-func testUserCompletesWorkflowAndOperationSucceeds()
-```
-
-**NOISE:** Trivial verification
-```
-func testButtonTapSendsAction()
-```
-
----
-
-## Application: CLAUDE.md Files
-
-**SIGNAL:** Project-specific decisions with WHY
-- "N-second timeout window prevents false negatives (X% fewer tickets)"
-- "Resource in LeafComponent, not RootComponent (NMB leak fixed)"
-
-**NOISE:** Generic patterns
-- "Use reactive state for UI updates" (Claude knows)
-- "Architecture has N layers" (Claude knows)
+**CLAUDE.md:** Project-specific wzorce z WHY (`Resource in LeafComponent, not RootComponent - NMB leak`). Nie pisz tego, co Claude już wie (`Use reactive state for UI updates`).
 
 ---
 
@@ -168,28 +101,6 @@ func testButtonTapSendsAction()
 "Is this something Claude already knows?"
 - YES → Cut it
 - NO → Keep it (with WHY)
-
----
-
-## Anti-Patterns (Common Mistakes)
-
-### ❌ Mistake 1: Including Generic Framework Knowledge
-
-**Problem:** Documentation explains how frameworks work instead of documenting project-specific decisions.
-
-**Why bad:** Claude already knows framework patterns. Generic explanations waste token budget and dilute project-specific insights.
-
-**Fix:** Document only project-specific decisions and patterns that differ from framework defaults.
-
----
-
-### ❌ Mistake 2: Over-Filtering (Removing Signal)
-
-**Problem:** Applying filter too aggressively, cutting project-specific context because "Claude might know this already."
-
-**Why bad:** Removes critical project decisions that differ from defaults. Claude makes incorrect assumptions based on standard patterns when your project does things differently.
-
-**Fix:** When in doubt, ask "Does our project do this differently than standard approach?" If yes, document it with WHY. Better to include project-specific context than remove it.
 
 ---
 

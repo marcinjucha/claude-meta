@@ -17,3 +17,6 @@ stats-cache.json
 cache
 .DS_Store
 plugins
+backups
+telemetry
+policy-limits.json

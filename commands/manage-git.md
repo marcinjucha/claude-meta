@@ -27,42 +27,19 @@ Generate high-quality conventional commit messages from staged git changes. Anal
 
 ---
 
-## 🚫 ZERO HALLUCINATIONS POLICY
+## 🚫 ZERO HALLUCINATIONS
 
-**ABSOLUTE REQUIREMENT - NO EXCEPTIONS:**
+**Why this rule exists:** Previous audit added invented metrics to commit messages ("40% faster iteration", "30-minute test run") - required cleanup.
 
-**When generating commit messages, NEVER invent:**
-- ❌ Impact metrics (improved performance by X%, reduced bugs by Y%)
-- ❌ Production context (unless user provides specific incident details)
-- ❌ Before/after measurements (2hr→30min, 30%→0%, etc.)
-- ❌ User/team statistics (affected 40% users, Team X experienced, etc.)
-- ❌ Specific incident details not in diff or user message
+**NEVER invent:**
+- ❌ Impact metrics ("improved performance by X%", "reduced bugs by Y%")
+- ❌ Before/after measurements ("2hr→30min", "30%→0%")
+- ❌ Production context not in diff or user message
 
 **ONLY write about:**
-- ✅ Changes visible in git diff (files modified, code added/removed)
-- ✅ User-provided context (if user says "fixes login bug", use that)
-- ✅ Technical changes (what functions changed, what architecture touched)
-- ✅ Code structure changes (refactored X to Y, extracted Z)
-
-**ANY NO = HALLUCINATION → Reject immediately.**
-
-**Commit message focus:**
-- ✅ WHAT changed (visible in diff)
-- ✅ WHY changed (if user provided reason)
-- ❌ DO NOT invent impact ("improved performance", "reduced crashes")
-- ❌ DO NOT add metrics without evidence
-
-**Your role:** Describe changes accurately based on diff. ZERO creativity in inventing context.
-
----
-
-## 🚫 ZERO HALLUCINATIONS - PROJECT INCIDENT
-
-**What happened:** Audit added invented metrics to commit patterns. Required cleanup.
-
-**Rule:** Describe ONLY what's in diff. Use user's exact words for WHY. NO invented impact.
-
-**Your role:** Describe changes factually from diff.
+- ✅ Changes visible in git diff
+- ✅ User-provided context (use their exact words for WHY)
+- ✅ Technical changes visible in code structure
 
 ---
 
@@ -77,17 +54,9 @@ Generate high-quality conventional commit messages from staged git changes. Anal
 
 ---
 
-## ⚠️ CRITICAL: YOU MUST INVOKE AGENTS
-
-**You are the orchestrator.** Your job is to **ACTUALLY INVOKE AGENTS using the Task tool**.
-
-**For Phase 1**, invoke project-manager-agent via Task tool - do not describe what it will do, actually invoke it.
-
----
-
 ## Critical Rules
 
-1. **INVOKE Phase 1 with Task tool** - project-manager-agent generates message
+1. **INVOKE Phase 1 with Task tool** - actually invoke project-manager-agent, don't describe what it will do
 2. **Read entire modified files** - Agent needs file contents, not just diff
 3. **Phase 2 is only user checkpoint** - User accepts/edits/regenerates here
 4. **Abort if nothing staged** - Stop workflow gracefully
@@ -332,95 +301,3 @@ Next steps:
 
 ---
 
-## Command Design Decisions
-
-**Why 4 phases (not 5)?**
-- Phase 0: Trivial (no agent) → status check
-- Phase 1: Complex (needs agent + skills) → message generation
-- Phase 2: Interactive (user checkpoint) → review/edit loop
-- Phase 3: Trivial (no agent) → commit execution
-
-**Why project-manager-agent?**
-- Has git-commit-patterns skill
-- Focuses on WHY (business context) not HOW (implementation)
-- Perfect for commit messages
-
-**Why read entire files (not just diff)?**
-- Diff shows WHAT changed
-- File contents show WHY changed
-- Commit messages need WHY context
-
-**Why minimal clarifying questions?**
-- Streamlined workflow
-- User only decides on message (Phase 2)
-- Agent/orchestrator handles analysis
-
-**Why no footer by default?**
-- Noise reduction (Signal vs Noise)
-- No Co-Authored-By (obvious AI-generated commit)
-- Exception: BREAKING: footer if breaking change required
-
----
-
-## Real Example: RIGHT vs WRONG
-
-### ❌ WRONG (5 paragraphs, 450+ words - TOO LONG)
-
-```
-chore: consolidate agents and enhance workflow orchestration
-
-Consolidated agent count from 8 to 6 by merging redundant roles with overlapping
-responsibilities. Analysis-Agent now owns both strategic planning and code
-organization concerns (previous 2-agent split created unnecessary handoff).
-
-Added verification-specialist agent (dedicated quality gate before testing).
-Previous workflow mixed validation and testing in single agent. Splitting ensures
-implementation correctness verified before expensive test cycles. Reduces feedback
-loops: incorrect implementation caught immediately, not after 30-minute test run.
-Estimated 40% faster iteration on buggy implementations.
-
-Enhanced implement-phase command with Notion integration and clarifying questions
-pattern. Previous implementation required manual task lookups. Auto-searches Notion
-for matching tasks (NOTION-FIRST approach). Clarifying questions ensure correct
-task selected before execution. Notion sync on completion enables automatic task
-status updates without manual tracking.
-
-Improved build verification checkpoints. Separated database migrations, type
-generation, and React components into clear sequential phases. Parallel execution
-where safe (no shared dependencies). Prevents cascading failures: migration failure
-stops before type generation wastes time.
-
-Added code-validation anti-patterns (6 production-validated mistakes documented).
-Framework inconsistencies, memory leaks, query performance issues. Integrated with
-verification-specialist for automatic detection during code review.
-
-Why these changes matter: Consolidation reduces agent context bloat (6 focused
-agents faster than 8 general agents). Verification split catches bugs before
-expensive test cycles. Notion integration eliminates manual task tracking.
-Build verification ordering prevents wasted compilation time. Anti-patterns
-provide instant feedback on common mistakes.
-```
-
-**Problem:** 6 paragraphs, 5+ decisions listed, ~450 words. User asked for **concise**!
-
-### ✅ RIGHT (2 paragraphs, 100-150 words - GOOD)
-
-```
-chore: consolidate agents and enhance workflow orchestration
-
-Consolidated agents (8→6) to reduce context bloat and clarify boundaries.
-New verification-specialist agent separates quality gate from testing,
-catching implementation bugs before expensive test cycles (~40% faster iteration).
-
-Enhanced implement-phase with Notion integration (eliminates manual task tracking),
-clarifying questions pattern (prevent wrong task selection), and build verification
-checkpoints (prevent cascading failures). Added code-validation anti-patterns for
-automatic detection during code review.
-```
-
-**Why right:**
-- 2 paragraphs (within complex change limit of 2-3)
-- ~110 words (within 200-250 limit)
-- TOP 2 decisions only (consolidation + Notion integration)
-- Each paragraph = 1 decision + business impact
-- Concise and signal-focused

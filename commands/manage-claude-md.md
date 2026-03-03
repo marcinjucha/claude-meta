@@ -22,7 +22,7 @@ When you see "**Agent**: claude-manager" in a phase:
 
 1. **Invoke agents** - All phases marked "Agent: claude-manager" require Task tool invocation
 2. **Sufficient context** - Provide extracted decisions (50 lines), not full conversation (500 lines)
-3. **Clarifying questions MANDATORY** - After Phase 0 AND after EVERY agent phase (paraphrase + 5 questions + confirmation)
+3. **Clarifying questions MANDATORY** - After Phase 0 AND after EVERY agent phase (paraphrase + 3-5 questions scaled to complexity + confirmation)
 4. **User checkpoints** - Offer commands ONLY after user confirms understanding
 5. **Signal vs Noise filter** - 3-question filter: Project-specific? Non-obvious? Critical?
 6. **WHY over HOW** - Every pattern needs WHY it exists, WHY approach chosen, WHY it matters
@@ -31,35 +31,7 @@ When you see "**Agent**: claude-manager" in a phase:
 9. **CLAUDE.md vs Skill** - Folder-specific → CLAUDE.md; Project-wide → Skill
 10. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, patterns, or numbers. ONLY use user-provided data.
 11. **Minimal core** - Only Overview + Weird Parts required; everything else optional
-12. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic architectural explanations or framework basics. Focus on folder-specific weird behaviors, critical bugs, non-obvious patterns with WHY context.
-
----
-
-## ⚠️ AVOID AI-KNOWN CONTENT
-
-**Core principle for CLAUDE.md:** If Claude already knows it, it's NOISE.
-
-**Why this matters:** Generic architectural explanations (layered architecture, MVC patterns, framework basics) waste token budget. CLAUDE.md should document folder-specific weird behaviors and decisions that differ from standard approaches.
-
-**Self-check question:**
-> "Would Claude know this without CLAUDE.md?"
-> - **YES** → It's noise, remove it (standard patterns, framework explanations)
-> - **NO** → It's signal, keep it (folder-specific bugs, non-obvious behaviors)
-
-**Example:**
-```markdown
-❌ NOISE (AI-known): "This module handles data persistence using repository pattern"
-✅ SIGNAL (folder-specific): "Never query same table in RLS policy → infinite recursion (crashed prod, fixed in commit abc123)"
-
-❌ NOISE (AI-known): "Use dependency injection for testability"
-✅ SIGNAL (folder-specific): "Singleton leaks NMB per instance → use weak refs in observers (20+ crash reports, devices < 2GB RAM)"
-```
-
-**When creating CLAUDE.md, claude-manager must:**
-- Skip generic module explanations → NOISE
-- Document folder-specific weird behaviors + WHY → SIGNAL
-- Skip framework architecture basics → NOISE
-- Document critical bugs with production context → SIGNAL
+12. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic architectural explanations or framework basics. Focus on folder-specific weird behaviors, critical bugs, non-obvious patterns with WHY context. Example: ❌ "This module handles data persistence using repository pattern" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod, fixed in commit abc123)"
 
 ---
 
@@ -82,49 +54,6 @@ When you see "**Agent**: claude-manager" in a phase:
 - Cross-References
 - Decision Trees
 - Custom sections
-
-**Principles:**
-- Signal vs Noise
-- WHY over HOW
-- Avoid things AI knows
-- Minimalistic approach
-
----
-
-## Phase Execution Pattern
-
-**Every phase follows this pattern:**
-
-1. **Paraphrase** phase goal (2-3 sentences)
-2. **Ask 5 clarifying questions** specific to this phase
-3. **Wait for user confirmation**
-4. **Execute phase** (invoke agent or perform inline work)
-5. **After completion**, offer commands: `continue`, `skip`, `back`, `stop`
-
-**Template:**
-```
-Let me verify my understanding of Phase N:
-[2-3 sentence paraphrase]
-
-Clarifying questions:
-1. [Scope/approach question]
-2. [Priorities/constraints question]
-3. [Expected output question]
-4. [Edge cases question]
-5. [Verification criteria question]
-
-Does this match exactly what you want? If not, what should I adjust?
-```
-
-[WAIT for user confirmation]
-
-After user confirms:
-```
-[Execute phase]
-
-Phase N complete. Ready to proceed?
-Commands: continue | skip | back | stop
-```
 
 ---
 
@@ -169,12 +98,12 @@ SCOPE:
 ```
 I detected intent as [MODE] with [CONFIDENCE] confidence.
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. Mode: Should I [MODE A] or [MODE B]?
 2. Scope: [Scope question]
 3. Priority: [Priority question]
-4. Expected outcome: [Outcome question]
-5. Context: [Context question]
+[4. Expected outcome: [Outcome question]]
+[5. Context: [Context question]]
 
 Does this match what you want?
 ```
@@ -254,12 +183,12 @@ ls [module_path]/CLAUDE.md
 Let me verify my understanding:
 [2-3 sentence paraphrase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. CLAUDE.md vs Skill: Is this folder-specific, or project-wide?
 2. Source material: Where to extract content - [code/conversation/docs]?
 3. Scope: Should this document [specific aspects] or broader?
-4. Content availability: Critical Mistakes, Quick Reference to include, or just Overview + Weird Parts?
-5. Related patterns: Existing skills to reference?
+[4. Content availability: Critical Mistakes, Quick Reference to include, or just Overview + Weird Parts?]
+[5. Related patterns: Existing skills to reference?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -276,15 +205,6 @@ Commands: continue | skip | back | stop
 ### CREATE Phase 1: Signal Extraction
 
 **Agent**: claude-manager
-
-#### Sufficient Context for Quality
-
-**Input needed:**
-- Mode: CREATE
-- Module name and path
-- 3-question filter results (all YES from Phase 0)
-- Source material location
-- User confirmations from Phase 0
 
 #### Prompt to Agent
 
@@ -327,8 +247,6 @@ If pattern appears project-wide (not folder-specific):
 - Pattern used in 2+ unrelated modules → Should be skill
 - Pattern reusable across project → Should be skill
 
-Use claude-md and signal-vs-noise skills for extraction patterns.
-
 Output format:
 **Overview Extracted:** [description]
 **Weird Parts Extracted:** [list with WHY]
@@ -345,12 +263,12 @@ Output format:
 Let me verify my understanding of extracted signal:
 [2-3 sentence paraphrase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. Overview: Does description capture folder/module purpose correctly?
 2. Weird Parts: Did I capture [specific pattern] correctly with WHY context?
 3. Optional sections: Are Critical Mistakes/Quick Reference truly needed, or skip?
-4. Cross-References: Should I reference [specific CLAUDE.md/skill], or different ones?
-5. Project-wide patterns: If flagged [pattern], should that be skill instead?
+[4. Cross-References: Should I reference [specific CLAUDE.md/skill], or different ones?]
+[5. Project-wide patterns: If flagged [pattern], should that be skill instead?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -367,13 +285,6 @@ Commands: continue | skip | back | stop
 ### CREATE Phase 2: Structure Design
 
 **Agent**: claude-manager
-
-#### Sufficient Context for Quality
-
-**Input needed:**
-- Extracted signal (from Phase 1: overview, weird parts, optional sections)
-- User confirmations/adjustments (from Phase 1)
-- Module name and path
 
 #### Prompt to Agent
 
@@ -398,8 +309,6 @@ MINIMAL CORE STRUCTURE:
 - Add custom sections only if user specifically requested
 - Apply Signal vs Noise: Only critical project-specific patterns
 
-Use claude-md skill for structure patterns.
-
 Output:
 1. Section breakdown (which sections to include, why)
 2. Cross-reference plan (which CLAUDE.md to reference, which skills to reference)
@@ -413,12 +322,12 @@ Output:
 Let me verify my understanding of structure design:
 [2-3 sentence paraphrase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. Minimal structure: Overview + Weird Parts only, or also optional sections?
 2. Content allocation: Should [content item] go in [section A] or [section B]?
 3. Cross-references: Should I reference [specific CLAUDE.md] in [section], or different location?
-4. Optional sections: Include [Critical Mistakes/Quick Reference], or skip?
-5. Custom sections: Any additional sections needed?
+[4. Optional sections: Include [Critical Mistakes/Quick Reference], or skip?]
+[5. Custom sections: Any additional sections needed?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -436,17 +345,13 @@ Commands: continue | skip | back | stop
 
 **You do this - no agent**
 
-#### Step 1: Create CLAUDE.md File
-
 Use Write tool with:
 - Minimal core structure (from Phase 2)
 - Extracted content (from Phase 1)
 - Only sections that have content
 - Proper formatting (bold **Why**, code blocks, file paths, tables)
 
-#### Step 2: Verify Formatting
-
-Check:
+Verify formatting:
 - Bold **Why** for all WHY context
 - Code blocks with language tags
 - File paths with line numbers if available
@@ -477,11 +382,6 @@ Commands: continue | skip | back | stop
 - [ ] All content passes 3-question filter
 - [ ] Content is folder-specific
 
-**Content verification - Signal vs Noise per section:**
-  - [ ] Overview: No generic "what is CLAUDE.md"
-  - [ ] Weird Parts: Project-specific edge cases only
-  - [ ] No standard markdown formatting rules
-
 **WHY over HOW:**
 - [ ] Every pattern has WHY context
 - [ ] Critical Mistakes have production impact (if present)
@@ -492,11 +392,6 @@ Commands: continue | skip | back | stop
 
 **Current State:**
 - [ ] Shows HOW IT WORKS NOW
-
-**Optional Sections:**
-- [ ] Critical Mistakes present only if content exists
-- [ ] Quick Reference present only if content exists
-- [ ] Cross-References present only if content exists
 
 **Output:**
 ```
@@ -530,8 +425,6 @@ Commands: stop | back
 
 **You do this - no agent**
 
-#### Determine Audit Scope
-
 ```bash
 # Scope types
 specific: Find CLAUDE.md at module path
@@ -546,12 +439,12 @@ List found files with path and size.
 Let me verify my understanding:
 [2-3 sentence paraphrase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. Scope: Audit [N] CLAUDE.md files found, or exclude some?
 2. Priority focus: Structure, content quality, cross-references, or all?
 3. Auto-fix: Fix automatically or just report?
-4. Missing CLAUDE.md: Check for modules without CLAUDE.md?
-5. Success criterion: All files compliant, or report only?
+[4. Missing CLAUDE.md: Check for modules without CLAUDE.md?]
+[5. Success criterion: All files compliant, or report only?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -570,13 +463,6 @@ Commands: continue | skip | back | stop
 
 **Agent**: claude-manager
 
-#### Sufficient Context for Quality
-
-**Input needed:**
-- CLAUDE.md files to audit (paths, sizes)
-- Audit focus (from Phase 0)
-- User decisions (from Phase 0)
-
 #### Prompt to Agent
 
 ```
@@ -591,8 +477,6 @@ Task: Audit CLAUDE.md structure for minimal core compliance.
 MINIMAL CORE STRUCTURE:
 - REQUIRED: Overview, Weird Parts/Key Patterns
 - OPTIONAL: Critical Mistakes, Quick Reference, Cross-References, custom sections
-
-Use claude-md skill for structure patterns.
 
 Check for each file:
 - Missing REQUIRED sections (Overview, Weird Parts)
@@ -614,12 +498,12 @@ Output per file:
 Let me verify my understanding of structure audit results:
 [2-3 sentence paraphrase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. Violations: Are [critical violations] blocking, or proceed with warnings?
 2. Missing sections: Add missing REQUIRED sections?
 3. Empty sections: Populate empty sections, or flag for manual review?
-4. WHY context: Add WHY context where missing?
-5. Next phase: Proceed to content quality audit, or fix structure first?
+[4. WHY context: Add WHY context where missing?]
+[5. Next phase: Proceed to content quality audit, or fix structure first?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -638,13 +522,6 @@ Commands: continue | skip | back | stop
 
 **Agent**: claude-manager
 
-#### Sufficient Context for Quality
-
-**Input needed:**
-- Structure results (Phase 1: which files passed/failed)
-- User decisions (from Phase 1)
-- CLAUDE.md files to audit
-
 #### Prompt to Agent
 
 ```
@@ -657,8 +534,6 @@ USER DECISIONS: [from Phase 1]
 Task: Audit CLAUDE.md content for Signal vs Noise, WHY over HOW, and folder-specific knowledge.
 
 Apply "ANY NO = NOISE" to existing CLAUDE.md content.
-
-Use signal-vs-noise and claude-md skills for quality standards.
 
 Check violations:
 
@@ -704,12 +579,12 @@ Output per file:
 Let me verify my understanding of content quality audit results:
 [2-3 sentence paraphrase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. Noise: Remove all generic content flagged, or keep some with better WHY?
 2. WHY missing: Research production context for [pattern], or flag for manual addition?
 3. Historical timeline: Update existing content, or preserve history?
-4. Skill misplacement: Extract [pattern] to skill now with /manage-skill, or just flag?
-5. Next phase: Proceed to cross-reference audit, or fix content first?
+[4. Skill misplacement: Extract [pattern] to skill now with /manage-skill, or just flag?]
+[5. Next phase: Proceed to cross-reference audit, or fix content first?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -728,13 +603,6 @@ Commands: continue | skip | back | stop
 
 **Agent**: claude-manager
 
-#### Sufficient Context for Quality
-
-**Input needed:**
-- Structure results (Phase 1 summary)
-- Content results (Phase 2 summary)
-- CLAUDE.md files to audit
-
 #### Prompt to Agent
 
 ```
@@ -745,8 +613,6 @@ STRUCTURE RESULTS: [Phase 1 summary]
 CONTENT RESULTS: [Phase 2 summary]
 
 Task: Audit cross-references for validity and sufficiency.
-
-Use claude-md skill for cross-reference patterns.
 
 Check:
 1. **Broken file paths** - Non-existent files, outdated line numbers
@@ -768,12 +634,12 @@ Output per file:
 Let me verify my understanding of cross-reference audit results:
 [2-3 sentence paraphrase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. Broken references: Fix all broken paths, or flag critical ones only?
 2. Missing references: Add all suggested cross-references, or prioritize?
 3. Outdated references: Update all, or flag for manual review?
-4. Skills: If patterns should be skills, reference them or extract?
-5. Next phase: Proceed to recommendations, or fix cross-references first?
+[4. Skills: If patterns should be skills, reference them or extract?]
+[5. Next phase: Proceed to recommendations, or fix cross-references first?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -791,14 +657,6 @@ Commands: continue | skip | back | stop
 ### AUDIT Phase 4: Recommendations
 
 **Agent**: claude-manager
-
-#### Sufficient Context for Quality
-
-**Input needed:**
-- Structure results (Phase 1 summary)
-- Content results (Phase 2 summary)
-- Cross-reference results (Phase 3 summary)
-- User priorities (from previous phases)
 
 #### Prompt to Agent
 
@@ -840,12 +698,12 @@ Phase 4: Extract patterns to skills ([N] patterns with /manage-skill)
 Let me verify my understanding of recommendations:
 [2-3 sentence paraphrase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. Priority: Fix [priority 1] violations immediately, or all at once?
 2. Skill extraction: Use /manage-skill to extract [patterns] now, or defer?
 3. Migration plan: Does phased approach match your timeline, or adjust?
-4. Scope: Handle skill extraction as part of this audit, or separate?
-5. Next phase: Proceed to implementation, or review recommendations?
+[4. Scope: Handle skill extraction as part of this audit, or separate?]
+[5. Next phase: Proceed to implementation, or review recommendations?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -896,9 +754,7 @@ Fixed: [file]
 Progress: [N/M] complete
 ```
 
-#### Verify Fixes
-
-Run verification:
+Run verification after fixes:
 - Minimal core structure
 - Signal vs Noise
 - WHY over HOW
@@ -949,12 +805,12 @@ Commands: stop | back
 Let me verify my understanding:
 [2-3 sentence paraphrase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. Scope: Changes affect [specific sections] or entire CLAUDE.md?
 2. Category: Primarily [category A] or [category B]?
 3. Approach: [approach A] or [approach B] for [specific change]?
-4. Update strategy: UPDATE existing content (replace wrong) or ADD migration note?
-5. Verification: After changes, full quality check or just changed sections?
+[4. Update strategy: UPDATE existing content (replace wrong) or ADD migration note?]
+[5. Verification: After changes, full quality check or just changed sections?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -972,13 +828,6 @@ Commands: continue | skip | back | stop
 ### MODIFY Phase 1: Change Analysis
 
 **Agent**: claude-manager
-
-#### Sufficient Context for Quality
-
-**Input needed:**
-- CLAUDE.md path
-- Changes requested with categories (from Phase 0)
-- User confirmations (from Phase 0)
 
 #### Prompt to Agent
 
@@ -1001,8 +850,6 @@ UPDATE STRATEGY:
 If changes add project-wide patterns (not folder-specific):
 - Pattern used in 2+ unrelated modules → Should be skill
 - Pattern reusable across project → Should be skill
-
-Use claude-md, skill-fine-tuning, signal-vs-noise skills.
 
 Read file and analyze:
 1. Current state (sections, size)
@@ -1030,12 +877,12 @@ Output:
 Let me verify my understanding of change plan:
 [2-3 sentence paraphrase]
 
-Clarifying questions:
+Clarifying questions (3-5, scale with complexity):
 1. Scope: Changes affect [specific sections], or broader?
 2. Approach: [approach A] or [approach B] for [specific change]?
 3. Cross-references: Update [related CLAUDE.md] bidirectionally?
-4. Project-wide patterns: If flagged [pattern], should that be skill instead?
-5. Verification: After changes, verify [specific aspect]?
+[4. Project-wide patterns: If flagged [pattern], should that be skill instead?]
+[5. Verification: After changes, verify [specific aspect]?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -1053,8 +900,6 @@ Commands: continue | skip | back | stop
 ### MODIFY Phase 2: Implementation (Inline)
 
 **You do this - no agent**
-
-#### Apply Changes
 
 **Change patterns:**
 - **add_discovery**: Add to Weird Parts/Critical Mistakes WITH WHY context + production impact
@@ -1104,14 +949,10 @@ Commands: continue | skip | back | stop
 - [ ] No empty sections
 
 **Cross-References:**
-- [ ] All CLAUDE.md cross-references valid
-- [ ] All skill cross-references valid
+- [ ] All references valid
 - [ ] File paths and line numbers accurate
 - [ ] No broken references introduced
 - [ ] Bidirectional references updated (if applicable)
-
-**Current State:**
-- [ ] Shows HOW IT WORKS NOW
 
 **Output:**
 ```
@@ -1129,41 +970,6 @@ Commands: stop | back
 
 ---
 
-## Sufficient Context Principle
-
-**For each claude-manager invocation, provide:**
-
-✅ Mode (CREATE/AUDIT/MODIFY)
-✅ Critical decisions from previous phases (extracted)
-✅ User confirmations/adjustments
-✅ Specific task for this phase
-✅ Expected output format
-
-**Test question:**
-
-> "Can claude-manager produce HIGH QUALITY output with this context alone?"
->
-> If YES → sufficient
-> If NO → add missing critical info (not everything)
-
-**Example:**
-```yaml
-✅ SUFFICIENT (50 lines):
-  Extracted signal from Phase 1:
-  - Overview: [description]
-  - Weird Parts: [list with WHY]
-  - Critical Mistakes: [list] OR "None"
-  User adjustments: [specific corrections]
-
-❌ TOO MUCH (500 lines):
-  Full Phase 1 conversation including all agent outputs
-
-❌ INSUFFICIENT (10 lines):
-  "Use signal from Phase 1"
-```
-
----
-
 ## Commands
 
 - `continue` - Proceed to next phase
@@ -1171,35 +977,3 @@ Commands: stop | back
 - `back` - Return to previous phase
 - `status` - Show progress (current mode, phase, completion)
 - `stop` - Exit command (with confirmation if work in progress)
-
----
-
-## Success Criteria
-
-Command `/manage-claude-md` should:
-
-1. Detect intent from natural language (CREATE/AUDIT/MODIFY)
-2. Find files dynamically using Glob
-3. Invoke claude-manager for all agent phases
-4. Apply Signal vs Noise filter
-5. Enforce WHY over HOW
-6. Apply minimal core (only Overview + Weird Parts required)
-7. Make optional sections optional
-8. Flag skill misplacement (project-wide → /manage-skill)
-9. Audit cross-references
-10. Ask clarifying questions after Phase 0 and every agent phase
-11. Extract decisions (sufficient context)
-12. Update existing content (replace wrong)
-13. Pass verification
-14. Detect pattern duplication (flag for skill extraction)
-
----
-
-## Notes
-
-- **Pattern**: Mirrors update-skill architecture
-- **Agent**: claude-manager has claude-md, signal-vs-noise, skill-fine-tuning skills
-- **Signal vs Noise**: 3-question filter (project-specific, non-obvious, critical)
-- **Current state**: CLAUDE.md shows HOW IT WORKS NOW
-- **Minimal core**: Only Overview + Weird Parts required; everything else optional
-- **CLAUDE.md = folder-specific**: Project-wide knowledge → Skill
