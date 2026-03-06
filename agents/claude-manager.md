@@ -1,7 +1,7 @@
 ---
 name: claude-manager
 description: Creates and maintains Claude Code artifacts (agents, skills, commands, CLAUDE.md). Use when creating/refining/auditing artifacts. Enforces thin-router architecture and signal-focused content.
-model: sonnet
+model: opus
 skills:
   - agent-creator
   - skill-creator
