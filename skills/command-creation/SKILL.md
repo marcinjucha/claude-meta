@@ -132,6 +132,10 @@ NOT needed:
 
 ## Sufficient Context Principle
 [Test question, signal/noise examples]
+
+### Final Phase: Knowledge Capture
+**Agent**: claude-manager (or project-specific agent)
+[Post-workflow analysis: identify patterns worth capturing]
 ```
 
 **Why this structure:**
@@ -432,6 +436,66 @@ Output: [format]
 > If NO → add missing critical info (not everything)
 ```
 
+### 8. Knowledge Capture Phase (Always Last)
+
+**Standard final phase for any multi-phase command.** Always executes — agent decides if anything is worth capturing.
+
+**WHY separate phase:** Structured post-workflow analysis catches project-specific patterns that an ad-hoc "should we update docs?" question misses. Patterns discovered during implementation are lost if not captured immediately.
+
+**Template for Phase Details:**
+
+```markdown
+### Phase N: Knowledge Capture
+**Agent**: claude-manager (default — swap for project-specific agent if domain expertise needed, or run inline if command is simple)
+
+**Skills to load**: signal-vs-noise (always — for conciseness filtering), others at agent's discretion based on what was discovered
+
+**Sufficient context for quality**:
+```yaml
+Input needed:
+  - Completed task name + requirements summary
+  - Key implementation decisions made during workflow
+  - Validation findings (blocked issues, warnings)
+  - Testing outcome (pass/fail, retry count, failure descriptions)
+  - Files changed (ONLY if relevant to a specific non-obvious pattern)
+
+NOT needed:
+  - Full phase outputs (extract decisions only)
+  - Generic implementation details
+  - File lists without non-obvious context
+```
+
+**Prompt to agent**:
+```
+Analyze completed workflow for knowledge worth capturing.
+
+COMPLETED TASK: [task name + requirements summary]
+KEY DECISIONS: [extracted from previous phases]
+VALIDATION FINDINGS: [issues, warnings]
+TESTING OUTCOME: [pass/fail, retries, failures]
+FILES CHANGED: [only if non-obvious pattern]
+
+Agent tasks:
+1. Identify patterns worth capturing — non-obvious decisions, bugs, new integration patterns
+2. Apply signal filter: skip generic knowledge, skip one-off details, skip patterns already in existing skills
+3. Determine WHERE (which CLAUDE.md or skill) and WHAT (exact addition)
+4. PROPOSE to user — never auto-update
+5. If nothing worth capturing: say so explicitly
+
+Output: Proposals with Target / Type / Content / WHY signal
+  — OR "No patterns worth capturing" with brief explanation
+```
+
+**After agent**: Present proposals to user. No clarifying questions needed — this is the final phase.
+```
+
+**Key rules:**
+- **Always last** — never followed by another phase
+- **Always executes** — but agent may conclude "nothing worth capturing" (must say so explicitly)
+- **Never auto-updates** — proposals only, user decides
+- **Default agent: claude-manager** — swap for project-specific agent when domain expertise helps quality of pattern identification
+- **signal-vs-noise skill always loaded** — ensures proposals pass 3-question filter
+
 ---
 
 ## Phase Design Patterns
@@ -443,6 +507,8 @@ Output: [format]
 **User checkpoints:** Get approval after EVERY phase. Prevents wasted work if direction wrong.
 
 **Clarifying questions:** MANDATORY after every phase. Paraphrase + 3-5 questions + confirmation before commands.
+
+**Knowledge Capture always last:** Final phase analyzes workflow for patterns worth capturing. Always executes, agent decides if anything is signal. Never auto-updates — proposals only.
 
 ---
 
@@ -485,6 +551,7 @@ Output: [format]
 - [ ] Each phase includes clarifying questions in "After agent" subsection
 - [ ] Commands section (continue, skip, back, status, stop)
 - [ ] "Sufficient Context Principle" at end
+- [ ] Knowledge Capture as final phase (claude-manager default, signal-vs-noise skill loaded)
 
 **Content Quality:**
 - [ ] Phase 0 inline (orchestrator assessment + clarifying questions)
@@ -551,11 +618,14 @@ Validation command (parallel checks):
 
 **Force Invocation:** "⚠️ CRITICAL" section prevents describing instead of invoking
 
+**Knowledge Capture (Always Last):** Final phase analyzes workflow for capturable patterns. Agent decides if anything is signal — if not, says so explicitly. Never auto-updates.
+
 **WHY Explanations:**
 - Phase 0 inline (WHY: avoids wasting agent)
 - Clarifying questions (WHY: prevents misunderstandings, ensures alignment)
 - Flexible question count (WHY: match complexity, quality over rigid count)
 - User checkpoints (WHY: prevents wasted phases)
+- Knowledge Capture last (WHY: structured analysis catches patterns ad-hoc questions miss)
 
 ---
 
@@ -580,4 +650,4 @@ Validation command (parallel checks):
 
 ---
 
-**Key Lesson:** Multi-phase commands need standard structure + sufficient context principle + clarifying questions (3-5 flexible) + forced invocation. Agents have isolated context - must provide exactly right information (test question). Clarifying questions after every phase prevent misunderstandings. Match question count to phase complexity.
+**Key Lesson:** Multi-phase commands need standard structure + sufficient context principle + clarifying questions (3-5 flexible) + forced invocation + knowledge capture (always last). Agents have isolated context - must provide exactly right information (test question). Clarifying questions after every phase prevent misunderstandings. Match question count to phase complexity. Knowledge Capture as final phase ensures patterns are not lost.
