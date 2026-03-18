@@ -22,3 +22,4 @@ telemetry
 policy-limits.json
 mcp-needs-auth-cache.json
 .credentials.json
+/sessions
