@@ -11,8 +11,14 @@ effort_part=" | ${effort:-max}"
 total_in=$(echo "$input" | jq -r '.context_window.total_input_tokens // 0')
 total_out=$(echo "$input" | jq -r '.context_window.total_output_tokens // 0')
 
-# Approximate cost using Claude claude-sonnet-4-6 pricing: $3/M input, $15/M output
-cost=$(echo "$total_in $total_out" | awk '{printf "%.3f", ($1 / 1000000 * 3) + ($2 / 1000000 * 15)}')
+# Model-aware pricing ($/M tokens)
+model_id=$(echo "$input" | jq -r '.model.id // ""')
+case "$model_id" in
+    *opus*)   in_rate=15;  out_rate=75 ;;
+    *haiku*)  in_rate=0.80; out_rate=4 ;;
+    *)        in_rate=3;   out_rate=15 ;;  # default: Sonnet
+esac
+cost=$(echo "$total_in $total_out $in_rate $out_rate" | awk '{printf "%.3f", ($1 / 1000000 * $3) + ($2 / 1000000 * $4)}')
 
 used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 if [ -n "$used_pct" ]; then
