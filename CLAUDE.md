@@ -1,3 +1,5 @@
+> **Always load memory.md at the start of every session.** It contains project-specific feedback, domain concepts, and preferences extracted from previous conversations that are essential for correct behavior.
+
 ## Core Principles
 
 **Signal vs Noise:** Apply to comments, tests, documentation, skills, agents, commands.

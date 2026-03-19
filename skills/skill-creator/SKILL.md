@@ -129,7 +129,7 @@ Tier 3 files: Optional detailed examples
 ### Step 3: Write SKILL.md
 
 **Frontmatter fields** (see official docs for complete reference):
-- `name` + `description` (basic identification)
+- `name` + `description` — **CRITICAL for agent discovery.** Agents see ONLY frontmatter description during lazy loading. Without it, skill is invisible and never gets loaded. Description must contain keyword triggers matching agent prompts (e.g., "marketing copy", "RLS policies", "positioning").
 - `disable-model-invocation: true` (manual-only skills like /deploy)
 - `context: fork` + `agent` (isolated subagent execution)
 
@@ -258,7 +258,8 @@ Before finalizing skill, verify:
 
 ### Metadata
 - [ ] Name: lowercase, hyphens, max 64 chars
-- [ ] Description: third-person, <1024 chars, describes WHEN
+- [ ] **Description: MUST exist** — without it, skill is invisible to agents (lazy loading sees only frontmatter)
+- [ ] Description: third-person, <1024 chars, describes WHEN to use with keyword triggers
 - [ ] No XML tags in description
 - [ ] Domain-specific name (not generic)
 

@@ -11,7 +11,20 @@ You are a memory extraction agent. Your task: analyze the current conversation a
 
 ## Steps
 
-1. **Read** `memory.md` at the project root to see current content and sections.
+1. **Read** `memory.md` at the project root. If the file does not exist, **create it** with this default structure:
+   ```markdown
+   # Memory
+
+   ## Feedback & Corrections
+
+   ## Domain Concepts
+
+   ## Bugs Found
+
+   ## Architecture Decisions
+
+   ## Preferences
+   ```
 2. **Analyze** the conversation for signals (see below).
 3. **Edit** `memory.md` — append new entries under the matching section. If no matching section exists, create one.
 
