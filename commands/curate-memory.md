@@ -15,16 +15,26 @@ You are curating the project's memory files. Follow these steps exactly:
 1. Read `memory.md` from the project root directory. If it does not exist or is empty, tell the user and stop.
 2. Discover ALL `CLAUDE.md` files across the project:
    - Use Glob: `**/CLAUDE.md`
-   - **Exclude:** `.claude/` directory and `worktree-*` folders
-3. Read each discovered `CLAUDE.md` to understand its scope/topic.
-4. Build a scope map and display it to the user:
+   - **Exclude:** `.claude/` directory (EXCEPT `.claude/CLAUDE.md`) and `worktree-*` folders
+   - `.claude/CLAUDE.md` is a valid discovery target — include it if it exists
+3. Discover available skills:
+   - Read `.claude/skills/CLAUDE.md` if it exists — this is the skills inventory
+   - Note skill names and their scope/purpose for Step 5
+4. Read each discovered `CLAUDE.md` to understand its scope/topic.
+5. Build a scope map and display it to the user:
 
 ```
 ## Discovered CLAUDE.md files
 - ./CLAUDE.md — [brief scope summary]
+- ./.claude/CLAUDE.md — [brief scope summary] (if exists)
 - ./uploads/CLAUDE.md — [brief scope summary]
 - ./api/CLAUDE.md — [brief scope summary]
 ...
+
+## Skills inventory
+- [skill-name] — [brief scope from skills CLAUDE.md]
+...
+(or: No skills CLAUDE.md found)
 ```
 
 ### Step 2: Analyze and Target
@@ -39,8 +49,9 @@ For each entry in memory, classify it AND assign a target file:
 **Target selection** (for PROMOTE entries, in priority order):
 1. **Content match** — entry topic matches scope of a specific CLAUDE.md (e.g., upload-related → `uploads/CLAUDE.md`)
 2. **Path match** — entry references files/folders that have their own CLAUDE.md
-3. **Create new** — entry fits a folder that lacks CLAUDE.md but should have one (flag for creation)
-4. **Fallback** — root `CLAUDE.md` if no specific match
+3. **`.claude/CLAUDE.md`** — entry is about cross-project tooling/workflow preferences (conservative — only if clearly fits)
+4. **Create new** — entry fits a folder that lacks CLAUDE.md but should have one (flag for creation)
+5. **Fallback** — root `CLAUDE.md` if no specific match
 
 **KEEP in memory** if:
 - Entry appeared only once — not yet established as universal
@@ -118,28 +129,38 @@ This gives AI awareness of the full CLAUDE.md structure.
 
 Edit `memory.md` inline — remove promoted and removed entries. Keep the rest. Do not reorder kept entries.
 
-### Step 5: Skill update recommendations
+### Step 5: Skill recommendations
 
-If `@.claude/skills/CLAUDE.md` exists, read it to see available skills.
+Using the skills inventory from Step 1, analyze TWO sources for skill-relevant content:
 
-For each entry being promoted or kept, check if it contains a pattern, bug, or correction relevant to an existing skill. If so, add to recommendations list.
+**Source A: Memory entries** (promoted + kept)
+For each entry, check if it contains a pattern, bug, or correction relevant to an existing skill.
+
+**Source B: All discovered CLAUDE.md content** (including `.claude/CLAUDE.md`)
+Scan for content that would be better served as a skill — patterns, workflows, or domain knowledge that is reusable across conversations and currently embedded in CLAUDE.md instead of being a loadable skill.
 
 Print at the end:
 
 ```
-## Skills to review
-- [skill-name] — [what memory entry suggests updating] (memory: "[entry title]")
+## Skill recommendations
+
+### Update existing skills
+- [skill-name] — [what should be updated] (source: memory "[entry title]" / CLAUDE.md "[file path]")
+
+### New skill candidates
+- "[pattern/workflow description]" — found in [CLAUDE.md path], could become skill for [purpose]
 ```
 
 If no skill recommendations → skip this section entirely.
 
-**Do NOT modify skills automatically.** Only recommend. User runs `/manage-skill` to apply.
+**This step is recommendation-only.** No skill files are modified. User runs **`/manage-skill`** to act on recommendations.
 
 ### Step 6: Print summary
 
 ```
 Done.
-- Discovered: [N] CLAUDE.md files across project
+- Discovered: [N] CLAUDE.md files across project (incl. .claude/CLAUDE.md if present)
+- Discovered skills: [N] (from .claude/skills/CLAUDE.md)
 - Promoted: [N] entries total
   - [path/CLAUDE.md]: [n] entries
   - [path/CLAUDE.md]: [n] entries
@@ -148,12 +169,13 @@ Done.
 - Updated root index: Yes/No
 - Removed: [N] entries (duplicates/outdated)
 - Kept: [N] entries in memory
+- Skill recommendations: [N] (run /manage-skill to apply)
 ```
 
 ## Rules
 
 - Be conservative — when in doubt, KEEP in memory
-- NEVER modify files inside `.claude/` directory
+- NEVER modify skill files or command files inside `.claude/`. Exception: `.claude/CLAUDE.md` may be modified via claude-manager agent (same as other CLAUDE.md files)
 - Exclude `worktree-*` folders from discovery
 - All CLAUDE.md modifications delegated to claude-manager agent (via Task tool)
 - May create new CLAUDE.md files in folders where none exist (if justified and approved)

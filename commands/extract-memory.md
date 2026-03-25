@@ -1,6 +1,5 @@
 ---
 description: "Extract learnings from current session and save to memory.md. Usage: /extract-memory"
-model: sonnet
 ---
 
 # Extract Memory
