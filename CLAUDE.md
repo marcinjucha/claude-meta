@@ -1,54 +1,40 @@
-> **Always load memory.md at the start of every session.** It contains project-specific feedback, domain concepts, and preferences extracted from previous conversations that are essential for correct behavior.
+# claude-meta — Meta-Artifact Repository
 
-## Core Principles
+## Overview
 
-**Signal vs Noise:** Apply to comments, tests, documentation, skills, agents, commands.
-- Comments: only non-obvious decisions, skip obvious ("set loading to true")
-- Unit tests: holistic coverage of key business/developer paths, skip trivial cases
-- Content quality > line count: 600 lines of signal > 300 lines with noise
-- **Sufficient > Comprehensive:** Focus on necessary signal, not exhaustive coverage
+This repo stores **meta-level** Claude Code artifacts — tools for creating, auditing, and maintaining other Claude Code artifacts. Symlinked into `.claude/` alongside `claude-dev` artifacts via shared `hooks/simlink.sh`.
 
-**WHY over HOW:** Always explain rationale, not just implementation. Include production context.
+**Why separate from claude-dev:** claude-dev holds domain artifacts (project-specific agents, skills, commands). claude-meta holds the tooling that builds and maintains those artifacts. Separation prevents circular dependencies and allows meta-tooling to evolve independently.
 
-**Agents (Thin Router) - Skills (Thick Applications):**
-- Agents = operating system, infrastructure, routing only
-- Skills = applications, domain knowledge, patterns
-- Agents have isolated context → provide everything they need before invocation
-- **Skill loading mechanism:** Agent sees ONLY skill metadata/description before deciding which to fully load. Decision based on: (1) prompt from command, (2) skill descriptions. Therefore: descriptions must precisely describe WHEN to use, and command prompts should contain descriptive keywords that match skill descriptions (not explicit skill names - avoids tight coupling).
-- Agents should not duplicate skill content, but critical rules (NEVER INVENT, AVOID AI-KNOWN) must live in command and agent system prompt - skills may not be loaded
+## Structure
 
----
+```
+agents/      → Single meta-agent (claude-manager) that orchestrates all artifact work
+commands/    → 8 slash commands: manage-* family + memory + solve + git
+skills/      → 7 meta-skills loaded by claude-manager (creator, auditor, fine-tuner patterns)
+  resources/ → 4 shared reference files used across multiple skills via @../resources/
+docs/        → Official Claude Code documentation (agents-doc.md, skill-doc.md)
+statusline-command.sh → Status line script (model, cost, context %) — hardcoded macOS path
+```
 
-## Artifact Architecture
+## Weird Parts / Key Patterns
 
-**Condensed Pattern (consistent across all artifacts):**
-- Anti-Patterns: Problem/Fix format, 16-40 lines max, critical markers only
-- No verbose examples with full code blocks
-- No generic content AI already knows (framework explanations, standard patterns)
-- No historical narratives ("Critical Mistakes We Made")
-- Preserve: WHY context, production incidents, project-specific patterns
-- **Philosophy:** Sufficient signal > comprehensive coverage (focused, not exhaustive)
+**Self-referential system**: claude-manager (the only agent) uses meta-skills to build/maintain artifacts — including itself. When modifying claude-manager or its skills, changes affect the tool doing the work.
 
-**Meta-Skills Principle (embedded in skill-creator, skill-fine-tuning, command-creation, signal-vs-noise):**
-- ⚠️ AVOID AI-KNOWN CONTENT: "If Claude already knows it, it's NOISE"
-- Self-check: "Would Claude know this without documentation?" → YES = remove
-- Focus: project-specific decisions, critical bugs, non-obvious patterns
-- Skip: framework basics, architecture 101, standard syntax
+**Single agent, 7 skills**: Unlike claude-dev (8 specialized agents), claude-meta has exactly one agent (`claude-manager`, opus model) that loads all 7 skills. **Why:** all meta-operations (create/audit/modify agents, skills, commands, CLAUDE.md) share the same quality principles (signal vs noise, WHY over HOW, no invented content), so one agent with skill-based routing is sufficient.
 
-**🚨 CRITICAL: NO INVENTED CONTENT**
-- **NEVER fabricate metrics** without user-provided source ("40% improvement", "15 minutes saved")
-- **NEVER invent production incidents** without real examples from user
-- **If no data available:** Use placeholders `[User to provide: real metric]` OR delete entirely
-- **Why this matters:** Invented content corrupts knowledge base, undermines trust in artifacts
-- **Red flags:** Specific numbers (percentages, time savings) without attribution or "production validation"
+**Tri-modal command pattern**: All `manage-*` commands (skill, agent, claude-md, commands) share identical phase structure: Phase 0 detects intent (CREATE/AUDIT/MODIFY), then adaptive phases follow. **Why:** consistent UX — user always gets clarifying questions → agent work → verification, regardless of artifact type.
 
-**Shared Resources:**
-- Common Tier 3 resources in `skills/resources/` - meta-skills reference via `@../resources/`, skill-specific via `@resources/`
+**Two critical rules live in agent system prompt, not skills**: "NEVER INVENT CONTENT" and "AVOID AI-KNOWN CONTENT" are in `claude-manager.md` directly. **Why:** skills are lazily loaded — if these rules were only in skills, claude-manager could generate invented metrics before the skill enforcing the rule gets loaded.
 
----
+**Shared resources at `skills/resources/`**: 4 reference files (signal-vs-noise, skill-ecosystem, skill-structure, why-over-how) shared across multiple skills via `@../resources/` paths. **Why:** avoids duplicating foundational reference content across 7 skills.
 
-## Workflow
+**statusline-command.sh has hardcoded macOS path**: Line 8 reads from `/Users/marcinjucha/.claude/settings.json` — only works on the original dev machine, not on VPS.
 
-Always ask at the end of work whether CLAUDE.md files and skills should be updated.
+**memory.md is project-scoped**: Unlike auto-memory (global), `memory.md` is checked into git. Preference: save project learnings here, not global auto-memory.
 
-Ignore folders starting with worktree-*
+## Cross-References
+
+- `agents/CLAUDE.md` — claude-manager frontmatter, skill loading, thin router pattern
+- `commands/CLAUDE.md` — command registry, tri-modal pattern, orchestration details
+- `skills/CLAUDE.md` — skill registry, shared resources, meta-skill relationships

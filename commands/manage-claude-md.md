@@ -20,7 +20,7 @@ When you see "**Agent**: claude-manager" in a phase:
 
 ## Critical Rules
 
-1. **Invoke agents** - All phases marked "Agent: claude-manager" require Task tool invocation
+1. **Invoke agents** - All phases except Phase 0 require claude-manager Task tool invocation
 2. **Sufficient context** - Provide extracted decisions (50 lines), not full conversation (500 lines)
 3. **Clarifying questions MANDATORY** - After Phase 0 AND after EVERY agent phase (paraphrase + 3-5 questions scaled to complexity + confirmation)
 4. **User checkpoints** - Offer commands ONLY after user confirms understanding
@@ -32,6 +32,7 @@ When you see "**Agent**: claude-manager" in a phase:
 10. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, patterns, or numbers. ONLY use user-provided data.
 11. **Minimal core** - Only Overview + Weird Parts required; everything else optional
 12. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic architectural explanations or framework basics. Focus on folder-specific weird behaviors, critical bugs, non-obvious patterns with WHY context. Example: ❌ "This module handles data persistence using repository pattern" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod, fixed in commit abc123)"
+13. **Orchestrator is thin router** - Phase 0 (intent detection) is inline. ALL other phases go through claude-manager. Orchestrator never writes CLAUDE.md content directly.
 
 ---
 
@@ -124,8 +125,8 @@ Does this match what you want?
 1. Phase 0: Decision Framework (inline)
 2. Phase 1: Signal Extraction (claude-manager)
 3. Phase 2: Structure Design (claude-manager)
-4. Phase 3: File Creation (inline)
-5. Phase 4: Verification (inline)
+4. Phase 3: File Creation (claude-manager)
+5. Phase 4: Verification (claude-manager)
 
 ---
 
@@ -341,36 +342,77 @@ Commands: continue | skip | back | stop
 
 ---
 
-### CREATE Phase 3: File Creation (Inline)
+### CREATE Phase 3: File Creation
 
-**You do this - no agent**
+**Agent**: claude-manager
 
-Use Write tool with:
-- Minimal core structure (from Phase 2)
-- Extracted content (from Phase 1)
-- Only sections that have content
-- Proper formatting (bold **Why**, code blocks, file paths, tables)
-
-Verify formatting:
-- Bold **Why** for all WHY context
-- Code blocks with language tags
-- File paths with line numbers if available
-- Tables in Quick Reference (if present)
-- Cross-references formatted correctly
+#### Prompt to Agent
 
 ```
-Phase 3 complete. CLAUDE.md created at [path] with [N] lines.
-Ready to proceed?
+MODE: CREATE CLAUDE.md - File creation
+
+MODULE: [name and path]
+FILE PATH: [target CLAUDE.md path]
+
+STRUCTURE DESIGN (from Phase 2):
+[section breakdown, content organization, cross-reference plan]
+
+EXTRACTED SIGNAL (from Phase 1):
+[overview, weird parts, critical mistakes, quick reference, cross-references]
+
+USER ADJUSTMENTS: [from Phase 2]
+
+Task: Create the CLAUDE.md file using Write tool.
+
+Requirements:
+- Follow the approved structure design exactly
+- Apply proper formatting: bold **Why** for all WHY context, code blocks with language tags, file paths with line numbers, tables in Quick Reference
+- Only include sections that have content — no empty sections
+- Cross-references formatted as markdown links
+- Use Write tool to create the file at the specified path
+
+Output: Confirm file created with path and line count.
+```
+
+#### After Agent Completes - MANDATORY Clarifying Questions
+
+```
+Let me verify the created file:
+[2-3 sentence paraphrase of what was created]
+
+Clarifying questions (3-5, scale with complexity):
+1. File created at [path] with [N] lines — does the structure match expectations?
+2. Section [X] includes [content] — accurate?
+3. Cross-references point to [files] — correct targets?
+[4. Any content missing that should be added?]
+[5. Formatting correct, or adjustments needed?]
+
+Does this match exactly what you want? If not, what should I adjust?
+```
+
+[WAIT for confirmation]
+
+```
+Phase 3 complete. Ready to proceed?
 Commands: continue | skip | back | stop
 ```
 
 ---
 
-### CREATE Phase 4: Verification (Inline)
+### CREATE Phase 4: Verification
 
-**You do this - no agent**
+**Agent**: claude-manager
 
-#### Verification Checklist
+#### Prompt to Agent
+
+```
+MODE: CREATE CLAUDE.md - Verification
+
+FILE: [path to created CLAUDE.md]
+
+Task: Read the created CLAUDE.md and verify against quality checklist.
+
+Verification Checklist:
 
 **Minimal Core:**
 - [ ] Overview section present
@@ -379,7 +421,7 @@ Commands: continue | skip | back | stop
 
 **Signal vs Noise:**
 - [ ] No generic architecture explanations
-- [ ] All content passes 3-question filter
+- [ ] All content passes 3-question filter (project-specific, non-obvious, critical)
 - [ ] Content is folder-specific
 
 **WHY over HOW:**
@@ -387,18 +429,26 @@ Commands: continue | skip | back | stop
 - [ ] Critical Mistakes have production impact (if present)
 
 **Cross-References:**
-- [ ] All CLAUDE.md references valid (if present)
-- [ ] All skill references valid (if present)
+- [ ] All CLAUDE.md references point to existing files
+- [ ] All skill references point to existing skills
 
 **Current State:**
 - [ ] Shows HOW IT WORKS NOW
 
-**Output:**
-```
+**Formatting:**
+- [ ] Bold **Why** for WHY context
+- [ ] Code blocks with language tags
+- [ ] Tables properly formatted
+
+Output:
 ✅ PASSED: [checks that passed]
 ⚠️ WARNINGS: [potential issues]
 ❌ FAILED: [checks that failed]
+
+If FAILED: fix the issues directly using Edit tool before reporting.
 ```
+
+#### After Agent Completes
 
 ```
 Phase 4 complete. Verification [PASSED/FAILED].
@@ -417,7 +467,7 @@ Commands: stop | back
 3. Phase 2: Content Quality Audit (claude-manager)
 4. Phase 3: Cross-Reference Audit (claude-manager)
 5. Phase 4: Recommendations (claude-manager)
-6. Phase 5: Implementation (inline, if approved)
+6. Phase 5: Implementation (claude-manager, if approved)
 
 ---
 
@@ -718,13 +768,28 @@ Commands: continue | skip | back | stop
 
 ---
 
-### AUDIT Phase 5: Implementation (Inline)
+### AUDIT Phase 5: Implementation
 
-**You do this - no agent**
+**Agent**: claude-manager
 
-**Only proceed if user approved fixes**
+#### Prompt to Agent
 
-#### Apply Fixes Based on Priority
+```
+MODE: AUDIT CLAUDE.md - Implementation
+
+Only proceed because user approved fixes.
+
+RECOMMENDATIONS (from Phase 4):
+[Priority 1 critical fixes]
+[Priority 2 moderate fixes]
+[Priority 3 minor fixes]
+[Skill extraction opportunities]
+
+USER DECISIONS: [which priorities to fix, which to defer]
+
+Task: Apply approved fixes to CLAUDE.md files using Edit tool.
+
+Apply fixes in priority order:
 
 **Priority 1: Critical**
 - Add missing REQUIRED sections (Overview, Weird Parts)
@@ -742,24 +807,29 @@ Commands: continue | skip | back | stop
 - Polish
 
 **Skill Extraction:**
-- If user approved, use /manage-skill to create skills for project-wide patterns
-- Update CLAUDE.md files to reference new skills
+- If user approved, flag patterns for /manage-skill (do not create skills directly)
+- Update CLAUDE.md files to note planned skill extraction
 
-Track progress:
-```
-Fixed: [file]
-- [violation 1] → [fix]
-- [violation 2] → [fix]
+Track progress per file:
+- File path
+- Changes applied
+- Verification: PASS/FAIL after changes
 
-Progress: [N/M] complete
-```
-
-Run verification after fixes:
+Run verification after ALL fixes:
 - Minimal core structure
 - Signal vs Noise
 - WHY over HOW
 - Cross-references
 - Current state
+
+Output:
+- Files fixed: [N]
+- Changes applied: [list per file]
+- Verification: [PASSED/FAILED per file]
+- Skills flagged for extraction: [list]
+```
+
+#### After Agent Completes
 
 ```
 Phase 5 complete. Fixed [N] files.
@@ -769,7 +839,7 @@ AUDIT mode complete. Summary:
 - Structure: [N] files fixed
 - Content: [N] files fixed
 - Cross-references: [N] files fixed
-- Skills extracted: [N] patterns
+- Skills flagged: [N] patterns
 
 Commands: stop | back
 ```
@@ -781,8 +851,8 @@ Commands: stop | back
 **4 Phases:**
 1. Phase 0: Change Scope (inline)
 2. Phase 1: Change Analysis (claude-manager)
-3. Phase 2: Implementation (inline)
-4. Phase 3: Verification (inline)
+3. Phase 2: Implementation (claude-manager)
+4. Phase 3: Verification (claude-manager)
 
 ---
 
@@ -897,26 +967,55 @@ Commands: continue | skip | back | stop
 
 ---
 
-### MODIFY Phase 2: Implementation (Inline)
+### MODIFY Phase 2: Implementation
 
-**You do this - no agent**
+**Agent**: claude-manager
 
-**Change patterns:**
+#### Prompt to Agent
+
+```
+MODE: MODIFY CLAUDE.md - Implementation
+
+FILE: [path]
+CHANGE PLAN (from Phase 1):
+[section-by-section changes]
+[cross-reference updates]
+[implementation steps]
+
+USER ADJUSTMENTS: [from Phase 1]
+
+Task: Apply approved modifications using Edit tool.
+
+Change patterns:
 - **add_discovery**: Add to Weird Parts/Critical Mistakes WITH WHY context + production impact
 - **update_outdated**: Replace wrong with correct
-- **remove_obsolete**: Remove completely or move to Deprecated section
+- **remove_obsolete**: Remove completely (no deprecated sections)
 - **restructure**: Apply minimal core structure
 - **cross_reference**: Remove duplicate, add skill/CLAUDE.md reference
 
-Track changes:
-```
-Applied: [change]
-- Section: [name]
-- Change: [what]
-- Reason: [why]
+Update bidirectional cross-references if needed.
+
+Output:
+- Changes applied: [list per section]
+- Cross-references updated: [list]
+- File size before/after: [lines]
 ```
 
-Update bidirectional cross-references if needed.
+#### After Agent Completes - MANDATORY Clarifying Questions
+
+```
+Let me verify the applied changes:
+[2-3 sentence paraphrase]
+
+Clarifying questions (3-5, scale with complexity):
+1. Applied [N] changes to [sections] — all correct?
+2. Cross-references updated to [targets] — accurate?
+3. Any additional changes needed?
+
+Does this match exactly what you want? If not, what should I adjust?
+```
+
+[WAIT for confirmation]
 
 ```
 Phase 2 complete. Applied [N] changes.
@@ -926,11 +1025,22 @@ Commands: continue | skip | back | stop
 
 ---
 
-### MODIFY Phase 3: Verification (Inline)
+### MODIFY Phase 3: Verification
 
-**You do this - no agent**
+**Agent**: claude-manager
 
-#### Verification Checklist
+#### Prompt to Agent
+
+```
+MODE: MODIFY CLAUDE.md - Verification
+
+FILE: [path]
+CHANGES APPLIED (from Phase 2):
+[list of changes per section]
+
+Task: Read the modified CLAUDE.md and verify quality.
+
+Verification Checklist:
 
 **Change Verification:**
 - [ ] All requested changes applied
@@ -949,17 +1059,19 @@ Commands: continue | skip | back | stop
 - [ ] No empty sections
 
 **Cross-References:**
-- [ ] All references valid
-- [ ] File paths and line numbers accurate
+- [ ] All references valid (check files exist)
 - [ ] No broken references introduced
 - [ ] Bidirectional references updated (if applicable)
 
-**Output:**
+Output:
+✅ PASSED: [checks that passed]
+⚠️ WARNINGS: [potential issues]
+❌ FAILED: [checks that failed]
+
+If FAILED: fix the issues directly using Edit tool before reporting.
 ```
-✅ PASSED: [checks]
-⚠️ WARNINGS: [issues]
-❌ FAILED: [failures]
-```
+
+#### After Agent Completes
 
 ```
 Phase 3 complete. Verification [PASSED/FAILED].
