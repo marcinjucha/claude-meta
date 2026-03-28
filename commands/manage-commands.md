@@ -13,7 +13,7 @@ Automatically detects intent from natural language and executes appropriate comm
 0: Intent Detection + Complexity    (orchestrator - inline + clarifying questions)
 1: Requirements Gathering            (claude-manager with command-creation skill)
 2: Plan Creation                     (claude-manager with command-creation skill)
-3: File Creation                     (orchestrator - inline)
+3: File Creation                     (claude-manager — creates command file)
 4: Verification                      (orchestrator - inline + clarifying questions)
 ```
 
@@ -23,14 +23,14 @@ Automatically detects intent from natural language and executes appropriate comm
 1: Structure Analysis                (claude-manager with command-creation, signal-vs-noise skills)
 2: Content Audit                     (claude-manager with signal-vs-noise skill)
 3: Recommendations                   (claude-manager with command-creation skill)
-4: Implementation                    (orchestrator - inline if user approves)
+4: Implementation                    (claude-manager — applies approved fixes)
 ```
 
 **MODIFY Mode (Dynamic):**
 ```
 0: Intent Detection + Change Scope   (orchestrator - inline + clarifying questions)
 1: Change Analysis                   (claude-manager with command-creation skill)
-2: Implementation                    (orchestrator - inline)
+2: Implementation                    (claude-manager — applies approved changes)
 3: Verification                      (orchestrator - inline + clarifying questions)
 ```
 
@@ -62,7 +62,7 @@ Launching claude-manager...
 
 ### Critical Rules
 
-1. **INVOKE with Task tool** - Every phase requires actual Task tool call (except Phase 0 and inline phases)
+1. **INVOKE with Task tool** - Every phase requires actual Task tool call (except Phase 0 and Verification which are inline). Implementation/File Creation phases MUST use claude-manager — never do file edits inline.
 2. **Sufficient context** - Each claude-manager invocation gets ONLY critical decisions (not full conversation history)
 3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
 4. **User checkpoints** - Get approval after confirmation before proceeding
@@ -314,16 +314,31 @@ Ready to proceed? (continue/skip/back/stop)
 
 ---
 
-### Phase 3: File Creation (Inline)
-**You do this - no agent**
+### Phase 3: File Creation (claude-manager)
+**Agent**: claude-manager
 
-Create command file at `.claude/commands/[command-name].md`:
+**Prompt to agent:**
+```
+MODE: CREATE command file
 
-1. Use plan from Phase 2
+COMMAND: [name]
+FILE PATH: .claude/commands/[command-name].md
+
+APPROVED PLAN (from Phase 2):
+[Full command plan markdown]
+
+USER ADJUSTMENTS (from Phase 2 clarifying questions):
+[Any corrections user made]
+
+Task: Create the command file using the approved plan.
+
+1. Write file at the specified path
 2. Apply command-creation skill structure
-3. Include all required sections
-4. Verify frontmatter format
-5. Create file
+3. Include all required sections from the plan
+4. Verify frontmatter format is correct
+
+Output: Confirm file created, show file path.
+```
 
 No clarifying questions (file creation is mechanical based on approved plan).
 
@@ -596,25 +611,42 @@ Ready to proceed with implementation? (continue/skip/back/stop)
 
 ---
 
-### Phase 4: Implementation (Inline - Conditional)
-**You do this - no agent**
+### Phase 4: Implementation (claude-manager)
+**Agent**: claude-manager
 
 **Only if user approved in Phase 3.**
 
-Apply recommended changes:
+**Prompt to agent:**
+```
+MODE: AUDIT implementation
 
-1. **Create new artifacts first** (skills, agents)
-2. **Fix structure issues** (add missing sections)
-3. **Refactor content** (extract to skills, simplify context)
-4. **Add WHY context** (production incidents, rationale)
-5. **Verify each command** (run checklist from Phase 4 CREATE)
+⚠️ CRITICAL: NEVER INVENT OR HALLUCINATE CONTENT
+
+COMMANDS TO FIX: [list from Phase 3]
+
+APPROVED RECOMMENDATIONS:
+[Extracted recommendations user approved — per-command fixes]
+
+USER DECISIONS: [auto-fix scope, priorities from Phase 3 confirmation]
+
+Task: Apply approved fixes to command files.
+
+For each command:
+1. Read current file
+2. Apply structure fixes (add missing sections)
+3. Apply content refactoring (extract to skills, simplify context)
+4. Add WHY context where needed
+5. Verify changes match approved recommendations
 
 Track progress:
-```
 Fixed: [command]
 - [violation] → [fix]
 Progress: [N/M] complete
+
+Output: Summary of all changes made, per file.
 ```
+
+**After agent:**
 
 ```
 Let me verify my understanding:
@@ -726,27 +758,33 @@ Ready to proceed? (continue/skip/back/stop)
 
 ---
 
-### Phase 2: Implementation (Inline)
-**You do this - no agent**
+### Phase 2: Implementation (claude-manager)
+**Agent**: claude-manager
 
-Apply modifications from Phase 1 plan:
+**Prompt to agent:**
+```
+MODE: MODIFY command implementation
 
-```yaml
-Structural changes:
-  - Add sections (use command-creation template)
-  - Remove sections
-  - Reorder sections (maintain logical flow)
+⚠️ CRITICAL: NEVER INVENT OR HALLUCINATE CONTENT
 
-Content changes:
-  - Update patterns (apply signal-vs-noise)
-  - Add WHY explanations (production context)
-  - Fix examples
-  - Simplify context sections (extract decisions)
+COMMAND: [name and path]
+APPROVED CHANGE PLAN (from Phase 1):
+[Extracted: section-by-section changes, implementation steps]
 
-Compliance fixes:
-  - Add clarifying questions pattern (if missing)
-  - Add "⚠️ CRITICAL" section (if missing)
-  - Fix Phase 0 (make inline if agent)
+USER ADJUSTMENTS (from Phase 1 clarifying questions):
+[Any corrections user made during confirmation]
+
+Task: Apply approved modifications to the command file.
+
+1. Read current command file
+2. Apply changes per the approved plan:
+   - Structural changes (add/remove/reorder sections)
+   - Content changes (update patterns, add WHY, fix examples)
+   - Compliance fixes (clarifying questions, sufficient context)
+3. Verify changes match approved plan
+4. Write updated file
+
+Output: Summary of changes made, section by section.
 ```
 
 No clarifying questions (implementation is mechanical based on approved plan).
