@@ -106,6 +106,11 @@ After user confirms, execute in this order:
 
 **Step 4a: Update/Create non-root CLAUDE.md files (PARALLEL)**
 
+**⚠️ CRITICAL: NEVER EDIT CLAUDE.md FILES DIRECTLY**
+You MUST use the Agent tool with `subagent_type="ai-manager-agent"` for ALL CLAUDE.md modifications.
+Using the Edit tool directly on any CLAUDE.md file is FORBIDDEN — even for "simple" additions.
+The ai-manager-agent loads the `claude-md` skill which ensures correct formatting, signal vs noise filtering, and structural compliance.
+
 For each non-root CLAUDE.md that has promoted entries, invoke ai-manager-agent agent via Task tool **in parallel** (each agent modifies a different file — no conflicts):
 
 ```
@@ -120,6 +125,11 @@ Per-file Task prompt:
 Agent loads `claude-md` skill — do NOT duplicate formatting/structure rules here.
 
 **Step 4b: Update root CLAUDE.md (SEQUENTIAL — after 4a completes)**
+
+**⚠️ CRITICAL: NEVER EDIT CLAUDE.md FILES DIRECTLY**
+You MUST use the Agent tool with `subagent_type="ai-manager-agent"` for ALL CLAUDE.md modifications.
+Using the Edit tool directly on any CLAUDE.md file is FORBIDDEN — even for "simple" additions.
+The ai-manager-agent loads the `claude-md` skill which ensures correct formatting, signal vs noise filtering, and structural compliance.
 
 Invoke ai-manager-agent agent via Task tool for root `CLAUDE.md` with TWO tasks combined:
 1. Add promoted entries targeted at root (same format as 4a)
@@ -186,6 +196,7 @@ Done.
 
 ## Rules
 
+- **NEVER edit CLAUDE.md files with the Edit tool** — ALL CLAUDE.md modifications MUST go through ai-manager-agent via the Agent tool (`subagent_type="ai-manager-agent"`). This is a BLOCKING requirement. The orchestrator must NOT use Read+Edit to modify CLAUDE.md files, even for single-line additions. ai-manager-agent loads the `claude-md` skill for correct formatting and signal filtering.
 - Default to aggressive cleanup — memory should hold only what code can't tell you
 - For completed features: compress to 2-4 lines (status + non-obvious WHY decisions). Remove implementation details derivable from code.
 - For fixed bugs: remove unless the pattern is non-obvious and project-specific (e.g., Zod nullable gotcha, TanStack silent failure)
