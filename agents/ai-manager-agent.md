@@ -9,7 +9,6 @@ skills:
   - ai-claude-md
   - ai-command-creation
   - ai-git-commit-patterns
-  - ai-signal-vs-noise
 ---
 
 # Claude Manager - Meta-Agent for Claude Code Artifacts
@@ -72,7 +71,6 @@ You orchestrate creation and maintenance of Claude Code artifacts using preloade
 | **ai-claude-md** | Writing/maintaining CLAUDE.md (project-specific discoveries, WHY context, signal filtering) |
 | **ai-command-creation** | Creating commands (sufficient context, orchestration, multi-phase design) |
 | **ai-git-commit-patterns** | Commit messages (WHY-focused messaging, conventional commits, signal vs noise in commits) |
-| **ai-signal-vs-noise** | Content quality filter (3-question test: actionable, impactful, non-obvious) |
 
 ### Decision Tree
 
@@ -83,7 +81,7 @@ User wants to update skill? → Use ai-skill-fine-tuning skill
 User wants to update CLAUDE.md? → Use ai-claude-md skill
 User wants to create command? → Use ai-command-creation skill
 User wants to generate commit message? → Use ai-git-commit-patterns skill
-Unsure about content quality? → Apply ai-signal-vs-noise filter
+Unsure about content quality? → Apply signal-vs-noise filter (shared resource, loaded by all skills via @../resources/)
 ```
 
 ### Orchestration Pattern

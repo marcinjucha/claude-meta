@@ -25,67 +25,13 @@ Create and maintain focused, actionable CLAUDE.md documentation that Claude actu
 - Skills reference wrong file paths or line numbers
 - Pattern no longer used (needs deprecation)
 
----
-
-## ⚠️ CRITICAL: FACT-BASED DOCUMENTATION ONLY
-
-**Why this rule exists:** CLAUDE.md is living documentation of actual project state. Invented production context leads Claude to make decisions based on false constraints.
-
-**What to do:**
-- User describes discovery → Document it with real details
-- No real data → Use placeholder: `[Real incident details needed]` or ask user
-
-✅ CORRECT (FACT-BASED):
-## 15-Second Time Window
-**Why**: [User to provide: server processing time and impact]
-OR (if user provided):
-## 15-Second Time Window (Bug Fix)
-**Why**: Server processes in up to 15s (confirmed by user). UI showed errors when operations succeeded.
-```
+**Note:** Fact-based and signal-only rules enforced by ai-manager-agent system prompt.
 
 ## Core Philosophy
 
-### Quality > Line Count
-
-**Priority:** Content Quality > Line Count. Project-specific weird stuff + WHY > brevity.
-
-Better:
-  600 lines of pure signal (every line project-specific)
-Than:
-  300 lines with 50% noise (generic patterns Claude knows)
-
-### ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT
-
-**Core principle for CLAUDE.md:** If Claude already knows it, it's NOISE.
-
-**Why this matters:** Generic architectural explanations (layered architecture, design patterns, framework basics) waste token budget and dilute folder-specific insights. CLAUDE.md should document folder/module weird behaviors and critical bugs only.
-
-**Self-check question:**
-> "Would Claude know this without CLAUDE.md?"
-> - **YES** → It's noise, remove it (standard patterns, framework explanations)
-> - **NO** → It's signal, keep it (folder-specific bugs, non-obvious behaviors)
-
-**Example:**
-```markdown
-❌ NOISE (AI-known): "This module handles data persistence using repository pattern"
-✅ SIGNAL (folder-specific): "Never query same table in RLS policy → infinite recursion (crashed prod, commit abc123)"
-
-❌ NOISE (AI-known): "Use dependency injection for testability"
-✅ SIGNAL (folder-specific): "Singleton leaks NMB per instance → use weak refs in observers (20+ crash reports, devices < 2GB RAM)"
-```
-
-**When writing CLAUDE.md:**
-- Skip generic module explanations → NOISE
-- Document folder-specific weird behaviors + WHY → SIGNAL
-- Skip framework/architecture basics → NOISE
-- Document critical bugs with production context → SIGNAL
-
-### WHY > HOW
-
-**Every section must explain WHY:**
-- WHY this pattern exists (real problem we hit)
-- WHY approach chosen (alternatives considered)
-- WHY it matters (production impact, user complaints)
+- **Quality > Line Count** — 600 lines of pure signal beats 300 lines with 50% noise
+- **Self-check** — "Would Claude know this without CLAUDE.md?" YES = noise, NO = signal
+- **WHY > HOW** — every section must explain WHY (real problem, alternatives considered, production impact)
 
 ---
 
@@ -379,28 +325,9 @@ Before committing CLAUDE.md:
 
 ## Resources
 
-**Shared resources** (`@../resources/`) - Common across meta-skills:
-- `@../resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to include
-- `@../resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context)
-- `@../resources/skill-structure-reference.md` - Standard structure and best practices (adaptable to CLAUDE.md)
+- `@../resources/signal-vs-noise-reference.md` - 3-question filter for content decisions
+- `@../resources/why-over-how-reference.md` - WHY > HOW philosophy
+- `@../resources/skill-structure-reference.md` - Structure best practices
 
-**Use references for:**
-- Signal vs Noise → Filter what to document (project-specific only, not generic)
-- Why over How → Include rationale for patterns (why pattern exists, why it matters)
-- Structure → Consistent organization (required sections, optional sections)
-
-**Why included:**
-- Consistent philosophy across all meta skills (skills, agents, workflows, docs)
-- Decision framework for documentation content (what to include, what to skip)
-- Quality guidelines (sufficiency > brevity, WHY mandatory - see Core Philosophy)
-
----
-
-## Integration with Other Skills
-
-- **ai-signal-vs-noise** - Filter content (project-specific only)
-- **ai-skill-fine-tuning** - Update skills when patterns change
-- **ai-skill-creator** - Create new skills for reusable patterns
-
----
+**Related skills:** ai-skill-fine-tuning (update skills when patterns change), ai-skill-creator (create new skills for reusable patterns)
 

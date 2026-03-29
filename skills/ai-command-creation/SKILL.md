@@ -10,62 +10,7 @@ argument-hint: "[command-name]"
 
 Guide for creating multi-phase command files that orchestrate multiple agents across phases. Focus on **command structure pattern**, **sufficient context principle** (agents have isolated context), and **clarifying questions pattern** (3-5 questions, flexible). Documents anti-patterns in command CREATION process (not for inclusion in command files).
 
-## ⚠️ CRITICAL: FACT-BASED COMMAND EXAMPLES ONLY
-
-**Why this rule exists:** Invented rework rates or timing metrics in command anti-patterns create false expectations about command performance.
-
-**What to do:**
-- User provides real command incident → Document it
-- No data → Skip metrics or use placeholder: `[Real metric needed]`
-- During audit → Flag invented content for removal
-
-**RED FLAGS - NEVER invent:**
-- ❌ Metrics/percentages without source ("30% faster", "50% reduction")
-- ❌ Production incidents without user verification
-- ❌ Team statistics or timing data
-- ❌ Anti-patterns without real examples
-
-**GREEN LIGHT - ONLY include:**
-- ✅ User-provided data and incidents
-- ✅ Real patterns from codebase
-- ✅ Placeholder when missing: `[User to provide: real metric]`
-
-**Quick test:** Can you verify with user/codebase? NO → Use placeholder or skip.
-
-## ⚠️ CRITICAL: AVOID AI-KNOWN CONTENT IN COMMANDS
-
-**Why this rule exists:** Multi-phase command prompts to agents should contain ONLY project-specific context, not generic explanations Claude already knows. Adding AI-known content wastes tokens and dilutes signal.
-
-**WHEN CREATING COMMANDS:**
-
-- ✅ **Agent context** → ONLY project-specific (decisions, constraints, patterns, rules)
-- ✅ **Skip generic** → Framework basics, standard patterns, architecture 101
-- ✅ **Self-check**: "Does agent need this to produce quality output?" → If generic knowledge, NO
-
-**Example:**
-```markdown
-❌ WRONG (AI-KNOWN CONTENT IN PROMPT):
-Pass to architect-agent:
-- "Repository pattern separates data access from business logic"
-- "MVVM architecture has ViewModel between View and Model"
-- [Generic framework explanations]
-
-✅ CORRECT (PROJECT-SPECIFIC CONTEXT):
-Pass to architect-agent:
-CONSTRAINTS:
-  - Offline-first (40% usage offline)
-  - Query-based (300 items, can't in-memory)
-EXISTING PATTERNS:
-  - DataRepository, DataProvider (follow naming)
-PROJECT RULES:
-  - NO Component→Component (use service if 3+ repos)
-```
-
-**During command creation:**
-- Extract DECISIONS from previous phases (not full explanations)
-- List PROJECT CONSTRAINTS (not general best practices)
-- Identify EXISTING PATTERNS to match (not pattern definitions)
-- Include PROJECT RULES (not standard architecture rules)
+**Note:** Fact-based and signal-only rules enforced by ai-manager-agent system prompt. Agent context must contain only project-specific decisions, constraints, and patterns — not generic explanations.
 
 ## When to Use
 
@@ -271,88 +216,17 @@ Ready to proceed? (continue/skip/popraw/back/stop)
 
 ### 4. Clarifying Questions Pattern (REQUIRED)
 
-**CRITICAL SECTION** - Forces understanding alignment after every phase:
+**After EVERY phase (including Phase 0):** Paraphrase (2-3 sentences summarizing DECISIONS, not agent output) + 3-5 questions + confirmation loop.
 
-```markdown
-### Clarifying Questions Pattern (MANDATORY)
+**Question count:** Simple phases = 3, Standard = 3-4, Complex = 4-5. Quality over quantity.
 
-**After EVERY phase (including Phase 0), you MUST:**
+**Question types:** (1) Scope/constraint - ALWAYS, (2) Edge case - ALWAYS, (3) Priority/approach - ALWAYS, (4) Integration point - if complex, (5) Validation criteria - if complex.
 
-\```
-Let me verify my understanding:
-[2-3 sentence paraphrase of what was produced/decided in this phase]
+**Questions must be specific and actionable** ("For [X], should behavior be [A] or [B]?"), not generic ("Is this correct?").
 
-Clarifying questions (3-5 depending on phase complexity):
-1. [Question about scope/constraint from this phase]
-2. [Question about edge case/requirement]
-3. [Question about priority/approach]
-[4. [Question about integration point - if complex phase]]
-[5. [Question about validation criteria - if complex phase]]
+**Confirmation loop:** Wait for user response. If corrections needed, paraphrase updated understanding + ask new questions. Repeat until confirmed. Only then offer commands (continue/skip/back/stop).
 
-Does this match exactly what you want to achieve? If not, what should I adjust?
-\```
-
-**Wait for user response.** If user says corrections needed:
-- Apply corrections
-- Paraphrase updated understanding
-- Ask 3-5 NEW clarifying questions about updated version (depending on complexity)
-- Repeat until user confirms "dokładnie to co chcę" / "exactly what I want"
-
-**Only after confirmation**, proceed with: "Ready to proceed? (continue/skip/popraw/back/stop)"
-
-**Question count guidance:**
-- Simple phases (Context, Manual Testing, Review): 3 questions
-- Standard phases (Requirements, Data Flow, Single Tests): 3-4 questions
-- Complex phases (Architecture, Multi-layer Implementation): 4-5 questions
-
-**Principle**: Ask enough questions to uncover hidden constraints, not more. Quality over quantity.
-```
-
-**Why clarifying questions pattern:**
-
-Clarifying questions after EVERY phase prevent misunderstandings:
-1. **Paraphrase** forces orchestrator to demonstrate understanding (not just repeat)
-2. **3-5 questions** (flexible) uncover hidden constraints, edge cases, priorities user didn't mention
-3. **Confirmation loop** ensures alignment before proceeding (prevents wasted work)
-
-**Question count flexibility:**
-- **Simple phases** (Context Analysis, Manual Testing, Review): 3 questions
-- **Standard phases** (Requirements, Data Flow, Single Tests): 3-4 questions
-- **Complex phases** (Architecture, Multi-layer Implementation): 4-5 questions
-
-**Principle**: Ask enough questions to uncover hidden constraints, not more. Quality over quantity.
-
-**When to apply:**
-- ✅ After Phase 0 (inline assessment)
-- ✅ After EVERY agent phase
-- ✅ After inline phases if significant decisions made
-- ❌ NOT after final report (command complete)
-
-**Pattern anatomy:**
-
-```markdown
-**Paraphrase (2-3 sentences):**
-- Summarize what was DECIDED (not what agent did)
-- Focus on KEY outcomes (architecture chosen, files to modify, tests added)
-- Show understanding (not copy-paste agent output)
-
-**3-5 Questions (depending on complexity):**
-1. Scope/constraint question (boundaries, limitations) - ALWAYS
-2. Edge case/requirement question (what if X happens?) - ALWAYS
-3. Priority/approach question (is this approach correct?) - ALWAYS
-4. Integration point question (how does this connect to existing?) - If complex phase
-5. Validation criteria question (what makes this "correct"?) - If complex phase
-
-**Count guidance**: Simple=3, Standard=3-4, Complex=4-5
-
-**Confirmation request:**
-"Does this match exactly what you want to achieve? If not, what should I adjust?"
-```
-
-**Question quality:**
-- Specific, actionable ("For [X], should behavior be [A] or [B]?")
-- NOT generic ("Is this correct?", "Should I continue?")
-- Paraphrase shows understanding (not copy-paste)
+**When to apply:** After Phase 0, after every agent phase, after inline phases with significant decisions. NOT after final report.
 
 ### 5. Phase Details - Sufficient Context Section
 
@@ -448,7 +322,7 @@ Output: [format]
 ### Phase N: Knowledge Capture
 **Agent**: ai-manager-agent (default — swap for project-specific agent if domain expertise needed, or run inline if command is simple)
 
-**Skills to load**: ai-signal-vs-noise (always — for conciseness filtering), others at agent's discretion based on what was discovered
+**Skills to load**: signal-vs-noise-reference (shared resource, always loaded via @../resources/ — for conciseness filtering), others at agent's discretion based on what was discovered
 
 **Sufficient context for quality**:
 ```yaml
@@ -494,21 +368,17 @@ Output: Proposals with Target / Type / Content / WHY signal
 - **Always executes** — but agent may conclude "nothing worth capturing" (must say so explicitly)
 - **Never auto-updates** — proposals only, user decides
 - **Default agent: ai-manager-agent** — swap for project-specific agent when domain expertise helps quality of pattern identification
-- **ai-signal-vs-noise skill always loaded** — ensures proposals pass 3-question filter
+- **signal-vs-noise-reference always available** — shared resource ensures proposals pass 3-question filter
 
 ---
 
 ## Phase Design Patterns
 
-**Phase 0 always inline:** Orchestrator does quick categorization. Avoids wasting agent on trivial assessment. Must include clarifying questions.
-
-**Parallel phases:** Multiple independent validations with no dependencies. Invoke multiple Task calls in single message.
-
-**User checkpoints:** Get approval after EVERY phase. Prevents wasted work if direction wrong.
-
-**Clarifying questions:** MANDATORY after every phase. Paraphrase + 3-5 questions + confirmation before commands.
-
-**Knowledge Capture always last:** Final phase analyzes workflow for patterns worth capturing. Always executes, agent decides if anything is signal. Never auto-updates — proposals only.
+- **Phase 0 always inline** — quick categorization, avoids wasting agent invocation
+- **Parallel phases** — independent validations, multiple Task calls in single message
+- **User checkpoints** — approval after EVERY phase (prevents wasted work)
+- **Clarifying questions** — apply pattern from Section 4 after every phase
+- **Knowledge Capture always last** — agent decides if anything is signal, proposals only
 
 ---
 
@@ -543,34 +413,22 @@ Output: Proposals with Target / Type / Content / WHY signal
 **Structure:**
 - [ ] Description in frontmatter (<200 chars, includes usage)
 - [ ] Phases overview (with inline/agent markers)
-- [ ] "⚠️ CRITICAL: YOU MUST INVOKE AGENTS" section
-- [ ] Critical Rules (3-5 rules, includes clarifying questions requirement with flexible count)
-- [ ] "Clarifying Questions Pattern" section (template + 3-5 flexible guidance + examples)
-- [ ] Phase Execution Pattern (markdown template with paraphrase + 3-5 flexible questions)
+- [ ] "YOU MUST INVOKE AGENTS" section
+- [ ] Clarifying Questions Pattern section
+- [ ] Phase Execution Pattern template
 - [ ] Each phase has "Sufficient context for quality" section
-- [ ] Each phase includes clarifying questions in "After agent" subsection
 - [ ] Commands section (continue, skip, back, status, stop)
-- [ ] "Sufficient Context Principle" at end
-- [ ] Knowledge Capture as final phase (ai-manager-agent default, ai-signal-vs-noise skill loaded)
+- [ ] Sufficient Context Principle at end
+- [ ] Knowledge Capture as final phase
 
 **Content Quality:**
-- [ ] Phase 0 inline (orchestrator assessment + clarifying questions)
-- [ ] "Sufficient context" section for EVERY agent phase
-- [ ] Test question applied to context decisions
-- [ ] Clarifying questions after EVERY phase (paraphrase + 3-5 questions + confirmation, count depends on complexity)
-- [ ] User checkpoints after confirmation (continue/skip/back/stop)
-- [ ] No full YAML outputs passed (extract decisions)
-- [ ] Project-specific rules included
-- [ ] Existing patterns listed
-
-**Anti-Pattern Prevention:**
-- [ ] Force Task invocation (⚠️ CRITICAL section)
-- [ ] Context filtered (signal only, no noise)
-- [ ] Clarifying questions mandatory (prevent misunderstandings)
-- [ ] Flexible question count (3-5 depending on phase complexity)
-- [ ] User checkpoints after confirmation (prevent wasted phases)
-- [ ] Test question documented (for future maintainers)
-- [ ] Commands offered ONLY after confirmation (not before)
+- [ ] Phase 0 inline + clarifying questions
+- [ ] Sufficient context section for EVERY agent phase (test question applied)
+- [ ] Clarifying questions after EVERY phase (paraphrase + 3-5 questions + confirmation)
+- [ ] No full YAML outputs passed (extract decisions only)
+- [ ] Project-specific rules and existing patterns included
+- [ ] Force Task invocation (not describing)
+- [ ] Commands offered ONLY after user confirmation
 
 ### Decision Tree: How Many Phases?
 
@@ -608,46 +466,10 @@ Validation command (parallel checks):
 
 ---
 
-## Key Principles
-
-**Command Structure:** Standard sections (our convention), Phase 0 inline, user checkpoints, clarifying questions mandatory
-
-**Clarifying Questions (MANDATORY):** After EVERY phase - paraphrase + 3-5 questions (flexible, depends on complexity) + confirmation before commands
-
-**Sufficient Context:** Test question ("Can agent produce HIGH QUALITY?"), signal/noise filter, extract decisions (not full outputs)
-
-**Force Invocation:** "⚠️ CRITICAL" section prevents describing instead of invoking
-
-**Knowledge Capture (Always Last):** Final phase analyzes workflow for capturable patterns. Agent decides if anything is signal — if not, says so explicitly. Never auto-updates.
-
-**WHY Explanations:**
-- Phase 0 inline (WHY: avoids wasting agent)
-- Clarifying questions (WHY: prevents misunderstandings, ensures alignment)
-- Flexible question count (WHY: match complexity, quality over rigid count)
-- User checkpoints (WHY: prevents wasted phases)
-- Knowledge Capture last (WHY: structured analysis catches patterns ad-hoc questions miss)
-
 ---
 
-## Resources (Tier 3 - Philosophy)
+## Resources
 
-**Shared resources** (`@../resources/`) - Common across meta-skills:
-- `@../resources/signal-vs-noise-reference.md` - 3-question filter for deciding what to include in commands
-- `@../resources/why-over-how-reference.md` - Content quality philosophy (WHY > HOW, production context)
-- `@../resources/skill-structure-reference.md` - Standard structure and best practices (adaptable to command structure)
-
-**Use references for:**
-
-- Signal vs Noise → Filter what context to provide agents (sufficient, not excessive)
-- Why over How → Include rationale for command structure decisions (why phases, why checkpoints)
-- Structure → Consistent command organization (phase structure, section patterns)
-
-**Why included:**
-
-- Consistent philosophy across all meta skills (skills, agents, commands)
-- Decision framework for command content (what to include, what to skip)
-- Quality guidelines (sufficiency > brevity, WHY explanations mandatory)
-
----
-
-**Key Lesson:** Multi-phase commands need standard structure + sufficient context principle + clarifying questions (3-5 flexible) + forced invocation + knowledge capture (always last). Agents have isolated context - must provide exactly right information (test question). Clarifying questions after every phase prevent misunderstandings. Match question count to phase complexity. Knowledge Capture as final phase ensures patterns are not lost.
+- `@../resources/signal-vs-noise-reference.md` - 3-question filter for context decisions
+- `@../resources/why-over-how-reference.md` - WHY > HOW philosophy
+- `@../resources/skill-structure-reference.md` - Structure best practices

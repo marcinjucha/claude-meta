@@ -110,3 +110,60 @@ func testButtonTapSendsAction()
 ---
 
 **Remember:** 100 lines of project-specific content > 50 lines of generic patterns.
+
+---
+
+## Avoid AI-Known Content
+
+**Core principle:** If Claude already knows it, it's NOISE.
+
+**Self-check question:**
+> "Would Claude know this without documentation?"
+> - **YES** → It's noise, remove it (React hooks basics, standard design patterns)
+> - **NO** → It's signal, keep it (project-specific bugs, non-obvious decisions)
+
+**When filtering content:**
+- Generic knowledge → NOISE (remove)
+- Project-specific application → SIGNAL (keep)
+- Framework explanations → NOISE (remove)
+- Critical project bugs → SIGNAL (keep)
+- Standard syntax → NOISE (remove)
+- Non-obvious project patterns → SIGNAL (keep)
+
+---
+
+## Signal Must Be Real, Not Invented
+
+**ABSOLUTE RULE:**
+
+- NEVER invent metrics, numbers, or incidents to demonstrate signal vs noise
+- Production impact examples MUST be real (user-provided only)
+- Don't make up "before/after" statistics to show improvements
+
+**RED FLAGS - NEVER invent:**
+- Metrics/percentages without source ("30% faster", "50% reduction")
+- Production incidents without user verification
+- Team statistics or timing data
+- Anti-patterns without real examples
+
+**GREEN LIGHT - ONLY include:**
+- User-provided data and incidents
+- Real patterns from codebase
+- Placeholder when missing: `[User to provide: real metric]`
+
+**Quick test:** Can you verify with user/codebase? NO → Use placeholder or skip.
+
+**If no real data available:**
+- Ask user: "Do you have real metrics/incidents for this?"
+- Use placeholder: `[User to provide real example]`
+- Focus on the principle without fake examples
+
+---
+
+## Content Philosophy
+
+**Sufficient > Comprehensive:**
+- Focus on necessary signal, not exhaustive coverage
+- 600 lines of focused signal > 300 lines missing critical info
+- Include what's needed, skip what's known
+- Sufficient patterns > comprehensive documentation

@@ -295,7 +295,7 @@ cp .claude/skills/ai-skill-creator/skill-template.md .claude/skills/my-skill-nam
 # Edit: frontmatter, sections, verify <500 lines
 ```
 
-**Example skills:** data-access-patterns, ai-signal-vs-noise, ai-claude-md (see `.claude/skills/`)
+**Example skills:** data-access-patterns, ai-claude-md (see `.claude/skills/`)
 
 **Advanced patterns:** See `@resources/forked-execution.md` (context: fork), `@../resources/skill-ecosystem-reference.md` (dynamic injection, scripts)
 

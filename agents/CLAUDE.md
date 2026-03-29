@@ -8,13 +8,13 @@ Single meta-agent that orchestrates all artifact creation and maintenance. Unlik
 
 | Agent | Purpose | Model | Skills Loaded |
 |-------|---------|-------|---------------|
-| `ai-manager-agent` | Creates/maintains all Claude Code artifacts (agents, skills, commands, CLAUDE.md). Enforces thin-router architecture and signal-focused content. | opus | ai-agent-creator, ai-skill-creator, ai-skill-fine-tuning, ai-claude-md, ai-command-creation, ai-git-commit-patterns, ai-signal-vs-noise |
+| `ai-manager-agent` | Creates/maintains all Claude Code artifacts (agents, skills, commands, CLAUDE.md). Enforces thin-router architecture and signal-focused content. | opus | ai-agent-creator, ai-skill-creator, ai-skill-fine-tuning, ai-claude-md, ai-command-creation, ai-git-commit-patterns |
 
 ## Weird Parts / Key Patterns
 
 **Opus model required**: ai-manager-agent uses opus (not sonnet). **Why:** meta-operations require reasoning about artifact quality, signal vs noise filtering, and cross-artifact consistency — cheaper models produce more noise and miss subtle quality issues.
 
-**Loads all 7 skills**: Unlike domain agents (2-4 skills each), ai-manager-agent loads every meta-skill. **Why:** a single artifact operation often touches multiple concerns — creating a skill requires ai-signal-vs-noise filtering, ai-skill-creator templates, AND ai-claude-md knowledge for cross-references. Decision tree in system prompt routes to the right skill.
+**Loads all 6 skills**: Unlike domain agents (2-4 skills each), ai-manager-agent loads every meta-skill. **Why:** a single artifact operation often touches multiple concerns — creating a skill requires signal-vs-noise filtering (shared resource loaded by all skills), ai-skill-creator templates, AND ai-claude-md knowledge for cross-references. Decision tree in system prompt routes to the right skill.
 
 **Two hardcoded critical rules**: "FACT-BASED CONTENT ONLY" and "AVOID AI-KNOWN CONTENT" are in the agent system prompt directly (lines 19-52), not in skills. **Why:** these rules must apply BEFORE any skill loads — prevents generated noise from entering artifacts during the skill-loading decision phase.
 

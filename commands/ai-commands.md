@@ -20,8 +20,8 @@ Automatically detects intent from natural language and executes appropriate comm
 **AUDIT Mode:**
 ```
 0: Intent Detection + Scope          (orchestrator - inline + clarifying questions)
-1: Structure Analysis                (ai-manager-agent with ai-command-creation, ai-signal-vs-noise skills)
-2: Content Audit                     (ai-manager-agent with ai-signal-vs-noise skill)
+1: Structure Analysis                (ai-manager-agent with ai-command-creation skill)
+2: Content Audit                     (ai-manager-agent with signal-vs-noise shared resource)
 3: Recommendations                   (ai-manager-agent with ai-command-creation skill)
 4: Implementation                    (ai-manager-agent — applies approved fixes)
 ```
