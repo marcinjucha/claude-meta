@@ -1,5 +1,5 @@
 ---
-name: skill-fine-tuning
+name: ai-skill-fine-tuning
 description: Maintain and update existing Agent Skills. Use when: skill references outdated pattern or wrong file paths after refactoring, skill instructions cause agent confusion, production bug reveals missing documentation, or skill needs advanced features (context: fork, dynamic injection, tool restrictions, arguments).
 ---
 

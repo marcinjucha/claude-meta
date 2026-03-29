@@ -1,5 +1,5 @@
 ---
-name: agent-creator
+name: ai-agent-creator
 description: Create and evaluate custom subagents. Use when: creating a new agent with specific tool restrictions or isolation needs, deciding whether to use agent vs skill vs command, refactoring thick agents to thin routers, or adding hooks for validation.
 argument-hint: "[agent-name]"
 ---

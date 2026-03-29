@@ -11,67 +11,67 @@ Automatically detects intent from natural language and executes appropriate agen
 **CREATE Mode:**
 ```
 0: Intent Detection + Decision Framework    (orchestrator - inline + clarifying questions)
-1: Signal Extraction                         (claude-manager)
-2: Structure Design                          (claude-manager)
-3: File Creation                             (claude-manager)
-4: Verification                              (claude-manager)
+1: Signal Extraction                         (ai-manager-agent)
+2: Structure Design                          (ai-manager-agent)
+3: File Creation                             (ai-manager-agent)
+4: Verification                              (ai-manager-agent)
 ```
 
 **AUDIT Mode:**
 ```
 0: Intent Detection + Scope                  (orchestrator - inline + clarifying questions)
-1: Structure Compliance                      (claude-manager)
-2: Content Quality                           (claude-manager)
-3: Integration Check                         (claude-manager)
-4: Recommendations                           (claude-manager)
-5: Implementation                            (claude-manager - if approved)
+1: Structure Compliance                      (ai-manager-agent)
+2: Content Quality                           (ai-manager-agent)
+3: Integration Check                         (ai-manager-agent)
+4: Recommendations                           (ai-manager-agent)
+5: Implementation                            (ai-manager-agent - if approved)
 ```
 
 **MODIFY Mode:**
 ```
 0: Intent Detection + Change Scope           (orchestrator - inline + clarifying questions)
-1: Change Analysis                           (claude-manager)
-2: Implementation                            (claude-manager)
-3: Verification                              (claude-manager)
+1: Change Analysis                           (ai-manager-agent)
+2: Implementation                            (ai-manager-agent)
+3: Verification                              (ai-manager-agent)
 ```
 
 ---
 
 ## Orchestrator Instructions
 
-### ⚠️ CRITICAL: YOU MUST INVOKE claude-manager
+### ⚠️ CRITICAL: YOU MUST INVOKE ai-manager-agent
 
-**You are the orchestrator.** Your job is to **ACTUALLY INVOKE claude-manager using the Task tool**.
+**You are the orchestrator.** Your job is to **ACTUALLY INVOKE ai-manager-agent using the Task tool**.
 
 **DO NOT**:
-- ❌ Say "I will launch claude-manager"
-- ❌ Describe what claude-manager will do
+- ❌ Say "I will launch ai-manager-agent"
+- ❌ Describe what ai-manager-agent will do
 - ❌ Explain the phase without invoking
 - ❌ Try to create/audit/modify agents yourself
 
 **DO**:
-- ✅ Immediately invoke Task tool with claude-manager
-- ✅ Use subagent_type="claude-manager", description, prompt parameters
-- ✅ Wait for claude-manager completion
+- ✅ Immediately invoke Task tool with ai-manager-agent
+- ✅ Use subagent_type="ai-manager-agent", description, prompt parameters
+- ✅ Wait for ai-manager-agent completion
 - ✅ Show results to user
 
 **Example**:
 ```
 Phase 1/4: Signal Extraction
-Launching claude-manager...
+Launching ai-manager-agent...
 ```
-[IMMEDIATELY invoke Task tool NOW with subagent_type="claude-manager"]
+[IMMEDIATELY invoke Task tool NOW with subagent_type="ai-manager-agent"]
 
 ### Critical Rules
 
-1. **INVOKE with Task tool** - Every phase requires actual Task tool call to claude-manager
+1. **INVOKE with Task tool** - Every phase requires actual Task tool call to ai-manager-agent
 2. **Signal extraction** - Domain knowledge goes in skills, NOT agents (thin router principle)
 3. **User checkpoints** - Get approval after each phase (prevents wasted work)
 4. **Track phase** - Remember current position (user can skip/back)
 5. **Clarifying questions** - After EVERY phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
 6. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
-7. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
-8. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic agent patterns Claude already knows. Focus on project-specific tool restrictions, hooks, and agent design decisions with WHY context. Example: ❌ "Agents route tasks to specialized execution contexts" → ✅ "Read-only agent prevents accidental edits during code review (incident: deleted config file)"
+7. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
+8. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic agent patterns Claude already knows. Focus on project-specific tool restrictions, hooks, and agent design decisions with WHY context. Example: ❌ "Agents route tasks to specialized execution contexts" → ✅ "Read-only agent prevents accidental edits during code review (incident: deleted config file)"
 
 ### Clarifying Questions Pattern
 
@@ -201,9 +201,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/stop
 
 ### Phase 1: Signal Extraction
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are creating a new agent. Apply thin router architecture, tool restrictions design, and agent frontmatter patterns.
 
@@ -247,9 +247,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back
 
 ### Phase 2: Structure Design
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are designing agent structure. Apply thin router architecture and frontmatter design patterns.
 
@@ -282,9 +282,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back
 
 ### Phase 3: File Creation
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are creating agent file. Apply agent frontmatter format and system prompt patterns.
 
@@ -320,9 +320,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back
 
 ### Phase 4: Verification
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are verifying agent quality. Check thin router compliance, frontmatter validity, and system prompt quality.
 
@@ -375,9 +375,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/stop
 
 ### Phase 1: Structure Compliance
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are auditing agent structure compliance.
 
@@ -408,9 +408,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back
 
 ### Phase 2: Content Quality
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are auditing agent content quality. Check thin router principle and signal vs noise compliance.
 
@@ -445,9 +445,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back
 
 ### Phase 3: Integration Check
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are checking agent integration - skills existence, tools validity, cross-references.
 
@@ -470,9 +470,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back
 
 ### Phase 4: Recommendations
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are prioritizing audit recommendations by severity.
 
@@ -503,11 +503,11 @@ Apply clarifying questions pattern, then: "Ready to proceed with implementation?
 
 ### Phase 5: Implementation (If Approved)
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Only if user approved in Phase 4.**
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are implementing approved agent fixes.
 
@@ -551,9 +551,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/stop
 
 ### Phase 1: Change Analysis
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are analyzing agent modifications. Check thin router compliance and impact on related files.
 
@@ -589,9 +589,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back
 
 ### Phase 2: Implementation
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are implementing agent changes. Update frontmatter and system prompt.
 
@@ -623,9 +623,9 @@ Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back
 
 ### Phase 3: Verification
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
-**Prompt to claude-manager**:
+**Prompt to ai-manager-agent**:
 ```
 You are verifying agent changes. Check thin router compliance and reference integrity.
 

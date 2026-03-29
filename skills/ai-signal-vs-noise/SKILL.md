@@ -1,5 +1,5 @@
 ---
-name: signal-vs-noise
+name: ai-signal-vs-noise
 description: Filter content to keep only project-specific signal. Use when deciding what to include in CLAUDE.md, documentation, code comments, or tests. Core rule: if Claude already knows it, it's noise - only document project-specific decisions with WHY context.
 argument-hint: "[content-type]"
 ---

@@ -1,5 +1,5 @@
 ---
-description: "Universal task executor for non-technical tasks (presentations, planning, research, brainstorming) - Usage: /solve [task description]"
+description: "Universal task executor for non-technical tasks (presentations, planning, research, brainstorming) - Usage: /ai-solve [task description]"
 ---
 
 # Solve - Universal Task Executor (Non-Technical)
@@ -9,9 +9,9 @@ Executes non-technical tasks through 5 phases: Requirements, Solution Design, Im
 ## Usage
 
 ```bash
-/solve "Create quarterly roadmap presentation"
-/solve "Research market trends for product planning"
-/solve "Design team retrospective structure"
+/ai-solve "Create quarterly roadmap presentation"
+/ai-solve "Research market trends for product planning"
+/ai-solve "Design team retrospective structure"
 ```
 
 ## Phases

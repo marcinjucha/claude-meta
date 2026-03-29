@@ -11,8 +11,8 @@ Automatically detects intent from natural language and executes appropriate skil
 **CREATE Mode:**
 ```
 0: Intent Detection + Decision Framework    (orchestrator - inline + clarifying questions)
-1: Signal Extraction                         (claude-manager)
-2: Structure Design                          (claude-manager)
+1: Signal Extraction                         (ai-manager-agent)
+2: Structure Design                          (ai-manager-agent)
 3: File Creation                             (orchestrator - inline)
 4: Verification                              (orchestrator - inline)
 ```
@@ -20,16 +20,16 @@ Automatically detects intent from natural language and executes appropriate skil
 **AUDIT Mode:**
 ```
 0: Intent Detection + Scope                  (orchestrator - inline + clarifying questions)
-1: Structure Compliance                      (claude-manager)
-2: Content Quality Audit                     (claude-manager)
-3: Recommendations                           (claude-manager)
+1: Structure Compliance                      (ai-manager-agent)
+2: Content Quality Audit                     (ai-manager-agent)
+3: Recommendations                           (ai-manager-agent)
 4: Implementation                            (orchestrator - inline if approved)
 ```
 
 **MODIFY Mode:**
 ```
 0: Intent Detection + Change Scope           (orchestrator - inline + clarifying questions)
-1: Change Analysis                           (claude-manager)
+1: Change Analysis                           (ai-manager-agent)
 2: Implementation                            (orchestrator - inline)
 3: Verification                              (orchestrator - inline)
 ```
@@ -40,20 +40,20 @@ Automatically detects intent from natural language and executes appropriate skil
 
 **You are the orchestrator.** Invoke agents using the Task tool.
 
-Use Task tool with `subagent_type="claude-manager"`, description, prompt parameters. Wait for completion, show results to user.
+Use Task tool with `subagent_type="ai-manager-agent"`, description, prompt parameters. Wait for completion, show results to user.
 
-[IMMEDIATELY invoke Task tool with subagent_type="claude-manager" when phase requires agent]
+[IMMEDIATELY invoke Task tool with subagent_type="ai-manager-agent" when phase requires agent]
 
 ### Critical Rules
 
 1. **INVOKE with Task tool** - Every phase requires actual Task tool call (except Phase 0 and inline phases)
-2. **Sufficient context** - Each claude-manager invocation gets ONLY critical decisions (not full conversation history)
+2. **Sufficient context** - Each ai-manager-agent invocation gets ONLY critical decisions (not full conversation history)
 3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
 4. **User checkpoints** - Get approval after confirmation before proceeding
 5. **Track phase** - Remember current position and mode (CREATE/AUDIT/MODIFY)
 6. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
-7. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data. Placeholder when missing: `[User to provide: real metric/incident]`
-8. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic framework knowledge. Focus on project-specific patterns with WHY context. Example: ❌ "Repository pattern separates data access from business logic" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod)"
+7. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data. Placeholder when missing: `[User to provide: real metric/incident]`
+8. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic framework knowledge. Focus on project-specific patterns with WHY context. Example: ❌ "Repository pattern separates data access from business logic" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod)"
 9. **Tier 3 organization** - Detailed examples >50 lines → move to `resources/`. SKILL.md references via `@resources/filename.md`. ONE LEVEL DEEP (no nested `@resources/ → @resources/`).
 
 ---
@@ -172,7 +172,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 1: Signal Extraction
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -234,7 +234,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 2: Structure Design
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -403,7 +403,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 1: Structure Compliance
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -446,7 +446,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 2: Content Quality Audit
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -498,7 +498,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 3: Recommendations
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -608,7 +608,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 1: Change Analysis
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```

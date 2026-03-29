@@ -1,5 +1,5 @@
 ---
-name: git-commit-patterns
+name: ai-git-commit-patterns
 description: Write commit messages and organize commits before PR merge. Use when: writing a commit message (extracts ticket from branch, applies WHY > HOW, 250-500 char body), deciding commit separation (module boundaries, breaking changes), squashing WIP commits, or creating PR description.
 ---
 
@@ -279,7 +279,7 @@ git log --oneline develop..HEAD
 - `@../resources/signal-vs-noise-reference.md` - Signal vs Noise filter for commit messages (3-question test, what to include/exclude)
 - `@../resources/why-over-how-reference.md` - WHY over HOW philosophy (business context, technical rationale, bug context)
 
-**Skill-specific resources** (`@resources/`) - Unique to git-commit-patterns:
+**Skill-specific resources** (`@resources/`) - Unique to ai-git-commit-patterns:
 - `@resources/commit-message-examples.md` - Structure patterns (template vs natural prose, transformation examples)
 
 **Use resources for:** Signal vs Noise (3-question filter), Why over How (business context), transformation examples (template → natural prose)

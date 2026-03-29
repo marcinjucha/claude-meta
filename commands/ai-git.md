@@ -1,6 +1,6 @@
 ---
-name: manage-git
-description: Generate intelligent git commit messages from changes (staged, unstaged, or untracked) - Usage: /manage-git
+name: ai-git
+description: Generate intelligent git commit messages from changes (staged, unstaged, or untracked) - Usage: /ai-git
 ---
 
 # Manage Git - Intelligent Commit Message Generation
@@ -10,7 +10,7 @@ Generate high-quality conventional commit messages from git changes. Handles sta
 ## Usage
 
 ```bash
-/manage-git
+/ai-git
 ```
 
 **Prerequisites:**
@@ -64,7 +64,7 @@ Generate high-quality conventional commit messages from git changes. Handles sta
 
 ```
 0: Context Analysis       (orchestrator - inline, quick status check)
-1: Message Generation     (claude-manager with git-commit-patterns)
+1: Message Generation     (ai-manager-agent with ai-git-commit-patterns)
 2: Review & Confirmation  (orchestrator - inline, user checkpoint)
 3: Execute Commit         (orchestrator - inline, git commit)
 ```
@@ -73,7 +73,7 @@ Generate high-quality conventional commit messages from git changes. Handles sta
 
 ## Critical Rules
 
-1. **INVOKE Phase 1 with Task tool** - actually invoke claude-manager, don't describe what it will do
+1. **INVOKE Phase 1 with Task tool** - actually invoke ai-manager-agent, don't describe what it will do
 2. **Read entire modified files** - Agent needs file contents, not just diff
 3. **Phase 2 is only user checkpoint** - User accepts/edits/regenerates here
 4. **Abort if nothing changed** - Stop only if working tree is completely clean (no staged, unstaged, or untracked)
@@ -151,7 +151,7 @@ Proceed with staged only, or add more?
 
 ### Phase 1: Message Generation (Agent)
 
-**Agent:** claude-manager
+**Agent:** ai-manager-agent
 
 **Sufficient context for quality:**
 
@@ -333,7 +333,7 @@ Next steps:
 
 ## Sufficient Context Principle
 
-**For Phase 1 agent (claude-manager):**
+**For Phase 1 agent (ai-manager-agent):**
 
 **Provide:**
 - ✅ Git diff output (staged changes — after user selected what to stage)

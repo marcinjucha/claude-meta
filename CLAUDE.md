@@ -9,9 +9,9 @@ This repo stores **meta-level** Claude Code artifacts — tools for creating, au
 ## Structure
 
 ```
-agents/      → Single meta-agent (claude-manager) that orchestrates all artifact work
-commands/    → 8 slash commands: manage-* family + memory + solve + git
-skills/      → 7 meta-skills loaded by claude-manager (creator, auditor, fine-tuner patterns)
+agents/      → Single meta-agent (ai-manager-agent) that orchestrates all artifact work
+commands/    → 8 slash commands: ai-* family (skill, agent, commands, claude-md, git, extract-memory, curate-memory, solve)
+skills/      → 7 meta-skills loaded by ai-manager-agent (creator, auditor, fine-tuner patterns)
   resources/ → 4 shared reference files used across multiple skills via @../resources/
 docs/        → Official Claude Code documentation (agents-doc.md, skill-doc.md)
 statusline-command.sh → Status line script (model, cost, context %) — hardcoded macOS path
@@ -19,13 +19,13 @@ statusline-command.sh → Status line script (model, cost, context %) — hardco
 
 ## Weird Parts / Key Patterns
 
-**Self-referential system**: claude-manager (the only agent) uses meta-skills to build/maintain artifacts — including itself. When modifying claude-manager or its skills, changes affect the tool doing the work.
+**Self-referential system**: ai-manager-agent (the only agent) uses meta-skills to build/maintain artifacts — including itself. When modifying ai-manager-agent or its skills, changes affect the tool doing the work.
 
-**Single agent, 7 skills**: Unlike claude-dev (8 specialized agents), claude-meta has exactly one agent (`claude-manager`, opus model) that loads all 7 skills. **Why:** all meta-operations (create/audit/modify agents, skills, commands, CLAUDE.md) share the same quality principles (signal vs noise, WHY over HOW, no invented content), so one agent with skill-based routing is sufficient.
+**Single agent, 7 skills**: Unlike claude-dev (8 specialized agents), claude-meta has exactly one agent (`ai-manager-agent`, opus model) that loads all 7 skills. **Why:** all meta-operations (create/audit/modify agents, skills, commands, CLAUDE.md) share the same quality principles (signal vs noise, WHY over HOW, no invented content), so one agent with skill-based routing is sufficient.
 
-**Tri-modal command pattern**: All `manage-*` commands (skill, agent, claude-md, commands) share identical phase structure: Phase 0 detects intent (CREATE/AUDIT/MODIFY), then adaptive phases follow. **Why:** consistent UX — user always gets clarifying questions → agent work → verification, regardless of artifact type.
+**Tri-modal command pattern**: All `ai-*` artifact commands (ai-skill, ai-agent, ai-claude-md, ai-commands) share identical phase structure: Phase 0 detects intent (CREATE/AUDIT/MODIFY), then adaptive phases follow. **Why:** consistent UX — user always gets clarifying questions → agent work → verification, regardless of artifact type.
 
-**Two critical rules live in agent system prompt, not skills**: "NEVER INVENT CONTENT" and "AVOID AI-KNOWN CONTENT" are in `claude-manager.md` directly. **Why:** skills are lazily loaded — if these rules were only in skills, claude-manager could generate invented metrics before the skill enforcing the rule gets loaded.
+**Two critical rules live in agent system prompt, not skills**: "NEVER INVENT CONTENT" and "AVOID AI-KNOWN CONTENT" are in `ai-manager-agent.md` directly. **Why:** skills are lazily loaded — if these rules were only in skills, ai-manager-agent could generate invented metrics before the skill enforcing the rule gets loaded.
 
 **Shared resources at `skills/resources/`**: 4 reference files (signal-vs-noise, skill-ecosystem, skill-structure, why-over-how) shared across multiple skills via `@../resources/` paths. **Why:** avoids duplicating foundational reference content across 7 skills.
 
@@ -35,6 +35,6 @@ statusline-command.sh → Status line script (model, cost, context %) — hardco
 
 ## Cross-References
 
-- `agents/CLAUDE.md` — claude-manager frontmatter, skill loading, thin router pattern
+- `agents/CLAUDE.md` — ai-manager-agent frontmatter, skill loading, thin router pattern
 - `commands/CLAUDE.md` — command registry, tri-modal pattern, orchestration details
 - `skills/CLAUDE.md` — skill registry, shared resources, meta-skill relationships

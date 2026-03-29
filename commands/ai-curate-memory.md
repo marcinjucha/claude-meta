@@ -1,5 +1,5 @@
 ---
-description: "Curate memory — promote mature entries to most relevant CLAUDE.md files across project. Usage: /curate-memory"
+description: "Curate memory — promote mature entries to most relevant CLAUDE.md files across project. Usage: /ai-curate-memory"
 ---
 
 # Curate Memory
@@ -53,6 +53,12 @@ For each entry in memory, classify it AND assign a target file:
 4. **Create new** — entry fits a folder that lacks CLAUDE.md but should have one (flag for creation)
 5. **Fallback** — root `CLAUDE.md` if no specific match
 
+**COMPRESS in memory** if:
+- Completed feature section with implementation details now derivable from code (CSS values, RLS patterns, config, component props)
+- Section longer than 5 lines where only 1-2 decisions are non-obvious
+- Rule: keep only what code can't tell you — WHY decisions, production state, scoring formulas, deferred TODOs
+- Target: completed feature sections → 2-4 lines (status + non-obvious decisions only)
+
 **KEEP in memory** if:
 - Entry appeared only once — not yet established as universal
 - Entry is too specific to a single conversation or task
@@ -62,6 +68,8 @@ For each entry in memory, classify it AND assign a target file:
 - Entry is already documented in any CLAUDE.md (duplicate)
 - Entry is outdated or contradicted by newer entries or current code
 - Entry is no longer relevant (bug was fixed, feature was removed)
+- Entry is **code-derivable** — information readable from current source files (file structure, component props, CSS values, RLS policies, migration schemas). If `grep` or `Read` can answer it, memory doesn't need it.
+- **Fixed bugs** where the fix is in the codebase and the pattern is generic (not project-specific). Keep only bugs with non-obvious project-specific patterns (e.g., Zod nullable vs optional, TanStack Query silent failure).
 
 ### Step 3: Present proposed changes
 
@@ -78,11 +86,14 @@ Show the user a clear summary:
 - [folder/CLAUDE.md] — for entries: "[entry A]", "[entry B]"
   Reason: [why this folder needs its own CLAUDE.md]
 
+### Compress in memory
+- "[section title]" — [current lines] → [target lines]. Remove: [what's code-derivable]. Keep: [what's non-obvious]
+
 ### Keep in memory
 - "[entry title]" — [reason to keep]
 
 ### Remove from memory
-- "[entry title]" — [reason: duplicate/outdated/irrelevant]
+- "[entry title]" — [reason: duplicate/outdated/code-derivable/fixed bug]
 ```
 
 Then ask: **"Do you approve these changes? You can approve all, or specify which to skip."**
@@ -95,7 +106,7 @@ After user confirms, execute in this order:
 
 **Step 4a: Update/Create non-root CLAUDE.md files (PARALLEL)**
 
-For each non-root CLAUDE.md that has promoted entries, invoke claude-manager agent via Task tool **in parallel** (each agent modifies a different file — no conflicts):
+For each non-root CLAUDE.md that has promoted entries, invoke ai-manager-agent agent via Task tool **in parallel** (each agent modifies a different file — no conflicts):
 
 ```
 Per-file Task prompt:
@@ -110,7 +121,7 @@ Agent loads `claude-md` skill — do NOT duplicate formatting/structure rules he
 
 **Step 4b: Update root CLAUDE.md (SEQUENTIAL — after 4a completes)**
 
-Invoke claude-manager agent via Task tool for root `CLAUDE.md` with TWO tasks combined:
+Invoke ai-manager-agent agent via Task tool for root `CLAUDE.md` with TWO tasks combined:
 1. Add promoted entries targeted at root (same format as 4a)
 2. Add/update a `## Project CLAUDE.md Files` section at the end of root `CLAUDE.md`:
 
@@ -153,7 +164,7 @@ Print at the end:
 
 If no skill recommendations → skip this section entirely.
 
-**This step is recommendation-only.** No skill files are modified. User runs **`/manage-skill`** to act on recommendations.
+**This step is recommendation-only.** No skill files are modified. User runs **`/ai-skill`** to act on recommendations.
 
 ### Step 6: Print summary
 
@@ -167,17 +178,21 @@ Done.
   - ...
 - Created: [N] new CLAUDE.md files
 - Updated root index: Yes/No
-- Removed: [N] entries (duplicates/outdated)
+- Compressed: [N] sections (completed features, code-derivable details)
+- Removed: [N] entries (duplicates/outdated/code-derivable/fixed bugs)
 - Kept: [N] entries in memory
-- Skill recommendations: [N] (run /manage-skill to apply)
+- Skill recommendations: [N] (run /ai-skill to apply)
 ```
 
 ## Rules
 
-- Be conservative — when in doubt, KEEP in memory
-- NEVER modify skill files or command files inside `.claude/`. Exception: `.claude/CLAUDE.md` may be modified via claude-manager agent (same as other CLAUDE.md files)
+- Default to aggressive cleanup — memory should hold only what code can't tell you
+- For completed features: compress to 2-4 lines (status + non-obvious WHY decisions). Remove implementation details derivable from code.
+- For fixed bugs: remove unless the pattern is non-obvious and project-specific (e.g., Zod nullable gotcha, TanStack silent failure)
+- When in doubt about individual entries, KEEP — but when in doubt about verbose sections, COMPRESS
+- NEVER modify skill files or command files inside `.claude/`. Exception: `.claude/CLAUDE.md` may be modified via ai-manager-agent agent (same as other CLAUDE.md files)
 - Exclude `worktree-*` folders from discovery
-- All CLAUDE.md modifications delegated to claude-manager agent (via Task tool)
+- All CLAUDE.md modifications delegated to ai-manager-agent agent (via Task tool)
 - May create new CLAUDE.md files in folders where none exist (if justified and approved)
 - `memory.md` cleanup done inline (not delegated)
 - Preserve existing formatting and section structure in all CLAUDE.md files

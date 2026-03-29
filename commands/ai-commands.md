@@ -11,26 +11,26 @@ Automatically detects intent from natural language and executes appropriate comm
 **CREATE Mode:**
 ```
 0: Intent Detection + Complexity    (orchestrator - inline + clarifying questions)
-1: Requirements Gathering            (claude-manager with command-creation skill)
-2: Plan Creation                     (claude-manager with command-creation skill)
-3: File Creation                     (claude-manager — creates command file)
+1: Requirements Gathering            (ai-manager-agent with ai-command-creation skill)
+2: Plan Creation                     (ai-manager-agent with ai-command-creation skill)
+3: File Creation                     (ai-manager-agent — creates command file)
 4: Verification                      (orchestrator - inline + clarifying questions)
 ```
 
 **AUDIT Mode:**
 ```
 0: Intent Detection + Scope          (orchestrator - inline + clarifying questions)
-1: Structure Analysis                (claude-manager with command-creation, signal-vs-noise skills)
-2: Content Audit                     (claude-manager with signal-vs-noise skill)
-3: Recommendations                   (claude-manager with command-creation skill)
-4: Implementation                    (claude-manager — applies approved fixes)
+1: Structure Analysis                (ai-manager-agent with ai-command-creation, ai-signal-vs-noise skills)
+2: Content Audit                     (ai-manager-agent with ai-signal-vs-noise skill)
+3: Recommendations                   (ai-manager-agent with ai-command-creation skill)
+4: Implementation                    (ai-manager-agent — applies approved fixes)
 ```
 
 **MODIFY Mode (Dynamic):**
 ```
 0: Intent Detection + Change Scope   (orchestrator - inline + clarifying questions)
-1: Change Analysis                   (claude-manager with command-creation skill)
-2: Implementation                    (claude-manager — applies approved changes)
+1: Change Analysis                   (ai-manager-agent with ai-command-creation skill)
+2: Implementation                    (ai-manager-agent — applies approved changes)
 3: Verification                      (orchestrator - inline + clarifying questions)
 ```
 
@@ -43,33 +43,33 @@ Automatically detects intent from natural language and executes appropriate comm
 **You are the orchestrator.** Your job is to **ACTUALLY INVOKE AGENTS using the Task tool**.
 
 **DO NOT**:
-- ❌ Say "I will launch claude-manager"
+- ❌ Say "I will launch ai-manager-agent"
 - ❌ Describe what the agent will do
 - ❌ Explain the phase without invoking
 
 **DO**:
 - ✅ Immediately invoke Task tool with agent
-- ✅ Use subagent_type="claude-manager", description, prompt parameters
+- ✅ Use subagent_type="ai-manager-agent", description, prompt parameters
 - ✅ Wait for agent completion
 - ✅ Show results to user
 
 **Example**:
 ```
 Phase 1/4: Requirements Gathering
-Launching claude-manager...
+Launching ai-manager-agent...
 ```
-[IMMEDIATELY invoke Task tool NOW with subagent_type="claude-manager"]
+[IMMEDIATELY invoke Task tool NOW with subagent_type="ai-manager-agent"]
 
 ### Critical Rules
 
-1. **INVOKE with Task tool** - Every phase requires actual Task tool call (except Phase 0 and Verification which are inline). Implementation/File Creation phases MUST use claude-manager — never do file edits inline.
-2. **Sufficient context** - Each claude-manager invocation gets ONLY critical decisions (not full conversation history)
+1. **INVOKE with Task tool** - Every phase requires actual Task tool call (except Phase 0 and Verification which are inline). Implementation/File Creation phases MUST use ai-manager-agent — never do file edits inline.
+2. **Sufficient context** - Each ai-manager-agent invocation gets ONLY critical decisions (not full conversation history)
 3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
 4. **User checkpoints** - Get approval after confirmation before proceeding
 5. **Track phase** - Remember current position and mode (CREATE/AUDIT/MODIFY)
 6. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
-7. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
-8. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic multi-phase patterns Claude already knows. Focus on project-specific command design, sufficient context principles, and orchestration decisions with WHY context. Example: ❌ "Commands orchestrate multiple agents across phases" → ✅ "Extract decisions only (50 lines), not full conversation (500 lines) - agents have isolated context"
+7. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
+8. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic multi-phase patterns Claude already knows. Focus on project-specific command design, sufficient context principles, and orchestration decisions with WHY context. Example: ❌ "Commands orchestrate multiple agents across phases" → ✅ "Extract decisions only (50 lines), not full conversation (500 lines) - agents have isolated context"
 
 ---
 
@@ -194,7 +194,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 1: Requirements Gathering
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -228,7 +228,7 @@ DO NOT include:
 - Standard phase patterns (AI knows workflow structure)
 - Obvious agent usage
 
-Use your command-creation skill for structure patterns.
+Use your ai-command-creation skill for structure patterns.
 
 Output format:
 - Phase breakdown (Phase 0, 1, 2, ...)
@@ -260,7 +260,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 2: Plan Creation
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -275,7 +275,7 @@ REQUIREMENTS (from Phase 1):
 USER ADJUSTMENTS (from Phase 1 clarifying questions):
 [Extract: any corrections user made during confirmation]
 
-Task: Create complete command plan following command-creation skill structure.
+Task: Create complete command plan following ai-command-creation skill structure.
 
 Plan must include:
 1. Frontmatter (description with usage)
@@ -314,8 +314,8 @@ Ready to proceed? (continue/skip/back/stop)
 
 ---
 
-### Phase 3: File Creation (claude-manager)
-**Agent**: claude-manager
+### Phase 3: File Creation (ai-manager-agent)
+**Agent**: ai-manager-agent
 
 **Prompt to agent:**
 ```
@@ -333,7 +333,7 @@ USER ADJUSTMENTS (from Phase 2 clarifying questions):
 Task: Create the command file using the approved plan.
 
 1. Write file at the specified path
-2. Apply command-creation skill structure
+2. Apply ai-command-creation skill structure
 3. Include all required sections from the plan
 4. Verify frontmatter format is correct
 
@@ -429,7 +429,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 1: Structure Analysis
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -495,7 +495,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 2: Content Audit (WHY over HOW, Signal vs Noise)
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -560,7 +560,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 3: Recommendations
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -611,8 +611,8 @@ Ready to proceed with implementation? (continue/skip/back/stop)
 
 ---
 
-### Phase 4: Implementation (claude-manager)
-**Agent**: claude-manager
+### Phase 4: Implementation (ai-manager-agent)
+**Agent**: ai-manager-agent
 
 **Only if user approved in Phase 3.**
 
@@ -707,7 +707,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 1: Change Analysis
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 **Prompt to agent**:
 ```
@@ -758,8 +758,8 @@ Ready to proceed? (continue/skip/back/stop)
 
 ---
 
-### Phase 2: Implementation (claude-manager)
-**Agent**: claude-manager
+### Phase 2: Implementation (ai-manager-agent)
+**Agent**: ai-manager-agent
 
 **Prompt to agent:**
 ```

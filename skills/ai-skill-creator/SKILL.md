@@ -1,5 +1,5 @@
 ---
-name: skill-creator
+name: ai-skill-creator
 description: Create, evaluate, and refactor Agent Skills. Use when: creating a new skill from docs or codebase patterns, deciding whether to create skill vs command vs agent, converting existing documentation to skill format, or reviewing skill quality against best practices.
 ---
 
@@ -291,11 +291,11 @@ Before finalizing skill, verify:
 
 ```bash
 mkdir -p .claude/skills/my-skill-name
-cp .claude/skills/skill-creator/skill-template.md .claude/skills/my-skill-name/SKILL.md
+cp .claude/skills/ai-skill-creator/skill-template.md .claude/skills/my-skill-name/SKILL.md
 # Edit: frontmatter, sections, verify <500 lines
 ```
 
-**Example skills:** data-access-patterns, signal-vs-noise, claude-md (see `.claude/skills/`)
+**Example skills:** data-access-patterns, ai-signal-vs-noise, ai-claude-md (see `.claude/skills/`)
 
 **Advanced patterns:** See `@resources/forked-execution.md` (context: fork), `@../resources/skill-ecosystem-reference.md` (dynamic injection, scripts)
 

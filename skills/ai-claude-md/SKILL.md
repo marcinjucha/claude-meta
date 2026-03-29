@@ -1,5 +1,5 @@
 ---
-name: claude-md
+name: ai-claude-md
 description: Create and maintain CLAUDE.md files with project-specific signal. Use when: creating new CLAUDE.md for a feature, updating outdated patterns after refactoring, removing obsolete sections, or deciding what belongs in CLAUDE.md vs a skill.
 argument-hint: ""
 ---
@@ -398,9 +398,9 @@ Before committing CLAUDE.md:
 
 ## Integration with Other Skills
 
-- **signal-vs-noise** - Filter content (project-specific only)
-- **skill-fine-tuning** - Update skills when patterns change
-- **skill-creator** - Create new skills for reusable patterns
+- **ai-signal-vs-noise** - Filter content (project-specific only)
+- **ai-skill-fine-tuning** - Update skills when patterns change
+- **ai-skill-creator** - Create new skills for reusable patterns
 
 ---
 

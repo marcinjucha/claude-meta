@@ -1,5 +1,5 @@
 ---
-description: "Extract learnings from current session and save to memory.md. Usage: /extract-memory"
+description: "Extract learnings from current session and save to memory.md. Usage: /ai-extract-memory"
 ---
 
 # Extract Memory
@@ -55,10 +55,10 @@ Append under the matching section:
 - Do NOT duplicate entries already in memory.md
 - If session had zero signal (only commands, no discussion) → write nothing, tell user "No signal found in this session"
 - Keep total file under 200 lines
-- If unsure whether something is signal → INCLUDE it (duplicates handled by /curate-memory)
+- If unsure whether something is signal → INCLUDE it (duplicates handled by /ai-curate-memory)
 - Convert relative dates to absolute dates (e.g., "yesterday" → "2026-03-17")
 - After editing, confirm what was added in a short summary
 - **After editing, count lines in memory.md and report status:**
   - Below 150 lines → no warning
-  - 150-179 lines → warn: "memory.md at {N}/200 lines — consider running /curate-memory soon"
-  - 180+ lines → alert: "memory.md at {N}/200 lines — run /curate-memory to free space"
+  - 150-179 lines → warn: "memory.md at {N}/200 lines — consider running /ai-curate-memory soon"
+  - 180+ lines → alert: "memory.md at {N}/200 lines — run /ai-curate-memory to free space"

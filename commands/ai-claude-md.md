@@ -4,7 +4,7 @@ description: "Intelligent CLAUDE.md management - create, audit, or modify docume
 
 # Manage CLAUDE.md Command
 
-Automatically detects intent (CREATE/AUDIT/MODIFY) from natural language and executes appropriate task using claude-manager agent.
+Automatically detects intent (CREATE/AUDIT/MODIFY) from natural language and executes appropriate task using ai-manager-agent agent.
 
 **Pattern**: Minimal signal-focused documentation with WHY context and folder-specific knowledge.
 
@@ -12,15 +12,15 @@ Automatically detects intent (CREATE/AUDIT/MODIFY) from natural language and exe
 
 ## Agent Invocation
 
-When you see "**Agent**: claude-manager" in a phase:
-- Use Task tool with `subagent_type="claude-manager"` and the exact prompt provided
+When you see "**Agent**: ai-manager-agent" in a phase:
+- Use Task tool with `subagent_type="ai-manager-agent"` and the exact prompt provided
 - If typing more than 3 sentences about what agent will do → invoke the agent instead
 
 ---
 
 ## Critical Rules
 
-1. **Invoke agents** - All phases except Phase 0 require claude-manager Task tool invocation
+1. **Invoke agents** - All phases except Phase 0 require ai-manager-agent Task tool invocation
 2. **Sufficient context** - Provide extracted decisions (50 lines), not full conversation (500 lines)
 3. **Clarifying questions MANDATORY** - After Phase 0 AND after EVERY agent phase (paraphrase + 3-5 questions scaled to complexity + confirmation)
 4. **User checkpoints** - Offer commands ONLY after user confirms understanding
@@ -29,10 +29,10 @@ When you see "**Agent**: claude-manager" in a phase:
 7. **Current state focus** - CLAUDE.md shows HOW IT WORKS NOW
 8. **Cross-reference integrity** - All references valid, bidirectional when appropriate
 9. **CLAUDE.md vs Skill** - Folder-specific → CLAUDE.md; Project-wide → Skill
-10. **NEVER INVENT CONTENT** - claude-manager must NEVER make up metrics, production incidents, patterns, or numbers. ONLY use user-provided data.
+10. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, patterns, or numbers. ONLY use user-provided data.
 11. **Minimal core** - Only Overview + Weird Parts required; everything else optional
-12. **AVOID AI-KNOWN CONTENT** - claude-manager must NOT include generic architectural explanations or framework basics. Focus on folder-specific weird behaviors, critical bugs, non-obvious patterns with WHY context. Example: ❌ "This module handles data persistence using repository pattern" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod, fixed in commit abc123)"
-13. **Orchestrator is thin router** - Phase 0 (intent detection) is inline. ALL other phases go through claude-manager. Orchestrator never writes CLAUDE.md content directly.
+12. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic architectural explanations or framework basics. Focus on folder-specific weird behaviors, critical bugs, non-obvious patterns with WHY context. Example: ❌ "This module handles data persistence using repository pattern" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod, fixed in commit abc123)"
+13. **Orchestrator is thin router** - Phase 0 (intent detection) is inline. ALL other phases go through ai-manager-agent. Orchestrator never writes CLAUDE.md content directly.
 
 ---
 
@@ -123,10 +123,10 @@ Does this match what you want?
 
 **5 Phases:**
 1. Phase 0: Decision Framework (inline)
-2. Phase 1: Signal Extraction (claude-manager)
-3. Phase 2: Structure Design (claude-manager)
-4. Phase 3: File Creation (claude-manager)
-5. Phase 4: Verification (claude-manager)
+2. Phase 1: Signal Extraction (ai-manager-agent)
+3. Phase 2: Structure Design (ai-manager-agent)
+4. Phase 3: File Creation (ai-manager-agent)
+5. Phase 4: Verification (ai-manager-agent)
 
 ---
 
@@ -139,14 +139,14 @@ Does this match what you want?
 ```
 Is this knowledge folder-specific?
 ├─ YES → Continue to Step 2 (CLAUDE.md)
-└─ NO → Suggest /manage-skill instead
+└─ NO → Suggest /ai-skill instead
 
     Pattern used by 2+ unrelated modules?
-    ├─ YES → Suggest /manage-skill
+    ├─ YES → Suggest /ai-skill
     └─ NO → Continue to Step 2
 
     Pattern reusable across project?
-    ├─ YES → Suggest /manage-skill
+    ├─ YES → Suggest /ai-skill
     └─ NO → Continue to Step 2
 ```
 
@@ -155,7 +155,7 @@ Is this knowledge folder-specific?
 **If should be skill:**
 ```
 ⚠️ DETECTED: Project-wide knowledge, not folder-specific
-💡 SUGGESTION: Consider /manage-skill instead
+💡 SUGGESTION: Consider /ai-skill instead
 
 Reasons:
 - [Why project-wide]
@@ -205,7 +205,7 @@ Commands: continue | skip | back | stop
 
 ### CREATE Phase 1: Signal Extraction
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -285,7 +285,7 @@ Commands: continue | skip | back | stop
 
 ### CREATE Phase 2: Structure Design
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -344,7 +344,7 @@ Commands: continue | skip | back | stop
 
 ### CREATE Phase 3: File Creation
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -401,7 +401,7 @@ Commands: continue | skip | back | stop
 
 ### CREATE Phase 4: Verification
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -463,11 +463,11 @@ Commands: stop | back
 
 **6 Phases:**
 1. Phase 0: Scope Selection (inline)
-2. Phase 1: Structure Compliance (claude-manager)
-3. Phase 2: Content Quality Audit (claude-manager)
-4. Phase 3: Cross-Reference Audit (claude-manager)
-5. Phase 4: Recommendations (claude-manager)
-6. Phase 5: Implementation (claude-manager, if approved)
+2. Phase 1: Structure Compliance (ai-manager-agent)
+3. Phase 2: Content Quality Audit (ai-manager-agent)
+4. Phase 3: Cross-Reference Audit (ai-manager-agent)
+5. Phase 4: Recommendations (ai-manager-agent)
+6. Phase 5: Implementation (ai-manager-agent, if approved)
 
 ---
 
@@ -511,7 +511,7 @@ Commands: continue | skip | back | stop
 
 ### AUDIT Phase 1: Structure Compliance
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -570,7 +570,7 @@ Commands: continue | skip | back | stop
 
 ### AUDIT Phase 2: Content Quality Audit
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -633,7 +633,7 @@ Clarifying questions (3-5, scale with complexity):
 1. Noise: Remove all generic content flagged, or keep some with better WHY?
 2. WHY missing: Research production context for [pattern], or flag for manual addition?
 3. Historical timeline: Update existing content, or preserve history?
-[4. Skill misplacement: Extract [pattern] to skill now with /manage-skill, or just flag?]
+[4. Skill misplacement: Extract [pattern] to skill now with /ai-skill, or just flag?]
 [5. Next phase: Proceed to cross-reference audit, or fix content first?]
 
 Does this match exactly what you want? If not, what should I adjust?
@@ -651,7 +651,7 @@ Commands: continue | skip | back | stop
 
 ### AUDIT Phase 3: Cross-Reference Audit
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -706,7 +706,7 @@ Commands: continue | skip | back | stop
 
 ### AUDIT Phase 4: Recommendations
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -733,13 +733,13 @@ Output:
 [List with file, violation, fix]
 
 **Skill Extraction Opportunities:**
-[Content/patterns that should be skills → Suggest /manage-skill with name]
+[Content/patterns that should be skills → Suggest /ai-skill with name]
 
 **Migration Plan:**
 Phase 1: Fix critical ([N] files)
 Phase 2: Fix moderate ([N] files)
 Phase 3: Fix minor ([N] files)
-Phase 4: Extract patterns to skills ([N] patterns with /manage-skill)
+Phase 4: Extract patterns to skills ([N] patterns with /ai-skill)
 ```
 
 #### After Agent Completes - MANDATORY Clarifying Questions
@@ -750,7 +750,7 @@ Let me verify my understanding of recommendations:
 
 Clarifying questions (3-5, scale with complexity):
 1. Priority: Fix [priority 1] violations immediately, or all at once?
-2. Skill extraction: Use /manage-skill to extract [patterns] now, or defer?
+2. Skill extraction: Use /ai-skill to extract [patterns] now, or defer?
 3. Migration plan: Does phased approach match your timeline, or adjust?
 [4. Scope: Handle skill extraction as part of this audit, or separate?]
 [5. Next phase: Proceed to implementation, or review recommendations?]
@@ -770,7 +770,7 @@ Commands: continue | skip | back | stop
 
 ### AUDIT Phase 5: Implementation
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -807,7 +807,7 @@ Apply fixes in priority order:
 - Polish
 
 **Skill Extraction:**
-- If user approved, flag patterns for /manage-skill (do not create skills directly)
+- If user approved, flag patterns for /ai-skill (do not create skills directly)
 - Update CLAUDE.md files to note planned skill extraction
 
 Track progress per file:
@@ -850,9 +850,9 @@ Commands: stop | back
 
 **4 Phases:**
 1. Phase 0: Change Scope (inline)
-2. Phase 1: Change Analysis (claude-manager)
-3. Phase 2: Implementation (claude-manager)
-4. Phase 3: Verification (claude-manager)
+2. Phase 1: Change Analysis (ai-manager-agent)
+3. Phase 2: Implementation (ai-manager-agent)
+4. Phase 3: Verification (ai-manager-agent)
 
 ---
 
@@ -897,7 +897,7 @@ Commands: continue | skip | back | stop
 
 ### MODIFY Phase 1: Change Analysis
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -969,7 +969,7 @@ Commands: continue | skip | back | stop
 
 ### MODIFY Phase 2: Implementation
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 
@@ -1027,7 +1027,7 @@ Commands: continue | skip | back | stop
 
 ### MODIFY Phase 3: Verification
 
-**Agent**: claude-manager
+**Agent**: ai-manager-agent
 
 #### Prompt to Agent
 

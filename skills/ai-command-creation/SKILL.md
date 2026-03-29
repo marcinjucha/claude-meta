@@ -1,5 +1,5 @@
 ---
-name: command-creation
+name: ai-command-creation
 description: Create or refactor multi-phase commands (multi-agent orchestration). Provides structure pattern, sufficient context principle (agents have isolated context), clarifying questions pattern (3-5 flexible), and section templates. Critical for agents receiving exactly the right information.
 argument-hint: "[command-name]"
 ---
@@ -134,7 +134,7 @@ NOT needed:
 [Test question, signal/noise examples]
 
 ### Final Phase: Knowledge Capture
-**Agent**: claude-manager (or project-specific agent)
+**Agent**: ai-manager-agent (or project-specific agent)
 [Post-workflow analysis: identify patterns worth capturing]
 ```
 
@@ -446,9 +446,9 @@ Output: [format]
 
 ```markdown
 ### Phase N: Knowledge Capture
-**Agent**: claude-manager (default — swap for project-specific agent if domain expertise needed, or run inline if command is simple)
+**Agent**: ai-manager-agent (default — swap for project-specific agent if domain expertise needed, or run inline if command is simple)
 
-**Skills to load**: signal-vs-noise (always — for conciseness filtering), others at agent's discretion based on what was discovered
+**Skills to load**: ai-signal-vs-noise (always — for conciseness filtering), others at agent's discretion based on what was discovered
 
 **Sufficient context for quality**:
 ```yaml
@@ -493,8 +493,8 @@ Output: Proposals with Target / Type / Content / WHY signal
 - **Always last** — never followed by another phase
 - **Always executes** — but agent may conclude "nothing worth capturing" (must say so explicitly)
 - **Never auto-updates** — proposals only, user decides
-- **Default agent: claude-manager** — swap for project-specific agent when domain expertise helps quality of pattern identification
-- **signal-vs-noise skill always loaded** — ensures proposals pass 3-question filter
+- **Default agent: ai-manager-agent** — swap for project-specific agent when domain expertise helps quality of pattern identification
+- **ai-signal-vs-noise skill always loaded** — ensures proposals pass 3-question filter
 
 ---
 
@@ -551,7 +551,7 @@ Output: Proposals with Target / Type / Content / WHY signal
 - [ ] Each phase includes clarifying questions in "After agent" subsection
 - [ ] Commands section (continue, skip, back, status, stop)
 - [ ] "Sufficient Context Principle" at end
-- [ ] Knowledge Capture as final phase (claude-manager default, signal-vs-noise skill loaded)
+- [ ] Knowledge Capture as final phase (ai-manager-agent default, ai-signal-vs-noise skill loaded)
 
 **Content Quality:**
 - [ ] Phase 0 inline (orchestrator assessment + clarifying questions)
