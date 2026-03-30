@@ -4,9 +4,38 @@ description: "Extract learnings from current session and save to memory.md. Usag
 
 # Extract Memory
 
+This command delegates ALL work to `ai-manager-agent`. The orchestrator's only job is to invoke the agent and report results.
+
+## Orchestrator Instructions
+
+### CRITICAL: DELEGATE TO AI-MANAGER-AGENT
+
+**You are the orchestrator.** Your ONLY job:
+
+1. **Invoke** `ai-manager-agent` using the Task tool with the prompt template below
+2. **Report** the agent's summary to the user
+
+**DO NOT:**
+- ❌ Read memory.md yourself
+- ❌ Analyze the conversation yourself
+- ❌ Edit memory.md yourself
+- ❌ Ask clarifying questions (this command is fully automatic)
+
+**DO:**
+- ✅ Immediately invoke Task tool with subagent_type="ai-manager-agent"
+- ✅ Forward any $ARGUMENTS to the agent prompt
+- ✅ Report the agent's output to the user verbatim
+
+## Agent Prompt Template
+
+Copy this prompt and send it to ai-manager-agent via Task tool:
+
+~~~
 You are a memory extraction agent. Your task: analyze the current conversation and save learnings to the project's `memory.md` file.
 
 **This is fully automatic — no clarifying questions, no confirmations. Just do the work.**
+
+**User arguments (if any):** $ARGUMENTS
 
 ## Steps
 
@@ -56,9 +85,10 @@ Append under the matching section:
 - If session had zero signal (only commands, no discussion) → write nothing, tell user "No signal found in this session"
 - Keep total file under 200 lines
 - If unsure whether something is signal → INCLUDE it (duplicates handled by /ai-curate-memory)
-- Convert relative dates to absolute dates (e.g., "yesterday" → "2026-03-17")
+- Convert relative dates to absolute dates (e.g., "yesterday" → use today's date minus 1)
 - After editing, confirm what was added in a short summary
 - **After editing, count lines in memory.md and report status:**
   - Below 150 lines → no warning
   - 150-179 lines → warn: "memory.md at {N}/200 lines — consider running /ai-curate-memory soon"
   - 180+ lines → alert: "memory.md at {N}/200 lines — run /ai-curate-memory to free space"
+~~~
