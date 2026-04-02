@@ -33,6 +33,61 @@ When you see "**Agent**: ai-manager-agent" in a phase:
 11. **Minimal core** - Only Overview + Weird Parts required; everything else optional
 12. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic architectural explanations or framework basics. Focus on folder-specific weird behaviors, critical bugs, non-obvious patterns with WHY context. Example: ❌ "This module handles data persistence using repository pattern" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod, fixed in commit abc123)"
 13. **Orchestrator is thin router** - Phase 0 (intent detection) is inline. ALL other phases go through ai-manager-agent. Orchestrator never writes CLAUDE.md content directly.
+14. **Socratic Self-Reflection Gate** - Before EVERY agent invocation, conduct self-reflection (2-5 essence-probing questions scaled by complexity). Include key insights in the agent prompt. See Socratic Self-Reflection Gate section below.
+
+### Socratic Self-Reflection Gate (MANDATORY)
+
+Before EVERY agent invocation, the orchestrator MUST pause and conduct self-reflection. This is NOT optional — it directly impacts output quality by catching bad assumptions, identifying edge cases, and deepening understanding before delegating.
+
+**Socratic Questioning — probe essence, not surface:**
+
+Questions must challenge assumptions and cut to what truly matters — not check boxes. Four Socratic moves:
+1. **Question assumptions** — "I assumed X. Is that actually true?"
+2. **Probe the essence** — "What MUST this CLAUDE.md capture to be valuable?"
+3. **Expose contradictions** — "My approach does X, but the requirement says Y."
+4. **Consider consequences** — "If this breaks, what's the blast radius?"
+
+Surface questions (avoid): "Is the context sufficient?" / "What pattern should I use?"
+Socratic questions (use): "What would the agent misunderstand?" / "What constraint makes the obvious approach fail?"
+
+**Complexity-based depth (orchestrator decides based on task):**
+
+| Depth | When | Questions | Passes |
+|-------|------|-----------|--------|
+| Quick | Routine/structured: ai-manager-agent for file creation, structure verification | 2-3 | Single |
+| Deep | Novel/uncertain: ai-manager-agent for signal extraction (what belongs in CLAUDE.md vs skill?), content design | 4-5 | Single |
+| Deep + Iteration | Highly complex: content quality audit (signal vs noise across CLAUDE.md files), cross-file consistency check | 5+ | Answer then ask follow-ups from answers then answer again |
+
+**Complexity signals for this command's agents:**
+- **Quick:** ai-manager-agent for file creation, structure verification
+- **Deep:** ai-manager-agent for signal extraction (what belongs in CLAUDE.md vs skill?), content design
+- **Deep + Iteration:** content quality audit (signal vs noise across CLAUDE.md files), cross-file consistency check
+
+**Format:**
+
+```
+* Insight -----------------------------------------------
+**Self-reflection before ai-manager-agent:**
+
+Q: [Question about the task/approach/edge cases]
+A: [Answer based on codebase knowledge and context]
+
+Q: [Question about alternatives/risks]
+A: [Answer with reasoning]
+
+[Deep + Iteration only:]
+Q (follow-up from above): [Question arising from previous answers]
+A: [Refined answer]
+
+**Key insights for agent:**
+- [Insight 1 that shapes the agent prompt]
+- [Insight 2]
+-------------------------------------------------
+```
+
+**"Key insights for agent" MUST be included in the agent prompt.** These are the distilled conclusions from self-reflection that give the agent better context than it would have without reflection.
+
+**WHY this matters:** Without self-reflection, the orchestrator acts as a mechanical router — passing context without understanding it. Self-reflection forces the orchestrator to think about what could go wrong, what the agent needs to know, and what the best approach is. This catches signal-vs-noise misclassifications, missing WHY context, and CLAUDE.md-vs-skill boundary errors BEFORE they become problems downstream.
 
 ---
 
@@ -207,6 +262,12 @@ Commands: continue | skip | back | stop
 
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Deep — what belongs in CLAUDE.md vs skill?):**
+
+Orchestrator reflects on: Is this content truly folder-specific or could it be project-wide (skill)? What would a developer need to know about this module that Claude wouldn't know? Are there non-obvious behaviors that caused real bugs?
+
+Include key insights in the agent prompt as additional context.
+
 #### Prompt to Agent
 
 ```
@@ -256,6 +317,12 @@ Output format:
 **Cross-References Needed:** [list] OR "None found"
 **Noise Cut:** [what was excluded and why]
 **Project-Wide Patterns Flagged:** [patterns that should be skills] OR "None detected"
+
+SELF-REFLECTION INSTRUCTION:
+Before extracting signal, ask yourself 2-3 questions about the best approach.
+Answer them based on the module's code and existing CLAUDE.md files. Document your reasoning.
+Focus on essence: what MUST be documented for this folder, what assumption about signal vs noise could be wrong, what would a developer hit without this doc.
+If complexity is high, iterate: ask follow-up questions based on your answers.
 ```
 
 #### After Agent Completes - MANDATORY Clarifying Questions
@@ -286,6 +353,12 @@ Commands: continue | skip | back | stop
 ### CREATE Phase 2: Structure Design
 
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Deep — content organization decisions):**
+
+Orchestrator reflects on: Which optional sections are truly needed vs adding noise? Is the content allocation between sections logical? Are cross-references pointing to the right targets?
+
+Include key insights in the agent prompt as additional context.
 
 #### Prompt to Agent
 
@@ -346,6 +419,12 @@ Commands: continue | skip | back | stop
 
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Quick — mechanical file creation from approved structure):**
+
+Orchestrator reflects on: Does the approved structure have any gaps? Is the file path correct?
+
+Include key insights in the agent prompt as additional context.
+
 #### Prompt to Agent
 
 ```
@@ -402,6 +481,12 @@ Commands: continue | skip | back | stop
 ### CREATE Phase 4: Verification
 
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Quick — structured verification):**
+
+Orchestrator reflects on: What are the most common CLAUDE.md quality issues? Is there generic content that slipped through signal extraction?
+
+Include key insights in the agent prompt as additional context.
 
 #### Prompt to Agent
 
@@ -513,6 +598,12 @@ Commands: continue | skip | back | stop
 
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Quick — structured checklist):**
+
+Orchestrator reflects on: Which CLAUDE.md files are most likely to have missing required sections? Are there files that might be too large and need splitting?
+
+Include key insights in the agent prompt as additional context.
+
 #### Prompt to Agent
 
 ```
@@ -571,6 +662,12 @@ Commands: continue | skip | back | stop
 ### AUDIT Phase 2: Content Quality Audit
 
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Deep + Iteration — signal vs noise across CLAUDE.md files):**
+
+Orchestrator reflects on: What content looks like signal but might be noise (generic architecture explanations)? Are there patterns duplicated across multiple CLAUDE.md files that should be skills? Is WHY context genuinely present or just formulaic?
+
+Include key insights in the agent prompt as additional context.
 
 #### Prompt to Agent
 
@@ -653,6 +750,12 @@ Commands: continue | skip | back | stop
 
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Quick — reference integrity check):**
+
+Orchestrator reflects on: What file moves or refactors might have broken references? Are there missing bidirectional cross-references?
+
+Include key insights in the agent prompt as additional context.
+
 #### Prompt to Agent
 
 ```
@@ -707,6 +810,12 @@ Commands: continue | skip | back | stop
 ### AUDIT Phase 4: Recommendations
 
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Deep — prioritizing across multiple files):**
+
+Orchestrator reflects on: What is the right fix order to minimize cascading changes? Are recommendations consistent across files? Should some content be extracted to skills first?
+
+Include key insights in the agent prompt as additional context.
 
 #### Prompt to Agent
 
@@ -771,6 +880,12 @@ Commands: continue | skip | back | stop
 ### AUDIT Phase 5: Implementation
 
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Quick — mechanical fix application):**
+
+Orchestrator reflects on: Are all approved fixes compatible? Could applying one fix break another file's cross-references?
+
+Include key insights in the agent prompt as additional context.
 
 #### Prompt to Agent
 
@@ -899,6 +1014,12 @@ Commands: continue | skip | back | stop
 
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Deep — analyzing CLAUDE.md change impact):**
+
+Orchestrator reflects on: Could these changes move content that should stay folder-specific to a skill (or vice versa)? Will modifications affect cross-references in other CLAUDE.md files? Is the change actually needed or is the existing content still accurate?
+
+Include key insights in the agent prompt as additional context.
+
 #### Prompt to Agent
 
 ```
@@ -971,6 +1092,12 @@ Commands: continue | skip | back | stop
 
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Quick — mechanical implementation from approved plan):**
+
+Orchestrator reflects on: Does the approved plan cover all affected sections? Are bidirectional cross-references being updated?
+
+Include key insights in the agent prompt as additional context.
+
 #### Prompt to Agent
 
 ```
@@ -1028,6 +1155,12 @@ Commands: continue | skip | back | stop
 ### MODIFY Phase 3: Verification
 
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Quick — structured verification of changes):**
+
+Orchestrator reflects on: Were the changes applied correctly? Did any new generic content slip in? Are all cross-references still valid?
+
+Include key insights in the agent prompt as additional context.
 
 #### Prompt to Agent
 

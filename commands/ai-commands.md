@@ -67,9 +67,64 @@ Launching ai-manager-agent...
 3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
 4. **User checkpoints** - Get approval after confirmation before proceeding
 5. **Track phase** - Remember current position and mode (CREATE/AUDIT/MODIFY)
-6. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
-7. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
-8. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic multi-phase patterns Claude already knows. Focus on project-specific command design, sufficient context principles, and orchestration decisions with WHY context. Example: ❌ "Commands orchestrate multiple agents across phases" → ✅ "Extract decisions only (50 lines), not full conversation (500 lines) - agents have isolated context"
+6. **Socratic Self-Reflection Gate** - Before EVERY agent invocation, conduct self-reflection (2-5 essence-probing questions scaled by complexity). Include key insights in the agent prompt. See Socratic Self-Reflection Gate section below.
+7. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
+8. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
+9. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic multi-phase patterns Claude already knows. Focus on project-specific command design, sufficient context principles, and orchestration decisions with WHY context. Example: ❌ "Commands orchestrate multiple agents across phases" → ✅ "Extract decisions only (50 lines), not full conversation (500 lines) - agents have isolated context"
+
+### Socratic Self-Reflection Gate (MANDATORY)
+
+Before EVERY agent invocation, the orchestrator MUST pause and conduct self-reflection. This is NOT optional — it directly impacts output quality by catching bad assumptions, identifying edge cases, and deepening understanding before delegating.
+
+**Socratic Questioning — probe essence, not surface:**
+
+Questions must challenge assumptions and cut to what truly matters — not check boxes. Four Socratic moves:
+1. **Question assumptions** — "I assumed X. Is that actually true?"
+2. **Probe the essence** — "What MUST this command do correctly to be valuable?"
+3. **Expose contradictions** — "My approach does X, but the requirement says Y."
+4. **Consider consequences** — "If this breaks, what's the blast radius?"
+
+Surface questions (avoid): "Is the context sufficient?" / "What pattern should I use?"
+Socratic questions (use): "What would the agent misunderstand?" / "What constraint makes the obvious approach fail?"
+
+**Complexity-based depth (orchestrator decides based on task):**
+
+| Depth | When | Questions | Passes |
+|-------|------|-----------|--------|
+| Quick | Routine/structured: ai-manager-agent for file creation, structure analysis (checklist-driven) | 2-3 | Single |
+| Deep | Novel/uncertain: ai-manager-agent for requirements gathering (what phases does this command need?), plan creation (sufficient context design) | 4-5 | Single |
+| Deep + Iteration | Highly complex: content audit (signal vs noise in existing commands), recommendations (cross-command consistency) | 5+ | Answer then ask follow-ups from answers then answer again |
+
+**Complexity signals for this command's agents:**
+- **Quick:** ai-manager-agent for file creation, structure analysis (checklist-driven)
+- **Deep:** ai-manager-agent for requirements gathering (what phases does this command need?), plan creation (sufficient context design)
+- **Deep + Iteration:** content audit (signal vs noise in existing commands), recommendations (cross-command consistency)
+
+**Format:**
+
+```
+* Insight -----------------------------------------------
+**Self-reflection before ai-manager-agent:**
+
+Q: [Question about the task/approach/edge cases]
+A: [Answer based on codebase knowledge and context]
+
+Q: [Question about alternatives/risks]
+A: [Answer with reasoning]
+
+[Deep + Iteration only:]
+Q (follow-up from above): [Question arising from previous answers]
+A: [Refined answer]
+
+**Key insights for agent:**
+- [Insight 1 that shapes the agent prompt]
+- [Insight 2]
+-------------------------------------------------
+```
+
+**"Key insights for agent" MUST be included in the agent prompt.** These are the distilled conclusions from self-reflection that give the agent better context than it would have without reflection.
+
+**WHY this matters:** Without self-reflection, the orchestrator acts as a mechanical router — passing context without understanding it. Self-reflection forces the orchestrator to think about what could go wrong, what the agent needs to know, and what the best approach is. This catches insufficient context, missing phase designs, and structural gaps BEFORE they become problems in the generated command.
 
 ---
 
@@ -196,6 +251,12 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 1: Requirements Gathering
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Deep — first analysis of what phases this command needs):**
+
+Orchestrator reflects on: What is the core workflow this command orchestrates? What agents are actually needed vs assumed? Is the complexity assessment from Phase 0 correct, or should it be adjusted?
+
+Include key insights in the agent prompt as additional context.
+
 **Prompt to agent**:
 ```
 MODE: CREATE command
@@ -235,6 +296,12 @@ Output format:
 - Agent assignments per phase
 - Skills per agent
 - Context flow between phases
+
+SELF-REFLECTION INSTRUCTION:
+Before gathering requirements, ask yourself 2-3 questions about the best approach.
+Answer them based on the command's purpose and existing command patterns. Document your reasoning.
+Focus on essence: what MUST this command orchestrate, what phase could be unnecessary, what context flow could break.
+If complexity is high, iterate: ask follow-up questions based on your answers.
 ```
 
 **After agent**:
@@ -261,6 +328,12 @@ Ready to proceed? (continue/skip/back/stop)
 
 ### Phase 2: Plan Creation
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Deep — sufficient context design for each phase):**
+
+Orchestrator reflects on: Does each phase have enough context for agents to produce high-quality output? Are there context dependencies between phases that could cause information loss? Is the command structure following the standard template or deviating for good reason?
+
+Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -290,6 +363,12 @@ Apply Signal vs Noise: No generic orchestration, only project-specific command d
 Apply command structure template and sufficient context patterns.
 
 Output: Complete command plan (markdown structure)
+
+SELF-REFLECTION INSTRUCTION:
+Before creating the plan, ask yourself 2-3 questions about the best approach.
+Answer them based on the requirements and command structure patterns. Document your reasoning.
+Focus on essence: what MUST each phase's sufficient context include, what would make the orchestrator fail to invoke agents correctly.
+If complexity is high, iterate: ask follow-up questions based on your answers.
 ```
 
 **After agent**:
@@ -316,6 +395,12 @@ Ready to proceed? (continue/skip/back/stop)
 
 ### Phase 3: File Creation (ai-manager-agent)
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Quick — mechanical file creation from approved plan):**
+
+Orchestrator reflects on: Does the approved plan have any structural gaps? Is the file path correct?
+
+Include key insights in the agent prompt as additional context.
 
 **Prompt to agent:**
 ```
@@ -431,6 +516,12 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 1: Structure Analysis
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Quick — structured checklist analysis):**
+
+Orchestrator reflects on: Which commands are most likely to have structure issues? Are there common missing sections I should flag?
+
+Include key insights in the agent prompt as additional context.
+
 **Prompt to agent**:
 ```
 MODE: AUDIT commands (structure compliance)
@@ -497,6 +588,12 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 2: Content Audit (WHY over HOW, Signal vs Noise)
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Deep + Iteration — signal vs noise across existing commands):**
+
+Orchestrator reflects on: What content in these commands looks like signal but might be noise? Are there invented metrics or generic explanations masquerading as project-specific knowledge? Could domain knowledge be hiding in agent prompts?
+
+Include key insights in the agent prompt as additional context.
+
 **Prompt to agent**:
 ```
 MODE: AUDIT commands (content quality)
@@ -562,6 +659,12 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 3: Recommendations
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Deep — cross-command consistency):**
+
+Orchestrator reflects on: Are recommendations consistent across commands? Could fixing one command break another's cross-references? What is the right priority order to minimize cascading changes?
+
+Include key insights in the agent prompt as additional context.
+
 **Prompt to agent**:
 ```
 MODE: AUDIT recommendations
@@ -615,6 +718,12 @@ Ready to proceed with implementation? (continue/skip/back/stop)
 **Agent**: ai-manager-agent
 
 **Only if user approved in Phase 3.**
+
+**Socratic Self-Reflection Gate (Quick — mechanical fix application):**
+
+Orchestrator reflects on: Are all approved fixes compatible? Could applying one fix invalidate another recommendation?
+
+Include key insights in the agent prompt as additional context.
 
 **Prompt to agent:**
 ```
@@ -709,6 +818,12 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 1: Change Analysis
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Deep — analyzing impact of command changes):**
+
+Orchestrator reflects on: Could these changes break the command's phase flow? Will modifications affect how agents receive context? Is the change scope actually what the user needs, or should it be broader/narrower?
+
+Include key insights in the agent prompt as additional context.
+
 **Prompt to agent**:
 ```
 MODE: MODIFY command
@@ -760,6 +875,12 @@ Ready to proceed? (continue/skip/back/stop)
 
 ### Phase 2: Implementation (ai-manager-agent)
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Quick — mechanical implementation from approved plan):**
+
+Orchestrator reflects on: Does the approved plan cover all sections that need changes? Are there implicit dependencies between sections?
+
+Include key insights in the agent prompt as additional context.
 
 **Prompt to agent:**
 ```

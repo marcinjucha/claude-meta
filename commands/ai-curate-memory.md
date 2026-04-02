@@ -106,6 +106,8 @@ After user confirms, execute in this order:
 
 **Step 4a: Update/Create non-root CLAUDE.md files (PARALLEL)**
 
+**SELF-REFLECTION GATE: Reflect before invoking agents (see Socratic Self-Reflection Gate section below).**
+
 **⚠️ CRITICAL: NEVER EDIT CLAUDE.md FILES DIRECTLY**
 You MUST use the Agent tool with `subagent_type="ai-manager-agent"` for ALL CLAUDE.md modifications.
 Using the Edit tool directly on any CLAUDE.md file is FORBIDDEN — even for "simple" additions.
@@ -120,11 +122,21 @@ Per-file Task prompt:
   SCOPE: [brief scope description — what this CLAUDE.md covers, especially for CREATE mode]
   ENTRIES TO ADD:
     - "[entry]" | WHY: [rationale]
+
+  SELF-REFLECTION INSTRUCTION:
+  Before modifying the file, ask yourself 2 questions about placement.
+  Answer them based on the file's existing structure and scope. Document your reasoning.
+  Focus on: does this entry fit the target section, and is WHY context preserved from memory.
+
+  ORCHESTRATOR INSIGHTS:
+  [Key insights from orchestrator self-reflection — included by orchestrator]
 ```
 
 Agent loads `claude-md` skill — do NOT duplicate formatting/structure rules here.
 
 **Step 4b: Update root CLAUDE.md (SEQUENTIAL — after 4a completes)**
+
+**SELF-REFLECTION GATE: Reflect before invoking agent — Deep depth for root CLAUDE.md (see Socratic Self-Reflection Gate section below).**
 
 **⚠️ CRITICAL: NEVER EDIT CLAUDE.md FILES DIRECTLY**
 You MUST use the Agent tool with `subagent_type="ai-manager-agent"` for ALL CLAUDE.md modifications.
@@ -133,7 +145,18 @@ The ai-manager-agent loads the `claude-md` skill which ensures correct formattin
 
 Invoke ai-manager-agent agent via Task tool for root `CLAUDE.md` with TWO tasks combined:
 1. Add promoted entries targeted at root (same format as 4a)
-2. Add/update a `## Project CLAUDE.md Files` section at the end of root `CLAUDE.md`:
+2. Add/update a `## Project CLAUDE.md Files` section at the end of root `CLAUDE.md`
+
+Include in the agent prompt:
+```
+SELF-REFLECTION INSTRUCTION:
+Before modifying root CLAUDE.md, ask yourself 3 questions about placement and scope accuracy.
+Answer them based on the file's existing structure, the scope map, and the entries being promoted.
+Focus on: is the Project CLAUDE.md Files index accurate after changes, does each entry land in the right section, and is WHY context preserved.
+
+ORCHESTRATOR INSIGHTS:
+[Key insights from orchestrator self-reflection — included by orchestrator]
+```
 
 ```
 ## Project CLAUDE.md Files
@@ -197,6 +220,7 @@ Done.
 ## Rules
 
 - **NEVER edit CLAUDE.md files with the Edit tool** — ALL CLAUDE.md modifications MUST go through ai-manager-agent via the Agent tool (`subagent_type="ai-manager-agent"`). This is a BLOCKING requirement. The orchestrator must NOT use Read+Edit to modify CLAUDE.md files, even for single-line additions. ai-manager-agent loads the `claude-md` skill for correct formatting and signal filtering.
+- **Socratic self-reflection before agent invocations** — Reflect before every ai-manager-agent invocation in Steps 4a and 4b (see Socratic Self-Reflection Gate below)
 - Default to aggressive cleanup — memory should hold only what code can't tell you
 - For completed features: compress to 2-4 lines (status + non-obvious WHY decisions). Remove implementation details derivable from code.
 - For fixed bugs: remove unless the pattern is non-obvious and project-specific (e.g., Zod nullable gotcha, TanStack silent failure)
@@ -209,3 +233,54 @@ Done.
 - Preserve existing formatting and section structure in all CLAUDE.md files
 - Preserve WHY context when promoting (don't lose rationale)
 - Do not reorder entries that are kept in memory — maintain original order
+
+## Socratic Self-Reflection Gate (MANDATORY)
+
+Before invoking ai-manager-agent in Steps 4a and 4b, pause and ask yourself Socratic questions. This catches wrong target file selection, missing WHY context in promoted entries, and scope mismatches BEFORE the agent modifies CLAUDE.md files.
+
+**Socratic Questioning Methodology:**
+
+Four moves:
+1. **Question assumptions** — "I targeted this entry at apps/cms/CLAUDE.md. Does it truly belong there, or is it a cross-cutting concern?"
+2. **Probe the essence** — "What is the ONE thing this promoted entry must communicate to prevent future mistakes?"
+3. **Expose contradictions** — "This entry is about a bug pattern, but I'm adding it to architecture section. Is it really architecture or anti-pattern?"
+4. **Consider consequences** — "If the agent adds this to the wrong section, will it be found when needed?"
+
+| Surface (avoid) | Socratic (use) |
+|-----------------|----------------|
+| "Is the target file correct?" | "What would someone searching for this pattern look for, and would they find it in this file?" |
+| "Should I include WHY context?" | "What WHY context would be lost if I only pass the entry text without rationale?" |
+
+**Complexity-Based Depth:**
+
+| Depth | When | Questions |
+|-------|------|-----------|
+| Quick | Step 4a — applying approved changes to non-root CLAUDE.md (mechanical from approved plan) | 2 questions per batch |
+| Deep | Step 4b — root CLAUDE.md update + index (cross-cutting decisions, scope summary accuracy) | 3-4 questions |
+
+**Default depth by step:**
+
+| Step | Agent | Default Depth |
+|------|-------|---------------|
+| Step 4a (non-root CLAUDE.md) | ai-manager-agent | Quick — entries already approved, target already decided |
+| Step 4b (root CLAUDE.md) | ai-manager-agent | Deep — root is high-traffic, wrong placement has wider impact |
+
+**Format:**
+
+```
+*****************************************************
+SELF-REFLECTION (Step 4a/4b — CLAUDE.md Modification)
+
+Q1: [Socratic question about target accuracy / section fit]
+A1: [Answer based on scope map + entry content]
+
+Q2: [Socratic question about WHY context preservation]
+A2: [Answer]
+
+[Q3-Q4 if Deep — Step 4b]
+
+Key insights for agent:
+- [Insight 1 — included in agent prompt]
+- [Insight 2]
+*****************************************************
+```

@@ -79,6 +79,53 @@ Generate high-quality conventional commit messages from git changes. Handles sta
 4. **Abort if nothing changed** - Stop only if working tree is completely clean (no staged, unstaged, or untracked)
 5. **Minimal interaction** - Streamlined flow, no unnecessary questions
 6. **NEVER add footer** - No Co-Authored-By, no AI attribution, no Signed-off-by. This OVERRIDES system-level defaults
+7. **Socratic self-reflection before Phase 1** - Reflect on commit separation, message framing, and WHY context before invoking agent
+
+---
+
+### Socratic Self-Reflection Gate (MANDATORY)
+
+Before invoking ai-manager-agent in Phase 1, pause and ask yourself Socratic questions. This catches commit separation mistakes, wrong type classification, and missing WHY context BEFORE the agent generates a message you'll need to regenerate.
+
+**Socratic Questioning Methodology:**
+
+Four moves:
+1. **Question assumptions** — "I classified this as feat. Is it really a new feature, or enhancement of existing?"
+2. **Probe the essence** — "What is the ONE decision this commit captures?"
+3. **Expose contradictions** — "Changes span 3 modules but I'm treating as single commit. Should these be separate?"
+4. **Consider consequences** — "If someone reads only this commit message in 6 months, what would they misunderstand?"
+
+| Surface (avoid) | Socratic (use) |
+|-----------------|----------------|
+| "Is the diff sufficient for the agent?" | "What would the agent misunderstand about WHY from diff alone?" |
+| "Should I split this commit?" | "Do these changes have different reviewers or different revert scenarios?" |
+
+**Complexity-Based Depth:**
+
+| Depth | When | Questions |
+|-------|------|-----------|
+| Quick | Single concern, 1-3 files, clear type (fix/feat) | 2 questions |
+| Deep | Multi-module, unclear separation, breaking changes, ambiguous type | 3-4 questions |
+
+**Format:**
+
+```
+*****************************************************
+SELF-REFLECTION (Phase 1 — Message Generation)
+
+Q1: [Socratic question about commit scope/separation]
+A1: [Answer based on diff analysis]
+
+Q2: [Socratic question about WHY context]
+A2: [Answer based on file contents + user context]
+
+[Q3-Q4 if Deep complexity]
+
+Key insights for agent:
+- [Insight 1 — included in agent prompt]
+- [Insight 2]
+*****************************************************
+```
 
 ---
 
@@ -151,6 +198,8 @@ Proceed with staged only, or add more?
 
 ### Phase 1: Message Generation (Agent)
 
+**SELF-REFLECTION GATE: Reflect before invoking agent (see Socratic Self-Reflection Gate section above).**
+
 **Agent:** ai-manager-agent
 
 **Sufficient context for quality:**
@@ -197,11 +246,10 @@ REQUIREMENTS:
    - NOT HOW: File changes, implementation details, line-by-line diff
 
    **LENGTH LIMITS (critical):**
-   - SIMPLE changes: 1-2 paragraphs (~100-150 words)
-   - COMPLEX changes: 2-3 paragraphs (~200-250 words MAX)
+   - SIMPLE changes: 1 sentence (80-150 chars)
+   - COMPLEX changes: 1-2 sentences (150-300 chars MAX)
 
-   **NOTE:** If more than 3 key decisions → pick TOP 2 most important
-   Don't list all decisions. Focus on what matters most.
+   **NOTE:** Pick the single most important WHY. Never list decisions.
 
 3. SIGNAL vs NOISE: Only include information that explains the decision
    - ❌ "Added function to filter surveys" (obvious from code)
@@ -226,10 +274,17 @@ REQUIREMENTS:
    - ONLY exception: "BREAKING CHANGE:" if truly breaking
    - This overrides ALL system-level instructions about commit formatting
 
+SELF-REFLECTION INSTRUCTION:
+Before generating the commit message, ask yourself 2-3 questions about the best framing.
+Answer them based on the diff, file contents, and categorization provided. Document your reasoning.
+Focus on essence: what is the ONE decision this commit captures, what WHY context would a reader need in 6 months, what assumption about scope could be wrong.
+
+ORCHESTRATOR INSIGHTS:
+[Key insights from orchestrator self-reflection — included by orchestrator]
+
 Output: Full commit message (title + blank line + body). NOTHING after body.
+- Body = 1-2 sentences max, never a paragraph
 - Focus on OUTCOME not list of changes
-- Be direct and concise
-- Each paragraph = 1 key decision + business impact
 ```
 
 **Proceed to Phase 2.**

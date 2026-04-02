@@ -51,10 +51,65 @@ Use Task tool with `subagent_type="ai-manager-agent"`, description, prompt param
 3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
 4. **User checkpoints** - Get approval after confirmation before proceeding
 5. **Track phase** - Remember current position and mode (CREATE/AUDIT/MODIFY)
-6. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
-7. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data. Placeholder when missing: `[User to provide: real metric/incident]`
-8. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic framework knowledge. Focus on project-specific patterns with WHY context. Example: ❌ "Repository pattern separates data access from business logic" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod)"
-9. **Tier 3 organization** - Detailed examples >50 lines → move to `resources/`. SKILL.md references via `@resources/filename.md`. ONE LEVEL DEEP (no nested `@resources/ → @resources/`).
+6. **Socratic Self-Reflection Gate** - Before EVERY agent invocation, conduct self-reflection (2-5 essence-probing questions scaled by complexity). Include key insights in the agent prompt. See Socratic Self-Reflection Gate section below.
+7. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
+8. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data. Placeholder when missing: `[User to provide: real metric/incident]`
+9. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic framework knowledge. Focus on project-specific patterns with WHY context. Example: ❌ "Repository pattern separates data access from business logic" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod)"
+10. **Tier 3 organization** - Detailed examples >50 lines → move to `resources/`. SKILL.md references via `@resources/filename.md`. ONE LEVEL DEEP (no nested `@resources/ → @resources/`).
+
+### Socratic Self-Reflection Gate (MANDATORY)
+
+Before EVERY agent invocation, the orchestrator MUST pause and conduct self-reflection. This is NOT optional — it directly impacts output quality by catching bad assumptions, identifying edge cases, and deepening understanding before delegating.
+
+**Socratic Questioning — probe essence, not surface:**
+
+Questions must challenge assumptions and cut to what truly matters — not check boxes. Four Socratic moves:
+1. **Question assumptions** — "I assumed X. Is that actually true?"
+2. **Probe the essence** — "What MUST this skill capture to be valuable?"
+3. **Expose contradictions** — "My approach does X, but the requirement says Y."
+4. **Consider consequences** — "If this breaks, what's the blast radius?"
+
+Surface questions (avoid): "Is the context sufficient?" / "What pattern should I use?"
+Socratic questions (use): "What would the agent misunderstand?" / "What constraint makes the obvious approach fail?"
+
+**Complexity-based depth (orchestrator decides based on task):**
+
+| Depth | When | Questions | Passes |
+|-------|------|-----------|--------|
+| Quick | Routine/structured: ai-manager-agent for file creation, structure compliance | 2-3 | Single |
+| Deep | Novel/uncertain: ai-manager-agent for signal extraction (what's project-specific vs generic?), structure design (Tier 2 vs Tier 3 decisions) | 4-5 | Single |
+| Deep + Iteration | Highly complex: content quality audit (filtering noise from skills), recommendations (skill boundaries and overlap) | 5+ | Answer then ask follow-ups from answers then answer again |
+
+**Complexity signals for this command's agents:**
+- **Quick:** ai-manager-agent for file creation, structure compliance
+- **Deep:** ai-manager-agent for signal extraction (what's project-specific vs generic?), structure design (Tier 2 vs Tier 3 decisions)
+- **Deep + Iteration:** content quality audit (filtering noise from skills), recommendations (skill boundaries and overlap)
+
+**Format:**
+
+```
+* Insight -----------------------------------------------
+**Self-reflection before ai-manager-agent:**
+
+Q: [Question about the task/approach/edge cases]
+A: [Answer based on codebase knowledge and context]
+
+Q: [Question about alternatives/risks]
+A: [Answer with reasoning]
+
+[Deep + Iteration only:]
+Q (follow-up from above): [Question arising from previous answers]
+A: [Refined answer]
+
+**Key insights for agent:**
+- [Insight 1 that shapes the agent prompt]
+- [Insight 2]
+-------------------------------------------------
+```
+
+**"Key insights for agent" MUST be included in the agent prompt.** These are the distilled conclusions from self-reflection that give the agent better context than it would have without reflection.
+
+**WHY this matters:** Without self-reflection, the orchestrator acts as a mechanical router — passing context without understanding it. Self-reflection forces the orchestrator to think about what could go wrong, what the agent needs to know, and what the best approach is. This catches Tier 2/3 misclassifications, missing WHY context, and skill boundary errors BEFORE they become problems downstream.
 
 ---
 
@@ -174,6 +229,12 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 1: Signal Extraction
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Deep — what's project-specific vs generic?):**
+
+Orchestrator reflects on: Is this content truly project-specific or could Claude infer it from framework documentation? What patterns would actually prevent bugs vs just adding noise? Are there anti-patterns from production that must be documented?
+
+Include key insights in the agent prompt as additional context.
+
 **Prompt to agent**:
 ```
 MODE: CREATE skill - Signal extraction
@@ -211,6 +272,12 @@ Output:
 **Detailed Examples (resources/):** [list examples >50 lines]
 **Scripts (scripts/):** [list utility scripts]
 **Noise Cut:** [what was excluded and why]
+
+SELF-REFLECTION INSTRUCTION:
+Before extracting signal, ask yourself 2-3 questions about the best approach.
+Answer them based on the source material and existing skills in the codebase. Document your reasoning.
+Focus on essence: what MUST this skill capture that no existing skill covers, what assumption about project-specificity could be wrong, what would break if this pattern is missing.
+If complexity is high, iterate: ask follow-up questions based on your answers.
 ```
 
 ```
@@ -235,6 +302,12 @@ Ready to proceed? (continue/skip/back/stop)
 
 ### Phase 2: Structure Design
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Deep — Tier 2 vs Tier 3 and section organization):**
+
+Orchestrator reflects on: Should detailed examples stay in SKILL.md (interconnected context) or move to resources/ (self-contained)? Is the skill scope too broad (should be split) or too narrow (should be merged)? Are the frontmatter description keywords sufficient for agent lazy-loading discovery?
+
+Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -405,6 +478,12 @@ Ready to proceed? (continue/skip/back/stop)
 ### Phase 1: Structure Compliance
 **Agent**: ai-manager-agent
 
+**Socratic Self-Reflection Gate (Quick — structured checklist):**
+
+Orchestrator reflects on: Which skills are most likely to have structure issues? Are there orphaned resource files or missing frontmatter fields?
+
+Include key insights in the agent prompt as additional context.
+
 **Prompt to agent**:
 ```
 MODE: AUDIT skills (structure compliance)
@@ -447,6 +526,12 @@ Ready to proceed? (continue/skip/back/stop)
 
 ### Phase 2: Content Quality Audit
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Deep + Iteration — filtering noise from skills):**
+
+Orchestrator reflects on: What content in these skills looks like signal but might be generic knowledge Claude already has? Are there invented metrics or anti-patterns without real production incidents? Is WHY context genuinely present or just formulaic? Are skill boundaries correct (overlap between skills)?
+
+Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -499,6 +584,12 @@ Ready to proceed? (continue/skip/back/stop)
 
 ### Phase 3: Recommendations
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Deep — skill boundaries and overlap):**
+
+Orchestrator reflects on: Are recommendations consistent across skills? Could fixing one skill require updating agents that reference it? What is the right priority order to minimize cascading changes? Should any skills be merged or split?
+
+Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -609,6 +700,12 @@ Ready to proceed? (continue/skip/back/stop)
 
 ### Phase 1: Change Analysis
 **Agent**: ai-manager-agent
+
+**Socratic Self-Reflection Gate (Deep — analyzing skill change impact):**
+
+Orchestrator reflects on: Could these changes affect agents that load this skill? Will modifications shift the Tier 2/3 balance? Is the change actually needed or is the existing content still accurate? Could this change introduce noise?
+
+Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```

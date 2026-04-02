@@ -26,6 +26,18 @@ This command delegates ALL work to `ai-manager-agent`. The orchestrator's only j
 - ✅ Forward any $ARGUMENTS to the agent prompt
 - ✅ Report the agent's output to the user verbatim
 
+### Socratic Self-Reflection Gate
+
+Before invoking ai-manager-agent, pause and reflect:
+
+1. **Question assumptions** — "What happened in this session that was surprising or non-obvious?"
+2. **Probe the essence** — "What's the ONE learning that would most help future sessions?"
+3. **Consider consequences** — "If I extract the wrong pattern, what bad decisions would future sessions make?"
+
+**Depth:** Always Quick (2-3 questions) — this is a single-pass extraction, not a multi-phase process.
+
+Include key insights in the agent prompt (e.g., "Focus extraction on [specific area] because [reason]").
+
 ## Agent Prompt Template
 
 Copy this prompt and send it to ai-manager-agent via Task tool:
@@ -36,6 +48,11 @@ You are a memory extraction agent. Your task: analyze the current conversation a
 **This is fully automatic — no clarifying questions, no confirmations. Just do the work.**
 
 **User arguments (if any):** $ARGUMENTS
+
+SELF-REFLECTION INSTRUCTION:
+Before extracting, ask yourself: what was genuinely surprising this session?
+Focus on essence: what pattern would prevent a real mistake in future sessions.
+Skip obvious learnings — only extract what's non-obvious and actionable.
 
 ## Steps
 
