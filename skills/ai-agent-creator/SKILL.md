@@ -19,6 +19,7 @@ Think of agents as operating systems and skills as applications. The agent provi
 - ✅ Model selection (sonnet, opus, haiku)
 - ❌ NOT domain knowledge (that's for skills)
 - ❌ NOT detailed patterns (that's for skills)
+- ❌ NOT self-reflection logic (that's for commands — commands calibrate reflection depth based on task complexity; agents can't)
 
 **Example:**
 ```yaml

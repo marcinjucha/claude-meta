@@ -52,6 +52,9 @@ Brief explanation (1-2 sentences).
 ### Clarifying Questions Pattern (MANDATORY)
 [Template with 3-5 flexible questions, guidance on count]
 
+### Self-Reflection Gate (MANDATORY)
+[Complexity-based depth table, format template, agent prompt instruction]
+
 ### Phase Execution Pattern
 [Markdown template for presenting phases with clarifying questions]
 
@@ -87,6 +90,7 @@ NOT needed:
 - **Phases overview** - orchestrator sees full command before starting
 - **Orchestrator Instructions** - forces actual Task invocation (anti-pattern: just describing)
 - **Clarifying Questions Pattern** - MANDATORY section with 3-5 flexible questions guidance
+- **Self-Reflection Gate** — orchestrator reflects before each agent invocation (catches mismatches early)
 - **Phase Details** - includes "Sufficient context for quality" section (CRITICAL)
 - **Sufficient Context Principle** - always at end (test question for context filtering)
 
@@ -169,6 +173,7 @@ Launching requirements-analyst...
 3. **Clarifying questions mandatory** - Paraphrase + 3-5 questions after EVERY phase (count depends on complexity)
 4. **User checkpoints** - Get approval after each phase
 5. **Track phase** - Remember current position
+6. **Self-reflection before agents** - Reflect on approach before every Task tool invocation (depth based on complexity)
 
 ### Phase Execution Pattern
 
@@ -228,7 +233,47 @@ Ready to proceed? (continue/skip/popraw/back/stop)
 
 **When to apply:** After Phase 0, after every agent phase, after inline phases with significant decisions. NOT after final report.
 
-### 5. Phase Details - Sufficient Context Section
+### 5. Self-Reflection Gate (MANDATORY)
+
+Commands MUST include a Self-Reflection Gate before every agent invocation. The orchestrator pauses, asks itself questions, answers them, and includes key insights in the agent prompt.
+
+**Why this matters:** Without self-reflection, the orchestrator acts as a mechanical router — passing context without understanding it. Self-reflection catches architectural mismatches, missing constraints, and edge cases BEFORE they become bugs downstream.
+
+**Complexity-Based Depth:**
+
+| Depth | When | Questions | Passes |
+|-------|------|-----------|--------|
+| Quick | Routine/structured: re-validation, docs updates, fix loop retry N>1 | 2-3 | Single |
+| Deep | Novel/uncertain: first analysis, first implementation, new patterns | 4-5 | Single |
+| Deep + Iteration | Highly complex: schema design, cross-cutting concerns, multi-system integration | 5+ | Answer then follow-up questions from answers then answer again |
+
+Complexity depth should be calibrated to the command's specific agents and operation types. Include a table mapping the command's agents to default reflection depths.
+
+**Required elements in generated commands:**
+
+1. **New section in Orchestrator Instructions:** "Self-Reflection Gate (MANDATORY)" — placed after "Clarifying Questions Pattern", before "Phase Execution Pattern"
+2. **New Critical Rule:** referencing the gate as mandatory
+3. **Per-phase reflection:** Before each agent invocation, orchestrator reflects and includes "Key insights for agent" in the prompt
+4. **Agent prompt instruction:** Each agent prompt template includes a SELF-REFLECTION INSTRUCTION block telling the agent to self-reflect before working
+
+**Orchestrator Format Template:**
+
+Use this format for self-reflection output (visible to user):
+- Star-bordered insight block with Q&A pairs
+- "Key insights for agent" summary at the end
+- Insights MUST be included in the subsequent agent prompt
+
+**Agent Prompt Instruction Template:**
+
+Add to every agent prompt within the command:
+```
+SELF-REFLECTION INSTRUCTION:
+Before [action verb], ask yourself 2-3 questions about the best approach.
+Answer them based on [relevant context]. Document your reasoning.
+If complexity is high, iterate: ask follow-up questions based on your answers.
+```
+
+### 6. Phase Details - Sufficient Context Section
 
 **MOST CRITICAL SECTION** - What context to pass to agent:
 
@@ -271,7 +316,7 @@ Output: [format]
 - Need **sufficient context for quality** - not everything, just what's critical
 - **Test question**: "Can agent produce HIGH QUALITY output with this context alone?"
 
-### 6. Commands Section
+### 7. Commands Section
 
 ```markdown
 ## Commands
@@ -285,7 +330,7 @@ Output: [format]
 
 **Standard across all commands.**
 
-### 7. Sufficient Context Principle (End Section)
+### 8. Sufficient Context Principle (End Section)
 
 **Always include at command end:**
 
@@ -310,7 +355,7 @@ Output: [format]
 > If NO → add missing critical info (not everything)
 ```
 
-### 8. Knowledge Capture Phase (Always Last)
+### 9. Knowledge Capture Phase (Always Last)
 
 **Standard final phase for any multi-phase command.** Always executes — agent decides if anything is worth capturing.
 
@@ -378,6 +423,7 @@ Output: Proposals with Target / Type / Content / WHY signal
 - **Parallel phases** — independent validations, multiple Task calls in single message
 - **User checkpoints** — approval after EVERY phase (prevents wasted work)
 - **Clarifying questions** — apply pattern from Section 4 after every phase
+- **Self-reflection before agents** — orchestrator reflects before each invocation (Section 5), depth scales with complexity
 - **Knowledge Capture always last** — agent decides if anything is signal, proposals only
 
 ---
@@ -404,6 +450,10 @@ Output: Proposals with Target / Type / Content / WHY signal
 **Problem:** Agent assumes, user doesn't notice misalignment until later phases.
 **Fix:** MANDATORY clarifying questions after every phase. Paraphrase + 3-5 questions + confirmation.
 
+### ❌ No Self-Reflection Before Agent
+**Problem:** Orchestrator mechanically routes context to agent without considering approach. Agent produces technically correct but architecturally wrong output.
+**Fix:** MANDATORY self-reflection gate. Orchestrator asks 2-5 questions (depth by complexity), answers them, includes key insights in agent prompt.
+
 ---
 
 ## Quick Reference
@@ -415,6 +465,7 @@ Output: Proposals with Target / Type / Content / WHY signal
 - [ ] Phases overview (with inline/agent markers)
 - [ ] "YOU MUST INVOKE AGENTS" section
 - [ ] Clarifying Questions Pattern section
+- [ ] Self-Reflection Gate section (with complexity depth table)
 - [ ] Phase Execution Pattern template
 - [ ] Each phase has "Sufficient context for quality" section
 - [ ] Commands section (continue, skip, back, status, stop)
@@ -425,6 +476,7 @@ Output: Proposals with Target / Type / Content / WHY signal
 - [ ] Phase 0 inline + clarifying questions
 - [ ] Sufficient context section for EVERY agent phase (test question applied)
 - [ ] Clarifying questions after EVERY phase (paraphrase + 3-5 questions + confirmation)
+- [ ] Self-reflection before EVERY agent invocation (depth calibrated to task)
 - [ ] No full YAML outputs passed (extract decisions only)
 - [ ] Project-specific rules and existing patterns included
 - [ ] Force Task invocation (not describing)
