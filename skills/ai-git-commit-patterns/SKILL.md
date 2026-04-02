@@ -1,6 +1,6 @@
 ---
 name: ai-git-commit-patterns
-description: Write commit messages and organize commits before PR merge. Use when: writing a commit message (extracts ticket from branch, applies WHY > HOW, 250-500 char body), deciding commit separation (module boundaries, breaking changes), squashing WIP commits, or creating PR description.
+description: Write commit messages and organize commits before PR merge. Use when: writing a commit message (extracts ticket from branch, applies WHY > HOW, 80-300 char body), deciding commit separation (module boundaries, breaking changes), squashing WIP commits, or creating PR description.
 ---
 
 # Git Commit Patterns
@@ -9,7 +9,7 @@ description: Write commit messages and organize commits before PR merge. Use whe
 
 ## Core Philosophy
 
-Commit messages explain WHY, git diff shows HOW. Body = 250-500 chars, natural prose, no template sections.
+Commit messages explain WHY, git diff shows HOW. Body = 80-300 chars, natural prose, no template sections.
 
 **See:** `@../resources/signal-vs-noise-reference.md` for complete filter.
 
@@ -84,14 +84,13 @@ git branch --show-current | grep -oE '[A-Z]+-[0-9]+'
 ```
 [TICKET-NUM] <type>: <subject>
 
-[1-2 sentences describing affected areas/layers and WHY context. Max 500 chars.]
+[1-2 sentences max. 80-300 chars total.]
 ```
 
 **Body constraints:**
-- **Length:** 250-500 characters total
-- **Structure:** 1-2 sentences covering all affected areas
-- **Content:** Mention specific layers/areas changed (db, business logic, presentation, API, etc.)
-- **Focus:** WHY context + area identification (not exhaustive HOW)
+- **Length:** 80-300 characters total
+- **Structure:** 1-2 sentences max
+- **Focus:** WHY context (not exhaustive HOW)
 
 **Ticket prefix examples:**
 ```
@@ -130,7 +129,7 @@ git branch --show-current | grep -oE '[A-Z]+-[0-9]+'
 
 ### Body: Natural Prose > Template
 
-**Body must be 250-500 characters with 1-2 sentences covering affected areas.**
+**Body must be 80-300 characters. 1-2 sentences max.**
 
 **✅ Good (Concise, WHY-focused, areas mentioned, 250-500 chars):**
 ```
@@ -148,7 +147,7 @@ authorization code interception. (252 chars)
 
 Row-level security policy queried same table it protected, causing infinite
 recursion. Updated policy logic to use cached role check instead of
-re-querying user_roles table. (188 chars - note: under 250 is OK if complete)
+re-querying user_roles table. (188 chars)
 ```
 
 **✅ Good (Multiple areas, two sentences):**
@@ -182,9 +181,8 @@ Breaking Changes: NO
 ```
 
 **Why bad:** Template sections add NOISE. Git already shows files, line counts.
-Body exceeds 500 chars. Message should focus on WHY (business context,
-decisions) and specific areas affected, not WHAT (git shows). Missing ticket
-number from branch name.
+Body exceeds 300 chars. Message should focus on single WHY decision, not a
+list. Missing ticket number from branch name.
 
 ### Footer (Rarely Used)
 
