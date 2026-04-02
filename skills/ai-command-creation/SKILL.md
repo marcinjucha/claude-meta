@@ -52,8 +52,8 @@ Brief explanation (1-2 sentences).
 ### Clarifying Questions Pattern (MANDATORY)
 [Template with 3-5 flexible questions, guidance on count]
 
-### Self-Reflection Gate (MANDATORY)
-[Complexity-based depth table, format template, agent prompt instruction]
+### Socratic Self-Reflection Gate (MANDATORY)
+[Complexity-based depth table, Socratic methodology, format template, agent prompt instruction]
 
 ### Phase Execution Pattern
 [Markdown template for presenting phases with clarifying questions]
@@ -233,11 +233,31 @@ Ready to proceed? (continue/skip/popraw/back/stop)
 
 **When to apply:** After Phase 0, after every agent phase, after inline phases with significant decisions. NOT after final report.
 
-### 5. Self-Reflection Gate (MANDATORY)
+### 5. Socratic Self-Reflection Gate (MANDATORY)
 
 Commands MUST include a Self-Reflection Gate before every agent invocation. The orchestrator pauses, asks itself questions, answers them, and includes key insights in the agent prompt.
 
 **Why this matters:** Without self-reflection, the orchestrator acts as a mechanical router — passing context without understanding it. Self-reflection catches architectural mismatches, missing constraints, and edge cases BEFORE they become bugs downstream.
+
+**Socratic Questioning Methodology:**
+
+Self-reflection questions must probe **essence**, not surface mechanics. Inspired by Socratic inquiry — questions that challenge assumptions, expose contradictions, and cut to what truly matters.
+
+Four Socratic moves:
+1. **Question assumptions** — "I assumed X. Is that actually true in this codebase?"
+2. **Probe the essence** — "What is the ONE thing this feature MUST do correctly to be valuable?"
+3. **Expose contradictions** — "My approach does X, but the requirement says Y. Can both be true?"
+4. **Consider consequences** — "If this breaks, what's the blast radius? What downstream phases fail?"
+
+**Surface vs Socratic — calibration by depth:**
+
+| Depth | Surface (avoid) | Socratic (use) |
+|-------|-------------------|-------------------|
+| Quick | "Is the context sufficient for the agent?" | "What would this agent misunderstand if I passed only this context?" |
+| Deep | "What architecture pattern should we use?" | "What constraint makes the obvious approach fail here?" |
+| Deep + Iteration | "Are there edge cases to consider?" | "If this assumption is wrong, which downstream decisions break?" |
+
+The distinction: surface questions have obvious answers or invite generic responses. Socratic questions force genuine reasoning about the specific situation.
 
 **Complexity-Based Depth:**
 
@@ -251,7 +271,7 @@ Complexity depth should be calibrated to the command's specific agents and opera
 
 **Required elements in generated commands:**
 
-1. **New section in Orchestrator Instructions:** "Self-Reflection Gate (MANDATORY)" — placed after "Clarifying Questions Pattern", before "Phase Execution Pattern"
+1. **New section in Orchestrator Instructions:** "Socratic Self-Reflection Gate (MANDATORY)" — placed after "Clarifying Questions Pattern", before "Phase Execution Pattern"
 2. **New Critical Rule:** referencing the gate as mandatory
 3. **Per-phase reflection:** Before each agent invocation, orchestrator reflects and includes "Key insights for agent" in the prompt
 4. **Agent prompt instruction:** Each agent prompt template includes a SELF-REFLECTION INSTRUCTION block telling the agent to self-reflect before working
@@ -452,7 +472,7 @@ Output: Proposals with Target / Type / Content / WHY signal
 
 ### ❌ No Self-Reflection Before Agent
 **Problem:** Orchestrator mechanically routes context to agent without considering approach. Agent produces technically correct but architecturally wrong output.
-**Fix:** MANDATORY self-reflection gate. Orchestrator asks 2-5 questions (depth by complexity), answers them, includes key insights in agent prompt.
+**Fix:** MANDATORY Socratic self-reflection gate. Orchestrator asks 2-5 essence-probing questions (depth by complexity), answers them, includes key insights in agent prompt. Questions must challenge assumptions, not just check boxes.
 
 ---
 
@@ -465,7 +485,7 @@ Output: Proposals with Target / Type / Content / WHY signal
 - [ ] Phases overview (with inline/agent markers)
 - [ ] "YOU MUST INVOKE AGENTS" section
 - [ ] Clarifying Questions Pattern section
-- [ ] Self-Reflection Gate section (with complexity depth table)
+- [ ] Socratic Self-Reflection Gate section (with complexity depth table + Socratic methodology)
 - [ ] Phase Execution Pattern template
 - [ ] Each phase has "Sufficient context for quality" section
 - [ ] Commands section (continue, skip, back, status, stop)
@@ -476,7 +496,7 @@ Output: Proposals with Target / Type / Content / WHY signal
 - [ ] Phase 0 inline + clarifying questions
 - [ ] Sufficient context section for EVERY agent phase (test question applied)
 - [ ] Clarifying questions after EVERY phase (paraphrase + 3-5 questions + confirmation)
-- [ ] Self-reflection before EVERY agent invocation (depth calibrated to task)
+- [ ] Socratic self-reflection before EVERY agent invocation (essence-probing, not surface-level)
 - [ ] No full YAML outputs passed (extract decisions only)
 - [ ] Project-specific rules and existing patterns included
 - [ ] Force Task invocation (not describing)
