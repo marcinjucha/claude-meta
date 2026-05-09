@@ -2,9 +2,11 @@
 
 ## Overview
 
-Meta-skills loaded by the single `ai-manager-agent` agent. Each skill provides domain knowledge for one aspect of Claude Code artifact management. All 6 skills share 4 reference files at `resources/` via `@../resources/` paths.
+Two skill families in this repo: **ai-*** (meta-skills for Claude Code artifact management, loaded by `ai-manager-agent`) and **vps-*** (VPS infrastructure domain knowledge, loaded by `vps-ops-agent` and `vps-validator-agent`).
 
-## Skills in This Repo
+## AI Meta-Skills (ai-manager-agent)
+
+All 6 share 4 reference files at `resources/` via `@../resources/` paths.
 
 | Skill | Lines | Purpose |
 |-------|-------|---------|
@@ -14,6 +16,24 @@ Meta-skills loaded by the single `ai-manager-agent` agent. Each skill provides d
 | `ai-claude-md` | 406 | Create/maintain CLAUDE.md files. Project-specific discoveries, WHY context, signal filtering. |
 | `ai-command-creation` | 653 | Create/refactor multi-phase commands. Sufficient context principle, orchestration, clarifying questions pattern. |
 | `ai-git-commit-patterns` | 285 | Commit messages and organization. WHY-focused, conventional commits, ticket extraction, PR structure. |
+
+## VPS Infrastructure Skills (vps-ops-agent, vps-validator-agent)
+
+One skill per stack + shared practices. Each covers Docker topology, operations, and gotchas for its stack.
+
+| Skill | Lines | Stack path | Purpose |
+|-------|-------|-----------|---------|
+| `vps-practices` | 290 | (shared) | Cross-stack patterns: Docker Compose ops, backup/restore, monitoring setup, adding new services |
+| `vps-traefik-stack` | 131 | `/opt/traefik` | Standalone Traefik reverse proxy, SSL certs, traefik_proxy network, certdumper dependency |
+| `vps-n8n-stack` | 177 | `/opt/n8n` | n8n queue mode (7 services), encryption key sync, worker version matching |
+| `vps-monitoring-stack` | 143 | `/opt/monitoring` | Prometheus/Grafana/AlertManager, cross-compose scraping via container names |
+| `vps-glitchtip-stack` | 108 | `/opt/glitchtip` | GlitchTip error tracking, isolated postgres/redis, migrate-exits-normally pattern |
+| `vps-n8n-patterns` | — | `/opt/n8n` | n8n workflow development (NOT infrastructure) |
+| `vps-email-stack` | — | `/opt/email` | Stalwart mail server, Snappymail, certdumper TLS |
+| `vps-strapi-stack` | — | `/opt/strapi` | Strapi CMS deployment, container ops |
+| `vps-plausible-stack` | — | `/opt/plausible` | Plausible Analytics CE, ClickHouse |
+| `vps-cal-stack` | — | `/opt/cal-vps` | Baikal CalDAV/CardDAV |
+| `vps-postgresql-ops` | — | (shared) | PostgreSQL major upgrades, backup/restore, data migration |
 
 ## Shared Resources
 
@@ -36,7 +56,11 @@ skills/
 
 ## Weird Parts / Key Patterns
 
-**All skills serve one agent**: Unlike claude-dev (skills distributed across 8 agents), all 6 skills here load into `ai-manager-agent` exclusively. **Why:** all meta-operations share the same quality principles (signal vs noise, WHY over HOW), so one agent with a decision tree routes to the right skill.
+**Two skill families, two agent groups**: `ai-*` skills load into `ai-manager-agent` (meta-operations). `vps-*` skills load into `vps-ops-agent` + `vps-validator-agent` (infrastructure ops). **Why the split:** different concerns — meta-skills need quality principles (signal vs noise), VPS skills need operational runbooks (Docker topology, gotchas).
+
+**VPS skills map 1:1 to stacks (since 2026-04-11)**: Each `/opt/<stack>` has exactly one `vps-<stack>-stack` skill. **Why:** Previously monitoring/glitchtip/traefik were part of n8n stack — one giant skill. After extracting to standalone stacks, each got its own skill with focused scope.
+
+**All ai-* skills serve one agent**: All 6 ai-* skills load into `ai-manager-agent` exclusively. **Why:** all meta-operations share the same quality principles (signal vs noise, WHY over HOW), so one agent with a decision tree routes to the right skill.
 
 **signal-vs-noise absorbed into shared resource**: Previously a standalone skill (132 lines), now lives entirely in `resources/signal-vs-noise-reference.md`. **Why absorbed:** all unique content (AI-known content filter, invented content rules, content philosophy) fits naturally in the shared resource. All skills already referenced the shared resource via `@../resources/signal-vs-noise-reference.md` — the standalone skill was redundant indirection.
 

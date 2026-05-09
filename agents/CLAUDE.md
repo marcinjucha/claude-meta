@@ -6,9 +6,16 @@ Single meta-agent that orchestrates all artifact creation and maintenance. Unlik
 
 ## Agents in This Repo
 
+### Meta-Agent
 | Agent | Purpose | Model | Skills Loaded |
 |-------|---------|-------|---------------|
 | `ai-manager-agent` | Creates/maintains all Claude Code artifacts (agents, skills, commands, CLAUDE.md). Enforces thin-router architecture and signal-focused content. | opus | ai-agent-creator, ai-skill-creator, ai-skill-fine-tuning, ai-claude-md, ai-command-creation, ai-git-commit-patterns |
+
+### VPS Infrastructure Agents
+| Agent | Purpose | Model | Skills Loaded |
+|-------|---------|-------|---------------|
+| `vps-ops-agent` | VPS operations — Docker management, service health, deployments, infrastructure changes. Confirms destructive ops. | sonnet | vps-practices, vps-traefik-stack, vps-n8n-stack, vps-monitoring-stack, vps-glitchtip-stack, vps-email-stack, vps-strapi-stack, vps-plausible-stack, vps-cal-stack, vps-n8n-patterns, vps-postgresql-ops |
+| `vps-validator-agent` | Read-only VPS validation — Docker correctness, service health, security posture, config validity. No write tools. | sonnet | (same as vps-ops-agent, minus write tools) |
 
 ## Weird Parts / Key Patterns
 
