@@ -55,6 +55,7 @@ For each entry in memory, classify it AND assign a target file:
 
 **COMPRESS in memory** if:
 - Completed feature section with implementation details now derivable from code (CSS values, RLS patterns, config, component props)
+- Done task status sections (AAA-T-X DONE, AAA-P-X DONE) → **REMOVE entirely** if no active decisions pending. Do not compress to 2-4 lines — remove. Only keep 'In Progress' or 'Pending' status sections.
 - Section longer than 5 lines where only 1-2 decisions are non-obvious
 - Rule: keep only what code can't tell you — WHY decisions, production state, scoring formulas, deferred TODOs
 - Target: completed feature sections → 2-4 lines (status + non-obvious decisions only)
@@ -69,7 +70,9 @@ For each entry in memory, classify it AND assign a target file:
 - Entry is outdated or contradicted by newer entries or current code
 - Entry is no longer relevant (bug was fixed, feature was removed)
 - Entry is **code-derivable** — information readable from current source files (file structure, component props, CSS values, RLS policies, migration schemas). If `grep` or `Read` can answer it, memory doesn't need it.
-- **Fixed bugs** where the fix is in the codebase and the pattern is generic (not project-specific). Keep only bugs with non-obvious project-specific patterns (e.g., Zod nullable vs optional, TanStack Query silent failure).
+- **Fixed bugs** where: (a) fix is in the codebase AND (b) pattern is either generic OR documented in skills. The bar for keeping bugs is HIGH: only keep if the bug is project-specific, non-obvious, AND recurs across sessions. When in doubt: REMOVE.
+- Entry's pattern is **documented in existing skills** (ag-n8n-step-handlers, ag-workflow-engine, tanstack-setup, tanstack-routing, tanstack-server, etc.) — skills are loaded when needed; memory is not the right place.
+- Entry describes **Done task implementation details** — status sections for completed work ("AAA-T-X DONE — full implementation detail") should be removed entirely, not compressed. Keep only active/in-progress work.
 
 ### Step 3: Present proposed changes
 
@@ -95,6 +98,8 @@ Show the user a clear summary:
 ### Remove from memory
 - "[entry title]" — [reason: duplicate/outdated/code-derivable/fixed bug]
 ```
+
+**Aggressive mode:** Default posture is removal. Every entry must justify its presence. Ask: 'Would losing this entry cause a real mistake in the next session?' If no — REMOVE.
 
 Then ask: **"Do you approve these changes? You can approve all, or specify which to skip."**
 
@@ -219,12 +224,13 @@ Done.
 
 ## Rules
 
+- **Target: memory.md under 100 lines** — Aggressive cleanup means reaching this target, not just removing obvious noise.
 - **NEVER edit CLAUDE.md files with the Edit tool** — ALL CLAUDE.md modifications MUST go through ai-manager-agent via the Agent tool (`subagent_type="ai-manager-agent"`). This is a BLOCKING requirement. The orchestrator must NOT use Read+Edit to modify CLAUDE.md files, even for single-line additions. ai-manager-agent loads the `claude-md` skill for correct formatting and signal filtering.
 - **Socratic self-reflection before agent invocations** — Reflect before every ai-manager-agent invocation in Steps 4a and 4b (see Socratic Self-Reflection Gate below)
 - Default to aggressive cleanup — memory should hold only what code can't tell you
 - For completed features: compress to 2-4 lines (status + non-obvious WHY decisions). Remove implementation details derivable from code.
 - For fixed bugs: remove unless the pattern is non-obvious and project-specific (e.g., Zod nullable gotcha, TanStack silent failure)
-- When in doubt about individual entries, KEEP — but when in doubt about verbose sections, COMPRESS
+- When in doubt about individual entries — LEAN TOWARD REMOVAL if it's not critical production state (tenant IDs, active bugs, ongoing tasks). Only keep what code + skills + CLAUDE.md can NOT tell you. Memory is for context that disappears between sessions, not documentation.
 - NEVER modify skill files or command files inside `.claude/`. Exception: `.claude/CLAUDE.md` may be modified via ai-manager-agent agent (same as other CLAUDE.md files)
 - Exclude `worktree-*` folders from discovery
 - All CLAUDE.md modifications delegated to ai-manager-agent agent (via Task tool)
