@@ -23,3 +23,13 @@ policy-limits.json
 mcp-needs-auth-cache.json
 .credentials.json
 /sessions
+/.idea
+/jobs
+/daemon.log
+/daemon-auth-status.json
+/daemon-auth-cooldown
+/daemon
+/chrome
+/.last-update-result.json
+/.last-cleanup
+/Bing Webmaster Tools Auth.xml
