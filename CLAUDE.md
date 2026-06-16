@@ -38,3 +38,18 @@ statusline-command.sh → Status line script (model, cost, context %) — hardco
 - `agents/CLAUDE.md` — ai-manager-agent frontmatter, skill loading, thin router pattern
 - `commands/CLAUDE.md` — command registry, tri-modal pattern, orchestration details
 - `skills/CLAUDE.md` — skill registry, shared resources, meta-skill relationships
+
+## Second Brain & Session Memory (global behavior)
+
+**Brain-first awareness.** At session start, if the cwd maps to a claude-brain context (per
+`/Users/marcinjucha/Prywatne/projects/claude-brain/config.json` `.paths`), treat the brain
+project memory (`<vault>/<…>/_*.md`, the high shelf) as the source of truth for status and
+cross-project connections; keep it current via `/brain-update` at milestones; treat the
+worktree `SESSION.md` as the fine-grained, worktree-local scratchpad. The SessionStart hook
+only *injects* this data (read-only) — acting on it (full orient, ticket backfill) is `/brain-load`.
+If the cwd maps to NO brain context, `SESSION.md` is the only working memory.
+
+**`[do potwierdzenia]` for unverified hypotheses.** Mark any diagnosis or conclusion not yet
+confirmed by on-device testing / a passing test with a `[do potwierdzenia]` prefix in brain and
+SESSION notes. Promote to plain fact only after verification. **Why:** a guessed diagnosis once
+got recorded as fact and was later refuted — the prefix keeps hypotheses visibly provisional.
