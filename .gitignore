@@ -12,7 +12,7 @@ image-cache/*
 plans
 projects
 tasks
-settings.json
+settings.json.bak.*
 stats-cache.json
 cache
 .DS_Store

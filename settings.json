@@ -1,0 +1,157 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(awk:*)",
+      "Read(//private/tmp/**)",
+      "Bash(for file in \"Business Projects Database\" \"Business Tasks Database\" \"Skills Projects Database\" \"Skills Tasks Database\" \"Skills Tracker Database\" \"Documentation Hub Database\")",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(done)",
+      "Bash(for file in \"Business Projects Database - Usage Guidelines.md\" \"Business Tasks Database - Usage Guidelines.md\" \"Skills Projects Database - Usage Guidelines.md\" \"Skills Tasks Database - Usage Guidelines.md\" \"Skills Tracker Database - Usage Guidelines.md\" \"Documentation Hub Database - Usage Guidelines.md\")",
+      "Bash(do echo \"=== $file%.md ===\")",
+      "Bash(__NEW_LINE__)",
+      "Bash(__NEW_LINE__ rm \"Business Tasks Database - Usage Guidelines.md\")",
+      "Bash(__NEW_LINE__ rm \"Skills Projects Database - Usage Guidelines.md\")",
+      "Bash(__NEW_LINE__ rm \"Skills Tasks Database - Usage Guidelines.md\")",
+      "Bash(__NEW_LINE__ rm \"Skills Tracker Database - Usage Guidelines.md\")",
+      "Bash(__NEW_LINE__ rm \"Documentation Hub Database - Usage Guidelines.md\")",
+      "Bash(grep:*)",
+      "Bash(for file in \"Notes/Notion-Setup\"/*.md)",
+      "Read(//Users/marcinjucha/Library/Mobile Documents/iCloud~md~obsidian/Documents/Notes/**)",
+      "Read(//Users/marcinjucha/Downloads/**)",
+      "Bash(mkdir:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(swiftc:*)",
+      "Bash(git restore:*)",
+      "WebSearch",
+      "Bash(bundle exec fastlane test:*)",
+      "Bash(test:*)",
+      "Bash(npm install)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npx create-next-app:*)",
+      "Bash(npm run build:website:*)",
+      "Bash(npx create-next-app@latest cms --typescript --tailwind --app --import-alias \"@/*\" --no-git --yes)",
+      "Bash(npm run build:cms:*)",
+      "Bash(turbo run build:*)",
+      "Bash(npx turbo run build:*)",
+      "Bash(brew install:*)",
+      "Bash(npm install:*)",
+      "Bash(supabase --version:*)",
+      "Bash(supabase login:*)",
+      "Bash(supabase link:*)",
+      "Bash(supabase db push:*)",
+      "Bash(supabase gen types:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npm run build:*)",
+      "Bash(vercel whoami:*)",
+      "Bash(vercel --cwd:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:legal-mind-website.vercel.app)",
+      "WebFetch(domain:legal-mind-cms.vercel.app)",
+      "Bash(echo:*)",
+      "Bash(npm run dev:cms:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(curl:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(npm run dev:website:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm run dev:*)",
+      "Bash(cat:*)",
+      "Bash(git rm:*)",
+      "Bash(psql:*)",
+      "Bash(supabase migration:*)",
+      "Bash(git reset:*)",
+      "Bash(wc:*)",
+      "Bash(npx supabase:*)",
+      "Bash(npm run db:types:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pkill:*)",
+      "Bash(printf:*)",
+      "Bash(git rebase:*)",
+      "Bash(git log:*)",
+      "Bash(tree:*)",
+      "Bash(git show:*)",
+      "Bash(GIT_EDITOR=\"sed -i\" git rebase -i HEAD~9 -m \"pick 890714b\npick 9885cb9\npick cdc46f7\nsquash 0cb0e89\nsquash ebd3778\npick f76fb61\nsquash dd51414\nsquash 42e8a2f\npick 0920da2\")",
+      "Bash(GIT_SEQUENCE_EDITOR=\"cat /tmp/rebase-plan.txt >\" git rebase -i HEAD~9)",
+      "Bash(node -c:*)",
+      "Bash(npm run type-check:website:*)",
+      "Bash(npm run)",
+      "Bash(npm run lint:fix:*)",
+      "Bash(npm run lint:*)",
+      "Bash(for component in Navbar Hero Problems Benefits Features HowItWorks Pricing Testimonials FAQ FinalCTA Footer)",
+      "Bash(do)",
+      "Bash(if [ -f \"/Users/marcinjucha/Prywatne/projects/legal-mind/apps/website/features/marketing/components/$component.tsx\" ])",
+      "Bash(then)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(git diff:*)",
+      "Bash(npx shadcn-ui@latest add dialog)",
+      "WebFetch(domain:ui.shadcn.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Read(//Users/marcinjucha/Scandit/claude/**)",
+      "Read(//Users/marcinjucha/**)",
+      "Bash(xcrun simctl list:*)",
+      "Bash(chmod:*)",
+      "Bash(/Users/marcinjucha/Scandit/digital-shelf-ios/scripts/filter_logs.sh:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(/usr/bin/git -C /Users/marcinjucha/Scandit/digital-shelf-ios/worktree-feature diff -- \"Modules/Sources/Resources/Resources/en.lproj/Localized.strings\" \"Modules/Sources/Resources/Resources/pl.lproj/Localized.strings\")"
+    ],
+    "deny": [],
+    "ask": [],
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": [
+      "/Users/marcinjucha/Downloads",
+      "/Users/marcinjucha/Scandit/digital-shelf-ios/scripts"
+    ]
+  },
+  "model": "opus",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/marcinjucha/Prywatne/projects/claude-brain/hooks/session-start-brain.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); case \"$f\" in */.claude/commands/*.md|*/.claude/skills/*/SKILL.md|*/.claude/agents/*.md) printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"⚠️ Edytujesz plik-definicję artefaktu (command/skill/agent) inline. Jeśli komenda/skill nakazuje tworzenie przez agenta (np. /ai-commands, /ai-skill: MUST use ai-manager-agent), przepuść to przez agenta — nie pisz inline, nawet z pełnym kontekstem.\"}}' ;; esac; exit 0"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash -c 'cols=$(stty size </dev/tty 2>/dev/null | awk '\"'\"'{print $2}'\"'\"'); export COLUMNS=$(( ${cols:-120} > 4 ? ${cols:-120} - 4 : 1 )); plugin_dir=$(ls -d \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/plugins/cache/*/claude-hud/*/ 2>/dev/null | awk -F/ '\"'\"'{ print $(NF-1) \"\\t\" $(0) }'\"'\"' | grep -E '\"'\"'^[0-9]+\\.[0-9]+\\.[0-9]+\\t'\"'\"' | sort -t. -k1,1n -k2,2n -k3,3n -k4,4n | tail -1 | cut -f2-); exec \"/opt/homebrew/bin/bun\" --env-file /dev/null \"${plugin_dir}src/index.ts\"'"
+  },
+  "enabledPlugins": {
+    "claude-hud@claude-hud": true,
+    "frontend-design@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-hud": {
+      "source": {
+        "source": "github",
+        "repo": "jarrodwatts/claude-hud"
+      }
+    }
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "medium",
+  "skipDangerousModePermissionPrompt": true,
+  "editorMode": "normal",
+  "voiceEnabled": false
+}
