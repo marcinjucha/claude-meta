@@ -47,11 +47,12 @@ For each entry in memory, classify it AND assign a target file:
 - Entry matches an existing section in any discovered CLAUDE.md
 
 **Target selection** (for PROMOTE entries, in priority order):
-1. **Content match** — entry topic matches scope of a specific CLAUDE.md (e.g., upload-related → `uploads/CLAUDE.md`)
-2. **Path match** — entry references files/folders that have their own CLAUDE.md
-3. **`.claude/CLAUDE.md`** — entry is about cross-project tooling/workflow preferences (conservative — only if clearly fits)
-4. **Create new** — entry fits a folder that lacks CLAUDE.md but should have one (flag for creation)
-5. **Fallback** — root `CLAUDE.md` if no specific match
+1. **Brain knowledge note** (ONLY gdy cwd mapuje się do kontekstu brain z aktywnym obszarem knowledge — per claude-brain `config.json`) — jeśli wpis to **cross-cutting DOMAIN KNOWLEDGE** (reużywalny koncept/dyscyplina/taksonomia konsumowana przez SKILLE w runtime — typ żyjący w knowledge-system), promuj go do **notatki wiedzy mózgu** w `03-Resources/<ctx>/knowledge/` (przez `/brain-knowledge-migrate`, albo rozszerzając istniejącą notatkę wg reguły anty-dryf dedup), NIGDY do `CLAUDE.md` i **NIGDY** z powrotem do ciała ścienionego skilla (skille = procedura + blok-wskaźnik `## Knowledge`; włożenie wiedzy domenowej do ciała cofa migrację). Jak rozróżnić: wpis to evergreen wiedza, którą SKILL pobrałby w runtime → notatka mózgu; wpis to reguła/fakt projektu, który czyta człowiek → CLAUDE.md. Schemat notatki + komenda migracji: `_system/knowledge-system.md`. **W repo BEZ kontekstu brain — pomiń tę opcję, promuj jak dotąd (CLAUDE.md).**
+2. **Content match** — entry topic matches scope of a specific CLAUDE.md (e.g., upload-related → `uploads/CLAUDE.md`)
+3. **Path match** — entry references files/folders that have their own CLAUDE.md
+4. **`.claude/CLAUDE.md`** — entry is about cross-project tooling/workflow preferences (conservative — only if clearly fits)
+5. **Create new** — entry fits a folder that lacks CLAUDE.md but should have one (flag for creation)
+6. **Fallback** — root `CLAUDE.md` if no specific match
 
 **COMPRESS in memory** if:
 - Completed feature section with implementation details now derivable from code (CSS values, RLS patterns, config, component props)
