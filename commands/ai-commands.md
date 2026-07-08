@@ -237,7 +237,8 @@ Clarifying questions (3-5, scale with complexity):
 2. Should this command handle [edge case A] or is that out of scope?
 3. How many phases - simple (1-3), standard (5-6), or complex (8+)?
 [4. Which agents should be involved - [list potential agents]?]
-[5. What's the success criterion - what makes this command "complete"?]
+[5. Does any phase do deterministic work (parse/extract/filter/count/reshape) over a long/large input? If so, should it call a `scripts/` helper instead of an agent loading the whole input?]
+[6. What's the success criterion - what makes this command "complete"?]
 
 Does this match exactly what you want? If not, what should I adjust?
 ```
@@ -281,6 +282,7 @@ Ask clarifying questions to understand:
 3. What skills should agents load?
 4. What context does each agent need from previous phases?
 5. What user checkpoints are needed?
+6. Does any phase do deterministic work (parse/extract/filter/count/reshape) over a long/large input? If so, prefer having it run a `scripts/` helper that returns ONLY the relevant slice over spawning an agent to load the whole input into context. WHY: cheaper, faster, more reliable signal-finding in long documents, and it preserves the phase's context budget for decisions. BOUNDARY: deterministic work only — judgment/synthesis stays with the agent; do NOT script what needs the model to think.
 
 ANY NO = NOISE → Cut immediately.
 

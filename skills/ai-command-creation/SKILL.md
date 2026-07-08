@@ -336,6 +336,14 @@ Output: [format]
 - Need **sufficient context for quality** - not everything, just what's critical
 - **Test question**: "Can agent produce HIGH QUALITY output with this context alone?"
 
+#### Script deterministic phase work over large inputs
+
+When a phase does **mechanical/deterministic** work — parsing, extracting, filtering, counting, reshaping — over a **long or large input** (transcript, log, dataset, big doc), have it run a `scripts/` helper that returns ONLY the relevant slice, instead of spawning an agent to load the whole input into context and read it.
+
+**WHY:** a script surfaces signal in long documents more cheaply, faster, and more reliably than an agent scanning the whole thing — and it keeps the phase's context budget for decisions. This is how you extract the slice *deterministically* (complements the sufficient-context principle above: script the extraction, then hand the agent the slice).
+
+**BOUNDARY — deterministic work ONLY.** Reasoning, judgment, and synthesis stay with the agent. Do NOT script what needs the model to think; script only what a rule/regex/parser can do exactly.
+
 ### 7. Commands Section
 
 ```markdown

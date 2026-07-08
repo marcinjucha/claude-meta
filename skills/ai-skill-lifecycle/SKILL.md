@@ -258,6 +258,8 @@ Research $ARGUMENTS:
 
 **When to use:** Generate visual output, process complex data, reusable analysis.
 
+**Reach for a script when a step is DETERMINISTIC work over LARGE input.** When a step is mechanical — parsing, extracting, filtering, counting, reshaping — AND runs over a long/large input, write a `scripts/` helper that returns ONLY the relevant slice, instead of loading the whole input into context and reading it manually. **Why:** a script surfaces the signal in long documents more cheaply, faster, and more reliably than in-context reading, and keeps context clean for judgment. **Boundary:** deterministic work ONLY — reasoning/judgment/interpretation stays in-context; do NOT script what needs the model to think.
+
 **Key pattern:**
 1. Create `~/.claude/skills/my-skill/scripts/script.py`
 2. Use absolute path: `python ~/.claude/skills/my-skill/scripts/script.py`
@@ -329,7 +331,7 @@ File moved? -> Update file paths
 Numbers/thresholds changed? -> Update "Quick Reference" + relevant patterns
 Need isolation? -> Add frontmatter: context: fork, agent: [type]
 Need live data? -> Add dynamic injection
-Need script execution? -> Add scripts/ directory
+Deterministic parse/extract/filter/count over large input? -> Add scripts/ helper returning only the relevant slice (NOT for reasoning)
 Need tool restrictions? -> Add allowed-tools
 Need arguments? -> Add argument-hint + $ARGUMENTS
 ```

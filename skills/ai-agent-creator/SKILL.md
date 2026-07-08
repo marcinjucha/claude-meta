@@ -202,6 +202,8 @@ hooks:
 
 **Rule:** If you're adding reference docs to an agent, that's a skill, not an agent.
 
+**Script deterministic work over large inputs.** When an agent does mechanical/deterministic work — parsing, extracting, filtering, counting, reshaping — over a long or large input, give it a `scripts/` helper that returns ONLY the relevant slice, instead of loading the whole input into context to read. **Why:** cheaper, faster, more reliable signal-finding in long documents, and it keeps the agent's context clean for its routing/judgment role. **Boundary:** script deterministic work ONLY — reasoning, judgment, and routing stay in-context; do NOT script what needs the model to think.
+
 ### Step 5: Test Agent
 
 **Test invocation:**

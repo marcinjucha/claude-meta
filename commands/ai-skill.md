@@ -213,7 +213,7 @@ Let me verify my understanding:
 Clarifying questions (3-5, scale with complexity):
 1. Source material location - where is the signal to extract?
 2. Skill complexity - will this need Tier 3 resources/ (detailed examples >50 lines)?
-3. Scripts needed - does this skill need utility scripts (scripts/ directory)?
+3. Scripts needed - will the skill do any DETERMINISTIC work (parsing, extracting, filtering, counting, reshaping) over a LONG/LARGE input? If so, that work belongs in a `scripts/` helper that returns only the relevant slice instead of loading the whole input into context (cheaper, faster, more reliable signal-finding). Judgment/reasoning stays in-context.
 [4. Related skills - should this reference other existing skills?]
 [5. Target: Skill should help Claude decide [specific decision] - correct?]
 
@@ -265,7 +265,7 @@ DO NOT include:
 Extract categories:
 1. Core patterns (SKILL.md content): decision frameworks, integration patterns, production context
 2. Detailed examples (resources/ if >50 lines): complete code examples, sufficient guides
-3. Utility scripts (scripts/ if needed): automation utilities
+3. Utility scripts (scripts/ if needed): any DETERMINISTIC operation the skill performs — parsing, extracting, filtering, counting, reshaping — that runs over a LONG/LARGE input is a scripts/ candidate. The helper returns ONLY the relevant slice so the skill never loads the whole input into context to read it (cheaper, faster, more reliable signal-finding, keeps context clean). BOUNDARY: deterministic work only — any judgment/reasoning stays in-context, not in a script.
 
 Output:
 **Core Patterns (SKILL.md):** [list with WHY context]
