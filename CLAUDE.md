@@ -55,3 +55,16 @@ If the cwd maps to NO brain context, `SESSION.md` is the only working memory.
 confirmed by on-device testing / a passing test with a `[do potwierdzenia]` prefix in brain and
 SESSION notes. Promote to plain fact only after verification. **Why:** a guessed diagnosis once
 got recorded as fact and was later refuted — the prefix keeps hypotheses visibly provisional.
+
+## Reader-facing Text — mandatory language check (global behavior)
+
+**Whenever I write text a HUMAN reader will see — always run the `human-language-check` skill
+before delivering it.** This is a MUST, not a suggestion, and it applies especially to
+**website content and any copy for clients** (landing/site copy, posts, emails, ad/sales copy,
+scripts, surveys, messages). The skill lives at `~/.claude/skills/human-language-check` (global,
+available in every project). Run both passes (poprawność → de-AI/clarity) and honor its safety
+gate: clean ONLY audience-facing text, never scaffolding (doc titles, operator instructions in
+parentheses, internal notes). **Why:** unchecked text ships grammar errors and AI-tells; for
+website/client copy that directly damages credibility — the check is the last gate before it
+reaches a reader. Does NOT apply to code or purely internal working notes (there jargon,
+abbreviations, and em-dashes are functional).
