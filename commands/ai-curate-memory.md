@@ -47,7 +47,7 @@ For each entry in memory, classify it AND assign a target file:
 - Entry matches an existing section in any discovered CLAUDE.md
 
 **Target selection** (for PROMOTE entries, in priority order):
-1. **Brain knowledge note** (ONLY gdy cwd mapuje się do kontekstu brain z aktywnym obszarem knowledge — per claude-brain `config.json`) — jeśli wpis to **work-derived cross-cutting SYNTEZA** (obejmuje ≥2 atomy repo, żadna pojedyncza lokalizacja repo jej nie niesie — wiedza „dlaczego projekt/domena są jakie są"), promuj go do **notatki wiedzy mózgu** w `03-Resources/<ctx>/knowledge/` przez **`/brain-extract-knowledge`** (silnik dla syntezy wywiedzionej z PRACY), albo rozszerzając istniejącą notatkę wg reguły anty-dryf dedup. Migracja wiedzy ze SKILLA to osobne narzędzie — zostaje `/brain-knowledge-migrate`. **Jak rozróżnić (atom-vs-synteza):** POJEDYNCZY zakotwiczony ATOM (jeden próg / jeden bug / jedna reguła-pliku, który czyta człowiek) → zostaje w repo/`CLAUDE.md`; cross-atom SYNTEZA (łączy ≥2 wcześniej osobne atomy) → notatka mózgu. Notatki mózgu tu bywają **brain-only** (nie muszą być konsumowane przez skill — Scandit trzyma syntezę brain-only). NIGDY nie wkładaj wiedzy z powrotem do ciała ścienionego skilla. Schemat notatki + brzytwa: `_system/knowledge-system.md`. **W repo BEZ kontekstu brain — pomiń tę opcję, promuj jak dotąd (CLAUDE.md).**
+1. **Brain knowledge note** (ONLY gdy cwd mapuje się do kontekstu brain z aktywnym obszarem knowledge — per claude-brain `config.json`) — jeśli wpis to **work-derived cross-cutting SYNTEZA** (obejmuje ≥2 atomy repo, żadna pojedyncza lokalizacja repo jej nie niesie — wiedza „dlaczego projekt/domena są jakie są"), promuj go do **notatki wiedzy mózgu** w `03-Resources/<ctx>/knowledge/` przez **`/brain-extract-knowledge`** (silnik dla syntezy wywiedzionej z PRACY), albo rozszerzając istniejącą notatkę wg reguły anty-dryf dedup. Migracja wiedzy ze SKILLA to osobne narzędzie — zostaje `/brain-knowledge-migrate` (tryb REFLECT: skill nietknięty, wiedza jako ATOMOWE noty `status: reflection` — nie stary thick-`mirror`). **Jak rozróżnić (atom-vs-synteza):** POJEDYNCZY zakotwiczony ATOM (jeden próg / jeden bug / jedna reguła-pliku, który czyta człowiek) → zostaje w repo/`CLAUDE.md`; cross-atom SYNTEZA (łączy ≥2 wcześniej osobne atomy) → notatka mózgu. Notatki mózgu tu bywają **brain-only** (nie muszą być konsumowane przez skill — Scandit trzyma syntezę brain-only). NIGDY nie wkładaj wiedzy z powrotem do ciała ścienionego skilla. Schemat notatki + brzytwa: `_system/knowledge-system.md`. **W repo BEZ kontekstu brain — pomiń tę opcję, promuj jak dotąd (CLAUDE.md).**
 2. **Existing skill** — if the entry is **cross-cutting, reusable HOW / pattern / domain knowledge consumed by an agent at runtime** (TCA/SwiftUI patterns, ARKit/positioning domain, testing patterns, design-system rules), promote it INTO the relevant EXISTING skill (`.claude/skills/<name>/SKILL.md`), NOT CLAUDE.md. **How to distinguish from CLAUDE.md:** CLAUDE.md is for project rules a *human* reads; a skill is for knowledge an *agent* loads on demand. **This target applies ONLY to skills that already exist** — a genuinely NEW skill that doesn't exist yet stays a recommendation (Step 5), never a direct promotion here. Applied in Step 4d.
 3. **Content match** — entry topic matches scope of a specific CLAUDE.md (e.g., upload-related → `uploads/CLAUDE.md`)
 4. **Path match** — entry references files/folders that have their own CLAUDE.md
@@ -184,6 +184,8 @@ For each entry whose target is **#1** (brain knowledge note — cross-atom synth
 
 **NEVER remove a target-#1 entry from memory on the mere basis of being "promoted" when no brain write occurred** — the synthesis exists only in memory until the brain note exists. (This is the ONE promotion path allowed to later remove from memory, and only against a confirmed brain write; skills/CLAUDE.md promotions in 4a/4b/4d are copies, so their entries remove normally.)
 
+Every entry left in this "pending brain extraction" state is surfaced to the user as a dedicated line in the final Step 6 summary (title list + `run /brain-extract-knowledge` reminder) — so this classification logic ends in a visible end-of-run reminder, not just a silent memory decision.
+
 **Step 4c: Cleanup memory (after 4b-brain; PARALLEL with 4b or after)**
 
 Edit `memory.md` inline — remove promoted and removed entries, **EXCEPT** any target-#1 (brain) entry whose brain write was NOT confirmed in Step 4b-brain — keep those (reported as "pending brain extraction"). Keep the rest. Do not reorder kept entries.
@@ -222,13 +224,20 @@ Per-skill Task prompt:
 
 Agent loads `skill-fine-tuning` skill — do NOT duplicate skill structure rules here.
 
-**Step 4e: Refresh brain mirror (brain context only)**
+**Step 4e: Refresh brain reflection (brain context only)**
 
-IF the cwd maps to a brain context with an active knowledge-system (per claude-brain `config.json`) AND a skill just updated in Step 4d has a brain knowledge mirror (`status: mirror`) in `03-Resources/<ctx>/knowledge/`, refresh that mirror by running `/brain-knowledge-migrate <skill> --mirror`.
+IF the cwd maps to a brain context with an active knowledge-system (per claude-brain `config.json`) AND a skill just updated in Step 4d has brain knowledge **reflection** notes (`status: reflection`) in `03-Resources/<ctx>/knowledge/`, refresh those notes by running `/brain-knowledge-migrate <skill> --reflect`.
 
-**CRITICAL nuance:** For a TEAM skill, the SKILL is the source of truth and the brain note only MIRRORS it. Do NOT create a competing brain-owned canon note for the same knowledge, and — if the skill is a pointer-style (thinned) skill — do NOT write domain knowledge back into the skill body.
+**Discriminate note forms — refresh ONLY `reflection`:**
+- `status: reflection` — atomic reflections of a team skill (skill = source of truth) → **refresh** (skill→brain re-extraction). This is the target of this step.
+- `status: pointer` — link-only stub (title + gist + link, ZERO knowledge in the body; e.g. Scandit `ios-*` domain notes). A pointer carries no knowledge → refreshing it with knowledge is a **no-op / wrong** — **skip**. (A pointer only needs its link/gist kept accurate, which is not this step's job.)
+- `status: mirror` — LEGACY thick single-file copy (transitional form being superseded by `reflection`). Treat exactly like `reflection` — refresh unconditionally via `--reflect` (skill→brain re-extraction). Same handling as `brain-update.md` maintenance step; no operator-judged condition.
 
-If there is no brain context, or no `mirror` note exists for the updated skill → skip this step entirely. (Distinct from Step 2 target #1: brain canon note = brain-owned evergreen knowledge; here we only refresh a mirror OF a team skill.)
+**Where the forms live today:** the 6 meta skills (`skill-creator`, `agent-creator`, `signal-vs-noise`, `claude-md`, `skill-fine-tuning`, `command-creation`) now have ATOMIC `status: reflection` notes (8 atoms, the old thick copies removed) in the `claude-dev` context (`03-Resources/claude-dev/knowledge/`). The 7 Scandit `ios-*` domain notes are `status: pointer` (link-only) in `03-Resources/scandit/knowledge/` → NOT refreshed here.
+
+**CRITICAL nuance:** For a TEAM skill, the SKILL is the source of truth and the brain notes only REFLECT it. Do NOT create a competing brain-owned canon note for the same knowledge, and — if the skill is a pointer-style (thinned) skill — do NOT write domain knowledge back into the skill body.
+
+If there is no brain context, or no `reflection` note exists for the updated skill → skip this step entirely. (Distinct from Step 2 target #1: brain canon note = brain-owned evergreen knowledge; here we only refresh a reflection OF a team skill.)
 
 ### Step 5: Skill recommendations
 
@@ -274,13 +283,16 @@ Done.
 - Promoted to skills: [N] entries
   - [.claude/skills/name/SKILL.md]: [n] entries
   - ...
-- Brain mirrors refreshed: [N] (or: none — no brain context / no mirror)
+- Brain reflections refreshed: [N] (or: none — no brain context / no reflection)
 - Updated root index: Yes/No
 - Compressed: [N] sections (completed features, code-derivable details)
 - Removed: [N] entries (duplicates/outdated/code-derivable/fixed bugs)
 - Kept: [N] entries in memory
+- Pending brain extraction: [N] entries — [list of entry titles] — run /brain-extract-knowledge
 - Skill recommendations: [N] (new skill candidates + declined promotions — run /ai-skill to apply)
 ```
+
+If no entries are pending brain extraction (N=0) → omit the `Pending brain extraction` line entirely (do not print "none"), same convention as the Skill recommendations section.
 
 ## Rules
 
