@@ -1,45 +1,53 @@
-# claude-meta — Meta-Artifact Repository
+# ~/.claude — Global Config + Meta-Artifact Toolchain
 
 ## Overview
 
-This repo stores **meta-level** Claude Code artifacts — tools for creating, auditing, and maintaining other Claude Code artifacts. Symlinked into `.claude/` alongside `claude-dev` artifacts via shared `hooks/simlink.sh`.
+This IS `~/.claude` — the live global Claude Code config, loaded into every session in every project, and itself a git repo (`.gitignore` excludes runtime dirs: `cache`, `projects`, `history.jsonl`, `plugins`, `backups`, `debug`, `shell-snapshots`, `.DS_Store`, …). It holds the **meta-artifact toolchain** natively (tools for creating, auditing, and maintaining other Claude Code artifacts) and receives the `brain-*` family by symlink from `claude-brain`.
 
-**Why separate from claude-dev:** claude-dev holds domain artifacts (project-specific agents, skills, commands). claude-meta holds the tooling that builds and maintains those artifacts. Separation prevents circular dependencies and allows meta-tooling to evolve independently.
+**Domain artifacts live elsewhere:** project-specific agents/skills/commands stay in their own repos (`claude-dev` = programming/infra, `claude-marketing` = go-to-market) and are symlinked into each project's `.claude/`. Only meta-tooling + global behavior belongs here. **Why:** keeps each repo's skill-description routing budget focused on one domain.
 
 ## Structure
 
 ```
-agents/      → Single meta-agent (ai-manager-agent) that orchestrates all artifact work
-commands/    → 8 slash commands: ai-* family (skill, agent, commands, claude-md, git, extract-memory, curate-memory, solve)
-skills/      → 7 meta-skills loaded by ai-manager-agent (creator, auditor, fine-tuner patterns)
+agents/      → ai-manager-agent.md (opus, tracked) + brain-manager.md (SYMLINK → claude-brain, untracked)
+             + agents/CLAUDE.md
+commands/    → 22 .md: 10 native (8 ai-* + council.md + commands/CLAUDE.md)
+             + 12 brain-* SYMLINKS → claude-brain (5 committed as symlinks, 7 untracked)
+skills/      → 7 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
+               ai-git-commit-patterns, ai-skill-creator, ai-skill-fine-tuning, ai-skill-lifecycle)
+             + human-language-check (tracked) + brain-learn (UNTRACKED, this machine only)
+             + brain-conventions (SYMLINK → claude-brain, untracked)
   resources/ → 4 shared reference files used across multiple skills via @../resources/
 docs/        → Official Claude Code documentation (agents-doc.md, skill-doc.md)
 statusline-command.sh → Status line script (model, cost, context %) — hardcoded macOS path
+memory.md    → tracked session-memory buffer
 ```
+
+**EDIT AT THE SOURCE, not through the symlink**: every `brain-*` command, `brain-manager.md`, and `skills/brain-conventions` is a symlink into `/Users/marcinjucha/Prywatne/projects/claude-brain/.claude/` — edit them THERE. The symlinks are created by `claude-brain/scripts/link-commands.sh` (idempotent, links `commands/*.md`). **Why:** editing via the `~/.claude` path writes through into `claude-brain` with no diff visible here — and the 7 untracked ones must never be committed in `~/.claude`, since their source of truth is `claude-brain`. The 5 that ARE committed (brain-load, brain-publish, brain-pull, brain-social, brain-update) are stored as symlink blobs holding an absolute machine-specific path — they resolve only on this machine.
 
 ## Weird Parts / Key Patterns
 
-**Self-referential system**: ai-manager-agent (the only agent) uses meta-skills to build/maintain artifacts — including itself. When modifying ai-manager-agent or its skills, changes affect the tool doing the work.
+**Self-referential system**: `ai-manager-agent` uses the meta-skills to build/maintain artifacts — including itself and this file. When modifying ai-manager-agent or its skills, changes affect the tool doing the work.
 
-**Single agent, 7 skills**: Unlike claude-dev (8 specialized agents), claude-meta has exactly one agent (`ai-manager-agent`, opus model) that loads all 7 skills. **Why:** all meta-operations (create/audit/modify agents, skills, commands, CLAUDE.md) share the same quality principles (signal vs noise, WHY over HOW, no invented content), so one agent with skill-based routing is sufficient.
+**Two agents, one of which does all meta work**: `ai-manager-agent` (opus) performs every artifact operation (create/audit/modify agents, skills, commands, CLAUDE.md) and preloads **6** of the 7 meta skills in its frontmatter — `ai-skill-lifecycle` exists on disk but is NOT preloaded. **Why one agent with skill routing:** all meta-operations share the same quality principles (signal vs noise, WHY over HOW, no invented content), so routing by skill beats a fleet of near-identical agents. `brain-manager` is a separate router for brain/vault operations and shares none of that.
 
 **Tri-modal command pattern**: All `ai-*` artifact commands (ai-skill, ai-agent, ai-claude-md, ai-commands) share identical phase structure: Phase 0 detects intent (CREATE/AUDIT/MODIFY), then adaptive phases follow. **Why:** consistent UX — user always gets clarifying questions → agent work → verification, regardless of artifact type.
 
-**Two critical rules live in agent system prompt, not skills**: "NEVER INVENT CONTENT" and "AVOID AI-KNOWN CONTENT" are in `ai-manager-agent.md` directly. **Why:** skills are lazily loaded — if these rules were only in skills, ai-manager-agent could generate invented metrics before the skill enforcing the rule gets loaded.
+**Three critical rules live in the agent system prompt, not skills**: `agents/ai-manager-agent.md` carries "FACT-BASED CONTENT ONLY" (no invented metrics/incidents), "AVOID AI-KNOWN CONTENT", and "SCRIPT DETERMINISTIC WORK OVER LARGE INPUTS" inline. **Why:** skills are lazily loaded — if these rules lived only in skills, ai-manager-agent could generate invented metrics before the skill enforcing the rule gets loaded.
 
 **Artifact-file writes MUST route through ai-manager-agent, never the orchestrator inline**: The `ai-*` command family (ai-commands, ai-skill, ai-agent, ai-claude-md, ai-extract-memory) mandates that any file creation / implementation / edit to an artifact-definition file (`commands/*.md`, `skills/**/SKILL.md`, `agents/*.md`) goes through the `ai-manager-agent` subagent — the main loop must not write those files itself, even with full context. **Why:** a session running `/ai-commands` rationalized writing the command files inline ("I have context, it's procedural") and bypassed the command's explicit "must use ai-manager-agent" rule; user caught it. Rationalizations ("simpler", "full context") do NOT override an explicit MUST. Mechanical backstop: a global `~/.claude/settings.json` `PreToolUse` hook (matcher `Write|Edit`) fires a non-blocking reminder (via `hookSpecificOutput.additionalContext`) whenever an artifact-definition path is touched — non-blocking (exit 0) so the legitimate path (the subagent itself writing the files) is never blocked. CLAUDE.md files are intentionally out of scope (editable via the agent but not gated). Rule originates in the `ai-*` command bodies; enforcement hook lives in `~/.claude/settings.json`.
 
-**Shared resources at `skills/resources/`**: 4 reference files (signal-vs-noise, skill-ecosystem, skill-structure, why-over-how) shared across multiple skills via `@../resources/` paths. **Why:** avoids duplicating foundational reference content across 7 skills.
+**Shared resources at `skills/resources/`**: 4 reference files (signal-vs-noise, skill-ecosystem, skill-structure, why-over-how) shared across the meta skills via `@../resources/` paths. **Why:** avoids duplicating foundational reference content across 7 skills.
 
-**statusline-command.sh has hardcoded macOS path**: Line 8 reads from `/Users/marcinjucha/.claude/settings.json` — only works on the original dev machine, not on VPS.
+**statusline-command.sh has hardcoded macOS path**: Line 8 reads `.effortLevel` from `/Users/marcinjucha/.claude/settings.json` via `jq` — only works on the original dev machine, not on VPS.
 
-**memory.md is project-scoped**: Unlike auto-memory (global), `memory.md` is checked into git. Preference: save project learnings here, not global auto-memory.
+**`memory.md` is checked into git**: `~/.claude/memory.md` is tracked, unlike the global auto-memory index. Preference: save learnings to the *project's* `memory.md`, not to global auto-memory.
 
 ## Cross-References
 
-- `agents/CLAUDE.md` — ai-manager-agent frontmatter, skill loading, thin router pattern
-- `commands/CLAUDE.md` — command registry, tri-modal pattern, orchestration details
-- `skills/CLAUDE.md` — skill registry, shared resources, meta-skill relationships
+- `~/.claude/agents/CLAUDE.md` — ai-manager-agent frontmatter, skill loading, thin router pattern
+- `~/.claude/commands/CLAUDE.md` — command registry, tri-modal pattern, orchestration details
+- `~/.claude/skills/CLAUDE.md` — skill registry, shared resources, meta-skill relationships
 
 ## Second Brain & Session Memory (global behavior)
 

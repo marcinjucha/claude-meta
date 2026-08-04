@@ -4,16 +4,18 @@ description: "Extract learnings from current session and save to memory.md. Usag
 
 # Extract Memory
 
-This command delegates ALL work to `ai-manager-agent`. The orchestrator's only job is to invoke the agent and report results.
+This command delegates ALL work to a **fork** of the current conversation. The orchestrator's only job is to invoke the fork and report results.
 
 ## Orchestrator Instructions
 
-### CRITICAL: DELEGATE TO AI-MANAGER-AGENT
+### CRITICAL: DELEGATE TO A FORK
 
 **You are the orchestrator.** Your ONLY job:
 
-1. **Invoke** `ai-manager-agent` using the Task tool with the prompt template below
-2. **Report** the agent's summary to the user
+1. **Invoke** a fork (`subagent_type: "fork"`) using the Task tool with the prompt template below
+2. **Report** the fork's summary to the user
+
+**WHY a fork, never a fresh agent:** the extraction's primary source is THIS conversation, so the executor must inherit it — a fresh agent starts blank and will either return an empty extraction or invent one from whatever summary it was handed in the prompt. Commit `2587a33` ("use agents for extract memory") introduced exactly that bug by moving the work from inline to a fresh `ai-manager-agent`; do not route this command back to a fresh agent.
 
 **DO NOT:**
 - ❌ Read memory.md yourself
@@ -22,13 +24,13 @@ This command delegates ALL work to `ai-manager-agent`. The orchestrator's only j
 - ❌ Ask clarifying questions (this command is fully automatic)
 
 **DO:**
-- ✅ Immediately invoke Task tool with subagent_type="ai-manager-agent"
-- ✅ Forward any $ARGUMENTS to the agent prompt
-- ✅ Report the agent's output to the user verbatim
+- ✅ Immediately invoke Task tool with subagent_type="fork"
+- ✅ Forward any $ARGUMENTS to the fork prompt
+- ✅ Report the fork's output to the user verbatim
 
 ### Socratic Self-Reflection Gate
 
-Before invoking ai-manager-agent, pause and reflect:
+Before invoking the fork, pause and reflect:
 
 1. **Question assumptions** — "What happened in this session that was surprising or non-obvious?"
 2. **Probe the essence** — "What's the ONE learning that would most help future sessions?"
@@ -40,7 +42,7 @@ Include key insights in the agent prompt (e.g., "Focus extraction on [specific a
 
 ## Agent Prompt Template
 
-Copy this prompt and send it to ai-manager-agent via Task tool:
+Copy this prompt and send it to the fork via Task tool:
 
 ~~~
 You are a memory extraction agent. Your task: analyze the current conversation and save learnings to the project's `memory.md` file.
