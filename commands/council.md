@@ -24,7 +24,7 @@ Multi-phase orchestration command that models karpathy/llm-council as a Claude C
 ## The Claude Code adaptation (key insight)
 
 karpathy's council gets diversity from **different LLM vendors**. Here there is one model, so diversity comes from **distinct perspectives/roles** assigned per member (the load-bearing lever), optionally reinforced by:
-- `model` override per Agent call (mix `opus`/`sonnet`/`haiku` for genuine model diversity), and/or
+- `model` override per Agent call — a WEAK lever next to distinct perspectives, so treat it as garnish: default **every** member to `opus`, drop to `sonnet` only for a genuinely lighter-weight lens (narrow scope, mostly lookup/enumeration rather than judgment), **never `haiku`** (deliberation, cross-review and synthesis need reasoning depth a small model can't provide), and/or
 - **best-fit `subagent_type` per member** — match the lens to the most capable specialist agent, not one default (see Stage 0 step 4).
 
 A council of identical agents is wasted spend — **members must differ in lens, not just be N copies**.
@@ -40,7 +40,7 @@ A council of identical agents is wasted spend — **members must differ in lens,
 4. **Pick the best-fit agent per member — high-leverage, and DISCOVER don't hardcode.** Specialist subagents load their OWN skills and project context, so a well-matched agent answers with far more domain knowledge than a generic one — agent choice is part of the council's quality, not a detail. In THIS environment, enumerate what exists:
    - built-in agent types listed in the Agent tool registry (commonly `general-purpose`, `Explore`, `Plan`, plus any others),
    - project agents in `.claude/agents/` — **read each one's `description` (and `skills:` list)** to learn its specialty.
-   Then map each member's lens to the agent whose description best covers it (e.g. correctness/verification, architecture/placement, implementation, testing/performance, requirements, broad search, or a domain specialist). **Maximize specialist coverage, minimize generic agents:** every member that plausibly touches the project's domain should run on a specialist — `general-purpose` is a LAST resort, used only for a lens with no specialist even loosely relevant (or when the project ships no custom agents at all). If two lenses map to the same best specialist, either give both to it (distinct prompts) or assign the second to the next-closest specialist rather than dropping to generic. When a domain has more specialists than your initial lenses, prefer shaping the lenses so each maps to a distinct specialist — the specialist's loaded skills ARE part of the council's knowledge. Prefer Stage-2 reviewers to use a different specialist `subagent_type` than the Stage-1 author of the option they review. Optionally pair a stronger `model` with the hardest lens / the Chairman.
+   Then map each member's lens to the agent whose description best covers it (e.g. correctness/verification, architecture/placement, implementation, testing/performance, requirements, broad search, or a domain specialist). **Maximize specialist coverage, minimize generic agents:** every member that plausibly touches the project's domain should run on a specialist — `general-purpose` is a LAST resort, used only for a lens with no specialist even loosely relevant (or when the project ships no custom agents at all). If two lenses map to the same best specialist, either give both to it (distinct prompts) or assign the second to the next-closest specialist rather than dropping to generic. When a domain has more specialists than your initial lenses, prefer shaping the lenses so each maps to a distinct specialist — the specialist's loaded skills ARE part of the council's knowledge. Prefer Stage-2 reviewers to use a different specialist `subagent_type` than the Stage-1 author of the option they review. Every member defaults to `model: opus`; optionally drop a genuinely lighter lens to `sonnet`.
 5. State the size + the per-member (perspective → chosen agent) assignment to the user in one line, then proceed.
 
 ## Stage 1 — First opinions (parallel, FOREGROUND)
@@ -63,7 +63,7 @@ Goal: rank opinions on accuracy + insight without identity bias.
 
 ## Stage 3 — Chairman synthesis
 
-One **Chairman** produces the single final answer. The orchestrator may BE the chairman, or spawn a dedicated agent (use a stronger `model: opus` for hard calls).
+One **Chairman** produces the single final answer. The orchestrator may BE the chairman, or spawn a dedicated agent. The Chairman runs on `opus` — always, not just for hard calls.
 
 Chairman input: all opinions (de-anonymized is fine now) + the aggregated rankings. Chairman must:
 - weight by the panel's rankings but **not blindly follow the majority** — graft the best ideas from runners-up, discard flagged-wrong claims;
@@ -92,7 +92,7 @@ Keep Stage 1/2 as scannable summaries (link to detail if asked); the Chairman de
 ## Knobs (args)
 
 - `/council <query>` — auto-frames size + perspectives.
-- Honor explicit asks: "5 members", "lenses: X, Y, Z", "skip review", "you be the chairman", "mix models", "use agent X for the Y lens" (overrides the auto-match in Stage 0 step 4).
+- Honor explicit asks: "5 members", "lenses: X, Y, Z", "skip review", "you be the chairman", "mix models" (honored only within `opus`/`sonnet` — never `haiku`), "use agent X for the Y lens" (overrides the auto-match in Stage 0 step 4).
 - `--no-act` / `--decide-only`: produce the decision but don't implement it (default for code changes — confirm before editing).
 
 ## Anti-patterns
@@ -104,6 +104,7 @@ Keep Stage 1/2 as scannable summaries (link to detail if asked); the Chairman de
 - ❌ **Convening for trivia** — match council size to stakes; a 5-agent council on a one-liner is waste.
 - ❌ **Letting members see each other in Stage 1** — first opinions must be independent.
 - ❌ **Defaulting to `general-purpose` when a specialist exists** — specialists carry project-specific skills/context; a generic agent throws that away. Match to specialists first; generic is the last resort.
+- ❌ **Running any council member or the Chairman on `haiku`** — forbidden even under an explicit "mix models" ask; overrides stay inside `opus`/`sonnet`, with `opus` the default. Model diversity is a weak lever and must never be bought with reasoning depth.
 
 ## Scaling note
 
