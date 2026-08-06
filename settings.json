@@ -49,8 +49,6 @@
       "Bash(vercel whoami:*)",
       "Bash(vercel --cwd:*)",
       "Bash(git push:*)",
-      "WebFetch(domain:legal-mind-website.vercel.app)",
-      "WebFetch(domain:legal-mind-cms.vercel.app)",
       "Bash(echo:*)",
       "Bash(npm run dev:cms:*)",
       "WebFetch(domain:localhost)",
@@ -84,7 +82,7 @@
       "Bash(npm run lint:*)",
       "Bash(for component in Navbar Hero Problems Benefits Features HowItWorks Pricing Testimonials FAQ FinalCTA Footer)",
       "Bash(do)",
-      "Bash(if [ -f \"/Users/marcinjucha/Prywatne/projects/legal-mind/apps/website/features/marketing/components/$component.tsx\" ])",
+      "Bash(if [ -f \"/Users/marcinjucha/Prywatne/projects/agency-cms/apps/website/features/marketing/components/$component.tsx\" ])",
       "Bash(then)",
       "Bash(else)",
       "Bash(fi)",
@@ -119,6 +117,14 @@
             "command": "/Users/marcinjucha/Prywatne/projects/claude-brain/hooks/session-start-brain.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/marcinjucha/Prywatne/projects/claude-brain/hooks/session-start-knowledge.sh"
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -151,6 +157,7 @@
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "medium",
+  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "editorMode": "normal",
   "voiceEnabled": false
