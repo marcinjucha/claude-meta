@@ -15,9 +15,11 @@ commands/    → 22 .md: 10 native (8 ai-* + council.md + commands/CLAUDE.md)
              + 12 brain-* SYMLINKS → claude-brain (5 committed as symlinks, 7 untracked)
 skills/      → 7 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
                ai-git-commit-patterns, ai-skill-creator, ai-skill-fine-tuning, ai-skill-lifecycle)
-             + human-language-check (tracked) + brain-learn (UNTRACKED, this machine only)
+             + human-language-check, summary-signal-first (tracked)
+             + brainstorming (UNTRACKED, new) + brain-learn (UNTRACKED, this machine only)
              + brain-conventions (SYMLINK → claude-brain, untracked)
   resources/ → 4 shared reference files used across multiple skills via @../resources/
+  synced/    → synced anthropic-skills:* copies (untracked, not authored here)
 docs/        → Official Claude Code documentation (agents-doc.md, skill-doc.md)
 statusline-command.sh → Status line script (model, cost, context %) — hardcoded macOS path
 memory.md    → tracked session-memory buffer
@@ -100,6 +102,14 @@ When cutting, record the REASON in operator scaffolding (file header) so a week 
 look like a loss. This is the parent rule whose instances are „notatki: czyść, nie dodawaj"
 (2026-06-21) and „shared running doc = essence only, one language" (2026-07-21).
 
+**A decision question must stand on its own: shorthand from a vault note is NOT shared context.**
+Before asking him to decide, unfold the note's shorthand into the mechanism, and when the decision
+rests on a quote (a recording, a message), put the quote and the timeline in front of him. Two
+instances of „nie rozumiem tego": 2026-09-21 (calculator items quoted as note shorthand, both decided
+in two sentences once unfolded) and 2026-09-22 („obietnica pierwszeństwa, WA-05 przed filmem" passed
+only with the film quote plus the day's timeline). **Why:** a note is written for me-who-already-knows;
+a question he cannot evaluate costs a round trip and looks like his gap, not mine.
+
 ## Reviewing work WITH Marcin: one unit per turn, and show the framework's labels (global behavior)
 
 **Walk a long artifact BLOCK BY BLOCK in conversation — one block per message, ONE recommendation,
@@ -115,11 +125,59 @@ silent batch rewrite hides which edits rest on doctrine and which rest on my inf
 edits ship with the same authority as the strongest. The reading-of-canon ones are exactly what he
 wants to decide.
 
+**While applying an arbitration, write ONLY the settled items — my own improvement goes in a separate
+turn through the full pipeline.** Origin (2026-08-16/17, VSL): while applying arbitrated fixes I added
+„i jego proporcje" to a sentence, giving away a PAID first-edition bonus and making the scarcity false
+retroactively; it belonged to no arbitrated item, so no gate saw it, and only a second `copy-verify`
+pass caught it. **Why:** an edit riding along with approved ones inherits their approval without ever
+being checked.
+
+**Multi-agent review (`/council`, fan-out critique): PROPOSE it when a topic looks closed, never launch
+it on my own.** Marcin, 2026-08-08: „jak będę czuł potrzebę, to sam dam znać… ale możesz to
+zaproponować… To ja wtedy zdecyduję". **Why:** it is heavyweight and its timing is his call — which is
+also why it stays out of `copy-walkthrough`.
+
 **When applying ANY named framework, render it EXPLICITLY LABELLED with concrete steps** (Mean/Know/
 So-what, Value Equation, Grand Slam steps, awareness stages, launch phases…) — walk the work through
 each labelled step instead of folding the conclusion in silently. **Why:** the visible structure
 teaches him to apply the framework himself; a silently applied framework gives the answer but not the
 method.
+
+## Doing the work: divergences, verification, footprint (global behavior)
+
+**Never resolve a divergence silently — name it at hand-off.** Two cases: (1) porting a pattern from a
+sibling repo → do it THE SAME WAY by default and offer the improvement as a proposal (2026-09-17,
+Plausible gated by host where `apps/website` loads it unconditionally: „napraw aby było tak samo");
+(2) a coach's recommendation colliding with canon → calibrate, don't adopt or drop it (2026-08-03,
+Brett: cart extension rejected with his own downsell argument, instalments redesigned for conditions he
+didn't know, both divergences written into the reply). **Why:** an unnamed difference reads as a bug,
+silent adoption breaks canon, and silent omission costs trust plus another round of the same advice.
+
+**Diagnostics that go silent lie — a negative result needs positive proof.** Three forms of one trap:
+a negative or universal claim about the vault („nigdzie tego nie ma", „names are unique") needs a
+grep, never memory (2026-08-17/18: `raw-materials/` existed with 12 references; `audience.md`,
+`film1.md`… collide between creators); verifying my own test must read the file written by THIS run,
+not a previous one (2026-09-17, twice in one session: „BRAK komunikatu" while it was in the render);
+`grep` on single-line HTML here prints NOTHING, not even `0` for `-c`, and `LC_ALL=C` doesn't help —
+count with `python3` `open().read().count()` (2026-09-21, two false „not on the page"). **Why:** silence
+reads exactly like absence, so the false negative passes unchallenged — and on my own verification it
+is worse than no test, because it throws away work that was fine.
+
+**After a fan-out onto SIBLING documents, run an aligning pass myself.** Five agents writing five docs
+for one creator folder produced five title separators and two placeholder forms, one being `[DATA ...]`
+in caps inside a sentence the creator reads aloud. **Why:** each agent met its own contract; the
+inconsistency exists only at the level of the SET, which none of them sees.
+
+**Deterministic, mechanical work goes through scripts — in the main loop too, not only in
+`ai-manager-agent`.** Marcin, 2026-08-08. Boundary: a script returns only the relevant slice and never
+judges whether a sentence is good — judgment stays in context. **Why:** reading a whole input to do
+what a parser does costs context and is less reliable.
+
+**Limit the number of files I create — a new file must carry something no existing one does.** Marcin,
+2026-08-10, on a proposed `gw-paste-…md`: „chcę ograniczyć ilość tworzonych plików, które nic
+specjalnie nie wnoszą"; the fix was updating three existing DNA files and collapsing a duplicate BRIEF
+section into a pointer. **Why:** every extra file is one more place to keep in sync and one more
+candidate for the stale copy.
 
 ## Pliki z copy: sam gotowy tekst, uzasadnienia OSOBNO (global behavior)
 
