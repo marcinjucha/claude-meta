@@ -2,78 +2,53 @@
 
 ## Overview
 
-Two skill families in this repo: **ai-*** (meta-skills for Claude Code artifact management, loaded by `ai-manager-agent`) and **vps-*** (VPS infrastructure domain knowledge, loaded by `vps-ops-agent` and `vps-validator-agent`).
+Global skills only: the **ai-*** meta-skills (artifact management, used by `ai-manager-agent`) plus a few domain-agnostic **working-style** skills that apply in every project. Domain skills (vps-*, copy-*, so-* …) live in `claude-dev` / `claude-marketing`, not here.
 
 ## AI Meta-Skills (ai-manager-agent)
 
-All 6 share 4 reference files at `resources/` via `@../resources/` paths.
-
 | Skill | Lines | Purpose |
 |-------|-------|---------|
-| `ai-agent-creator` | 430 | Create/evaluate subagents. Thin router architecture, tool restrictions, frontmatter, system prompt. |
+| `ai-agent-creator` | 433 | Create/evaluate subagents. Thin router architecture, tool restrictions, frontmatter, system prompt. |
 | `ai-skill-creator` | 321 | Create/evaluate/refactor skills. Signal-focused content, Tier 2/3 structure, templates. |
 | `ai-skill-fine-tuning` | 472 | Update existing skills. Pattern drift, outdated content, anti-patterns, advanced features (fork, injection, hooks). |
-| `ai-claude-md` | 406 | Create/maintain CLAUDE.md files. Project-specific discoveries, WHY context, signal filtering. |
-| `ai-command-creation` | 653 | Create/refactor multi-phase commands. Sufficient context principle, orchestration, clarifying questions pattern. |
-| `ai-git-commit-patterns` | 285 | Commit messages and organization. WHY-focused, conventional commits, ticket extraction, PR structure. |
+| `ai-claude-md` | 333 | Create/maintain CLAUDE.md files. Project-specific discoveries, WHY context, signal filtering. |
+| `ai-command-creation` | 555 | Create/refactor multi-phase commands. Sufficient context principle, orchestration, clarifying questions pattern. |
+| `ai-git-commit-patterns` | 283 | Commit messages and organization. WHY-focused, conventional commits, ticket extraction, PR structure. |
+| `ai-skill-lifecycle` | 417 | Full skill lifecycle (create + maintain + advanced features) in one skill. **NOT preloaded** by `ai-manager-agent`. |
 
-## VPS Infrastructure Skills (vps-ops-agent, vps-validator-agent)
+## Working-Style Skills (global, any project)
 
-One skill per stack + shared practices. Each covers Docker topology, operations, and gotchas for its stack.
+| Skill | Lines | Tracked | Purpose |
+|-------|-------|---------|---------|
+| `human-language-check` | 79 | yes | Two-pass review of reader-facing text: correctness, then de-AI/clarity. Cleans only audience text, never scaffolding. Mandated by `../CLAUDE.md` for all human-facing text. |
+| `summary-signal-first` | 124 | yes | Summary/status/recap for a named recipient: decides what gets cut and what leads (the recipient's decision). Runs BEFORE `human-language-check`. |
+| `brainstorming` | 78 | no (new) | Turn-by-turn variant-narrowing loop: 3 variants → one recommendation → his pick is the next base, variants push along named axes; he closes it; rejection CRITERIA recorded. |
+| `brain-learn` | 54 | no (this machine only) | Teaches a discipline from the vault's `02-Areas/<discipline>/` notes via an explicit labeled-step walk on a real project, logs the rep. |
+| `brain-conventions` | 91 | SYMLINK → brain-vault/.brain | Brain conventions + knowledge-distillation discipline. Edit at source in `brain-vault/.brain`. |
 
-| Skill | Lines | Stack path | Purpose |
-|-------|-------|-----------|---------|
-| `vps-practices` | 290 | (shared) | Cross-stack patterns: Docker Compose ops, backup/restore, monitoring setup, adding new services |
-| `vps-traefik-stack` | 131 | `/opt/traefik` | Standalone Traefik reverse proxy, SSL certs, traefik_proxy network, certdumper dependency |
-| `vps-n8n-stack` | 177 | `/opt/n8n` | n8n queue mode (7 services), encryption key sync, worker version matching |
-| `vps-monitoring-stack` | 143 | `/opt/monitoring` | Prometheus/Grafana/AlertManager, cross-compose scraping via container names |
-| `vps-glitchtip-stack` | 108 | `/opt/glitchtip` | GlitchTip error tracking, isolated postgres/redis, migrate-exits-normally pattern |
-| `vps-n8n-patterns` | — | `/opt/n8n` | n8n workflow development (NOT infrastructure) |
-| `vps-email-stack` | — | `/opt/email` | Stalwart mail server, Snappymail, certdumper TLS |
-| `vps-strapi-stack` | — | `/opt/strapi` | Strapi CMS deployment, container ops |
-| `vps-plausible-stack` | — | `/opt/plausible` | Plausible Analytics CE, ClickHouse |
-| `vps-cal-stack` | — | `/opt/cal-vps` | Baikal CalDAV/CardDAV |
-| `vps-postgresql-ops` | — | (shared) | PostgreSQL major upgrades, backup/restore, data migration |
+## Other Directories
 
-## Shared Resources
-
-| File | Purpose |
-|------|---------|
-| `resources/signal-vs-noise-reference.md` | 3-question filter philosophy, detailed examples |
-| `resources/skill-ecosystem-reference.md` | Skill locations, sharing, permissions, dynamic injection |
-| `resources/skill-structure-reference.md` | Standard structure, required sections, organization |
-| `resources/why-over-how-reference.md` | WHY > HOW philosophy, production context guidelines |
-
-## Folder Structure
-
-```
-skills/
-  skill-name/
-    SKILL.md          # main content with YAML frontmatter
-    resources/        # skill-specific supplementary files (optional)
-  resources/          # SHARED across all 7 skills via @../resources/
-```
+| Path | What |
+|------|------|
+| `resources/` | 4 shared reference files (signal-vs-noise, skill-ecosystem, skill-structure, why-over-how) used by ai-* skills via `@../resources/`. |
+| `synced/<id>/` | 22 synced `anthropic-skills:*` copies (untracked). Not authored here — don't edit or register them. |
 
 ## Weird Parts / Key Patterns
 
-**Two skill families, two agent groups**: `ai-*` skills load into `ai-manager-agent` (meta-operations). `vps-*` skills load into `vps-ops-agent` + `vps-validator-agent` (infrastructure ops). **Why the split:** different concerns — meta-skills need quality principles (signal vs noise), VPS skills need operational runbooks (Docker topology, gotchas).
+**`ai-manager-agent` preloads 6 of 7 ai-* skills**: `ai-skill-lifecycle` is on disk but not in the agent's `skills:` frontmatter, so it only loads on demand.
 
-**VPS skills map 1:1 to stacks (since 2026-04-11)**: Each `/opt/<stack>` has exactly one `vps-<stack>-stack` skill. **Why:** Previously monitoring/glitchtip/traefik were part of n8n stack — one giant skill. After extracting to standalone stacks, each got its own skill with focused scope.
+**signal-vs-noise absorbed into shared resource**: Previously a standalone skill, now lives entirely in `resources/signal-vs-noise-reference.md`. **Why absorbed:** every skill already referenced the shared resource — the standalone skill was redundant indirection.
 
-**All ai-* skills serve one agent**: All 6 ai-* skills load into `ai-manager-agent` exclusively. **Why:** all meta-operations share the same quality principles (signal vs noise, WHY over HOW), so one agent with a decision tree routes to the right skill.
+**ai-command-creation is the largest**: **Why not split:** sufficient context principle → phase design → clarifying questions form one chain; splitting would lose it.
 
-**signal-vs-noise absorbed into shared resource**: Previously a standalone skill (132 lines), now lives entirely in `resources/signal-vs-noise-reference.md`. **Why absorbed:** all unique content (AI-known content filter, invented content rules, content philosophy) fits naturally in the shared resource. All skills already referenced the shared resource via `@../resources/signal-vs-noise-reference.md` — the standalone skill was redundant indirection.
+**ai-skill-creator vs ai-skill-fine-tuning split**: "what should this skill contain?" vs "what drifted and needs updating?" — two decision frameworks that would compete for attention in one file.
 
-**ai-command-creation is the largest (653 lines)**: Command orchestration is the most complex artifact type — multi-phase design, sufficient context principle, clarifying questions pattern, knowledge capture phase, section templates. **Why not split:** all sections are interconnected; the sufficient context principle references phase design which references clarifying questions. Splitting would lose that context chain.
+**"NEVER INVENT" and "AVOID AI-KNOWN" rules live in multiple places**: `ai-manager-agent` system prompt, individual skills, AND `signal-vs-noise-reference.md`. **Why:** defense-in-depth — the system prompt enforces them before any skill loads.
 
-**ai-skill-creator vs ai-skill-fine-tuning split**: Creator handles new skills (what to include, structure decisions, Tier 2/3 split). Fine-tuning handles existing skills (what to change, drift detection, advanced features). **Why two skills instead of one:** different decision frameworks — "what should this skill contain?" vs "what drifted and needs updating?" Combining them would exceed 700 lines with two distinct mental models competing for attention.
-
-**Shared resources via `@../resources/` paths**: 4 reference files live at `skills/resources/` and are referenced by multiple skills using relative paths. **Why not duplicate into each skill:** single source of truth for foundational philosophy. Updating signal-vs-noise-reference.md once updates it for all 7 skills.
-
-**"NEVER INVENT" and "AVOID AI-KNOWN" rules live in multiple places**: These rules appear in `ai-manager-agent` system prompt, individual skills, AND the shared `signal-vs-noise-reference.md`. **Why:** defense-in-depth — agent system prompt enforces rules immediately (before skills load), skills reinforce when loaded, shared resource provides the complete philosophy.
+**Working-style skills encode Marcin's global rules, not a domain**: `human-language-check`, `summary-signal-first` and `brainstorming` are the executable form of rules in `../CLAUDE.md` (language check, lead with the point, one unit per turn). **Why global:** those rules apply in every project, so the skills must be reachable from every project.
 
 ## Cross-References
 
-- `../CLAUDE.md` -- repo overview, self-referential system, shared resources explanation
-- `../agents/CLAUDE.md` -- ai-manager-agent loads all 7 skills, opus model rationale
+- `../CLAUDE.md` -- repo overview, self-referential system, symlink rules
+- `../agents/CLAUDE.md` -- ai-manager-agent frontmatter and skill preloading
 - `../commands/CLAUDE.md` -- ai-* commands invoke ai-manager-agent which routes to these skills
