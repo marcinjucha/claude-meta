@@ -488,8 +488,16 @@ Rozstrzygamy: czy diff zgadza się z tym, co potwierdziłeś w Fazie 5, i czy co
      Tryb (ii) (APPEND wiersza ❌ / LOKALNE) tej reguły NIE podlega.
 3. Snapshot do skilla jest należny dla <plik>. `sync-procesy.py` <istnieje / nie istnieje>.
    Odpalamy teraz, czy idzie do raportu jako „snapshot należny, skrypt nie istnieje"?
-4. Commitujemy te ścieżki teraz, czy zostawiamy niescommitowane do Twojego przeglądu?
+4. Commitujemy te ścieżki teraz i wypychamy repo vaulta (telefon widzi tylko wypchnięte),
+   czy zostawiamy niescommitowane do Twojego przeglądu?
 ```
+**Push repo vaulta** (`/Users/marcinjucha/Prywatne/projects/brain-vault`) po commicie — ta sama reguła
+co `/brain-finish` Faza 5 krok 8: najpierw `git -C <vault-repo> push`; tylko gdy odrzucony, a
+`git -C <vault-repo> status --porcelain` jest puste → `pull --rebase` (BEZ `--autostash`) i push;
+niepuste → nie pulluj, raport „NIE wypchnięty — vault ma niezacommitowaną pracę innych sesji; push
+po ich commicie". Nigdy `--force`; konflikt rebase'u → `rebase --abort` i stan do raportu. Inne repo
+(skille u właściciela) → bez pusha. **WHY:** vault bywa brudny od pracy równoległych sesji,
+a `--autostash` nakłada ją z powrotem i przy konflikcie z telefonem zostawia znaczniki w cudzych plikach.
 Przy braku zgody na punkcie 2 **cofnij edycję źródła przed przejściem do Fazy 7** — raport nie
 ma prawa twierdzić, że zapisano brzmienie, którego Marcin nie potwierdził.
 
