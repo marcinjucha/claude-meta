@@ -1,1 +1,1 @@
-/Users/marcinjucha/Prywatne/projects/claude-brain/.claude/commands/brain-social.md
+/Users/marcinjucha/Prywatne/projects/brain-vault/.brain/.claude/commands/brain-social.md

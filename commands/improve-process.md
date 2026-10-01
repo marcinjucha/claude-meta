@@ -17,7 +17,7 @@ i przy każdym przebiegu podnosi ten sam rozjazd do arbitrażu w nieskończonoś
 sprawia, że rozjazd ZBIEGA.
 
 `$ARGUMENTS` = etap pipeline'u albo nazwa twórcy (opcjonalny; brak → Faza 0 pyta).
-Repo mózgu (config/skrypty): `/Users/marcinjucha/Prywatne/projects/claude-brain`.
+Silnik mózgu (config/skrypty): `/Users/marcinjucha/Prywatne/projects/brain-vault/.brain`.
 
 ## Fazy
 
@@ -142,7 +142,7 @@ albo STOP przy gotowym procesie, albo Faza 0(c) zakłada DRUGI plik o launchu w 
 
 (b) **Inwentarz kroków źródła — ze SKRYPTU, nie z czytania pliku:**
 ```bash
-python3 /Users/marcinjucha/Prywatne/projects/claude-brain/scripts/procesy-scan.py \
+python3 /Users/marcinjucha/Prywatne/projects/brain-vault/.brain/scripts/procesy-scan.py \
   --inventory <źródło>
 ```
 Zwraca: **ID + KIEDY + PRZESŁANKI** (skrócone, z zachowanymi etykietami `[ZMIERZONA]` /
@@ -242,7 +242,7 @@ Dopiero po potwierdzeniu: `continue` / `skip` / `back` / `status` / `stop`.
 
 (a) **Skrypt zwraca WYCINEK, nigdy plik:**
 ```bash
-python3 /Users/marcinjucha/Prywatne/projects/claude-brain/scripts/procesy-scan.py \
+python3 /Users/marcinjucha/Prywatne/projects/brain-vault/.brain/scripts/procesy-scan.py \
   --diff "<źródło>" "<instancja>"
 ```
 `--diff` bierze **dwa argumenty pozycyjne**, nie flagi `--source` / `--instance`. Ścieżki vaulta mają
@@ -297,7 +297,7 @@ Dopiero po potwierdzeniu: `continue` / `skip` / `back` / `status` / `stop`.
 
 Dla KAŻDEGO kandydata z Faz 1 i 2:
 ```bash
-python3 /Users/marcinjucha/Prywatne/projects/claude-brain/scripts/procesy-scan.py \
+python3 /Users/marcinjucha/Prywatne/projects/brain-vault/.brain/scripts/procesy-scan.py \
   --dedup "<teza>" --ctx <ctx> --exclude-origin "<ścieżka originu bez :linia>"
 ```
 **Origin przekazywany do skryptu to ŚCIEŻKA, nie `ścieżka:linia`** — inaczej wykluczenie nie działa

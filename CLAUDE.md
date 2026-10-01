@@ -2,22 +2,22 @@
 
 ## Overview
 
-This IS `~/.claude` — the live global Claude Code config, loaded into every session in every project, and itself a git repo (`.gitignore` excludes runtime dirs: `cache`, `projects`, `history.jsonl`, `plugins`, `backups`, `debug`, `shell-snapshots`, `.DS_Store`, …). It holds the **meta-artifact toolchain** natively (tools for creating, auditing, and maintaining other Claude Code artifacts) and receives the `brain-*` family by symlink from `claude-brain`.
+This IS `~/.claude` — the live global Claude Code config, loaded into every session in every project, and itself a git repo (`.gitignore` excludes runtime dirs: `cache`, `projects`, `history.jsonl`, `plugins`, `backups`, `debug`, `shell-snapshots`, `.DS_Store`, …). It holds the **meta-artifact toolchain** natively (tools for creating, auditing, and maintaining other Claude Code artifacts) and receives the `brain-*` family by symlink from `brain-vault/.brain` (the engine, formerly the `claude-brain` repo, merged into the vault repo 2026-10-01).
 
 **Domain artifacts live elsewhere:** project-specific agents/skills/commands stay in their own repos (`claude-dev` = programming/infra, `claude-marketing` = go-to-market) and are symlinked into each project's `.claude/`. Only meta-tooling + global behavior belongs here. **Why:** keeps each repo's skill-description routing budget focused on one domain.
 
 ## Structure
 
 ```
-agents/      → ai-manager-agent.md (opus, tracked) + brain-manager.md (SYMLINK → claude-brain, untracked)
+agents/      → ai-manager-agent.md (opus, tracked) + brain-manager.md (SYMLINK → brain-vault/.brain, untracked)
              + agents/CLAUDE.md
 commands/    → 22 .md: 10 native (8 ai-* + council.md + commands/CLAUDE.md)
-             + 12 brain-* SYMLINKS → claude-brain (5 committed as symlinks, 7 untracked)
+             + 12 brain-* SYMLINKS → brain-vault/.brain (5 committed as symlinks, 7 untracked)
 skills/      → 7 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
                ai-git-commit-patterns, ai-skill-creator, ai-skill-fine-tuning, ai-skill-lifecycle)
              + human-language-check, summary-signal-first (tracked)
              + brainstorming (UNTRACKED, new) + brain-learn (UNTRACKED, this machine only)
-             + brain-conventions (SYMLINK → claude-brain, untracked)
+             + brain-conventions (SYMLINK → brain-vault/.brain, untracked)
   resources/ → 4 shared reference files used across multiple skills via @../resources/
   synced/    → synced anthropic-skills:* copies (untracked, not authored here)
 docs/        → Official Claude Code documentation (agents-doc.md, skill-doc.md)
@@ -25,7 +25,7 @@ statusline-command.sh → Status line script (model, cost, context %) — hardco
 memory.md    → tracked session-memory buffer
 ```
 
-**EDIT AT THE SOURCE, not through the symlink**: every `brain-*` command, `brain-manager.md`, and `skills/brain-conventions` is a symlink into `/Users/marcinjucha/Prywatne/projects/claude-brain/.claude/` — edit them THERE. The symlinks are created by `claude-brain/scripts/link-commands.sh` (idempotent, links `commands/*.md`). **Why:** editing via the `~/.claude` path writes through into `claude-brain` with no diff visible here — and the 7 untracked ones must never be committed in `~/.claude`, since their source of truth is `claude-brain`. The 5 that ARE committed (brain-load, brain-publish, brain-pull, brain-social, brain-update) are stored as symlink blobs holding an absolute machine-specific path — they resolve only on this machine.
+**EDIT AT THE SOURCE, not through the symlink**: every `brain-*` command, `brain-manager.md`, and `skills/brain-conventions` is a symlink into `/Users/marcinjucha/Prywatne/projects/brain-vault/.brain/.claude/` — edit them THERE. The symlinks are created by `brain-vault/.brain/scripts/link-commands.sh` (idempotent, links `commands/*.md`). **Why:** editing via the `~/.claude` path writes through into `brain-vault/.brain` with no diff visible here — and the 7 untracked ones must never be committed in `~/.claude`, since their source of truth is `brain-vault/.brain`. The 5 that ARE committed (brain-load, brain-publish, brain-pull, brain-social, brain-update) are stored as symlink blobs holding an absolute machine-specific path — they resolve only on this machine.
 
 ## Weird Parts / Key Patterns
 
@@ -53,8 +53,8 @@ memory.md    → tracked session-memory buffer
 
 ## Second Brain & Session Memory (global behavior)
 
-**Brain-first awareness.** At session start, if the cwd maps to a claude-brain context (per
-`/Users/marcinjucha/Prywatne/projects/claude-brain/config.json` `.paths`), treat the brain
+**Brain-first awareness.** At session start, if the cwd maps to a brain context (per
+`/Users/marcinjucha/Prywatne/projects/brain-vault/.brain/config.json` `.paths`), treat the brain
 project memory (`<vault>/<…>/_*.md`, the high shelf) as the source of truth for status and
 cross-project connections; keep it current via `/brain-update` at milestones; treat the
 worktree `SESSION.md` as the fine-grained, worktree-local scratchpad. The SessionStart hook
