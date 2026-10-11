@@ -113,12 +113,15 @@ Append under the matching section:
 - Do NOT add framework basics or standard patterns derivable from code
 - Do NOT duplicate entries already in memory.md
 - If session had zero signal (only commands, no discussion) → write nothing, tell user "No signal found in this session"
-- Keep total file under 200 lines
+- Keep the file within its size budget (see the size check below — characters for vault buffers, lines elsewhere)
 - If unsure whether something is signal → INCLUDE it (duplicates handled by /ai-curate-memory)
 - Convert relative dates to absolute dates (e.g., "yesterday" → use today's date minus 1)
 - After editing, confirm what was added in a short summary
-- **After editing, count lines in memory.md and report status:**
-  - Below 150 lines → no warning
-  - 150-179 lines → warn: "memory.md at {N}/200 lines — consider running /ai-curate-memory soon"
-  - 180+ lines → alert: "memory.md at {N}/200 lines — run /ai-curate-memory to free space"
+- **After editing, measure memory.md and report status — the unit depends on where the file lives:**
+  - **Vault buffer** (`/Users/marcinjucha/Prywatne/projects/brain-vault/01-Projects/<ctx>/memory.md`) → measure in CHARACTERS, never lines: run `python3 /Users/marcinjucha/Prywatne/projects/brain-vault/.brain/scripts/brain-budget.py --context <ctx>` (`<ctx>` = the folder name under `01-Projects/`) and read the `buffer` row; the budget is `budgets.buffer` in `/Users/marcinjucha/Prywatne/projects/brain-vault/.brain/config.json`. Output listing 0 files = wrong context name, not "within budget" — fix the name and rerun.
+    - Below 75% of `budgets.buffer` → no warning
+    - 75–99% → warn: "memory.md at {N}/{budget} chars — consider running /ai-curate-memory soon"
+    - At or over budget (the row carries `⚠`) → alert: "memory.md at {N}/{budget} chars — run /ai-curate-memory to free space"
+  - **Any other repo's `memory.md`** → count lines: below 150 → no warning; 150-179 → warn "memory.md at {N}/200 lines — consider running /ai-curate-memory soon"; 180+ → alert "memory.md at {N}/200 lines — run /ai-curate-memory to free space".
+  - **WHY two units:** vault buffers are budgeted in characters (`/brain-finish` Faza 0(b) and `brain-budget.py` use the same number); entries there are long single lines, so a line count reported "no warning" for a buffer almost 3x over budget.
 ~~~

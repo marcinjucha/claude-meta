@@ -296,7 +296,9 @@ If no entries are pending brain extraction (N=0) → omit the `Pending brain ext
 
 ## Rules
 
-- **Target: memory.md under 100 lines** — Aggressive cleanup means reaching this target, not just removing obvious noise.
+- **Target size** — aggressive cleanup means reaching this target, not just removing obvious noise:
+  - **Vault buffer** (`/Users/marcinjucha/Prywatne/projects/brain-vault/01-Projects/<ctx>/memory.md`) → in CHARACTERS: under `budgets.buffer` from `/Users/marcinjucha/Prywatne/projects/brain-vault/.brain/config.json`, measured with `python3 /Users/marcinjucha/Prywatne/projects/brain-vault/.brain/scripts/brain-budget.py --context <ctx>` (`buffer` row) before and after curation; report both numbers. Never judge a vault buffer by line count — its entries are long single lines.
+  - **Any other repo's `memory.md`** → under 100 lines.
 - **NEVER edit CLAUDE.md files with the Edit tool** — ALL CLAUDE.md modifications MUST go through ai-manager-agent via the Agent tool (`subagent_type="ai-manager-agent"`). This is a BLOCKING requirement. The orchestrator must NOT use Read+Edit to modify CLAUDE.md files, even for single-line additions. ai-manager-agent loads the `claude-md` skill for correct formatting and signal filtering.
 - **NEVER edit skill files (`.claude/skills/**/SKILL.md`) with the Edit tool** — ALL skill modifications (Step 4d) MUST go through ai-manager-agent via the Agent tool (`subagent_type="ai-manager-agent"`), which loads `skill-fine-tuning`. This is a BLOCKING requirement — the orchestrator must NOT use Read+Edit on any SKILL.md, even for single-line additions.
 - **Socratic self-reflection before agent invocations** — Reflect before every ai-manager-agent invocation in Steps 4a, 4b, and 4d (see Socratic Self-Reflection Gate below)
