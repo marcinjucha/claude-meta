@@ -33,9 +33,10 @@ This command delegates ALL work to a **fork** of the current conversation. The o
 
 - `$ARGUMENTS` contains a path to a `memory.md` → use it.
 - cwd is inside the brain vault (`/Users/marcinjucha/Prywatne/projects/brain-vault`) → the root `memory.md` does NOT exist there by design (split per context 2026-08-08); target = `01-Projects/<ctx>/memory.md` of the context this session's work belonged to. Context unclear from the session → ask the user once which context. Never create a root `memory.md` in the vault.
+- cwd is inside `/Users/marcinjucha/Prywatne/projects/claude-marketing` → its root `memory.md` is a FROZEN pre-split snapshot (2026-08-06), never write there. Target = the vault buffer of the session's context, resolved as `/brain-finish` resolves `<buffer>`: `/Users/marcinjucha/Prywatne/projects/brain-vault/01-Projects/shadow-operator/memory.md` by default; agency / Halo Efekt work (declared, or clear from the session) → `/Users/marcinjucha/Prywatne/projects/brain-vault/01-Projects/agency/memory.md`. File missing → created on first write.
 - Otherwise → `memory.md` at the project root.
 
-**WHY:** the project-root default points at a vault file that no longer exists, so a run there would recreate the deleted all-contexts buffer instead of writing to the one the context reads.
+**WHY:** the project-root default points at a vault file that no longer exists (vault) or at a frozen twin nobody reads (claude-marketing), so a run there would recreate the deleted all-contexts buffer or keep feeding the snapshot instead of writing to the one the context reads.
 
 ### Socratic Self-Reflection Gate
 
