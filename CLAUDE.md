@@ -26,7 +26,7 @@ statusline-command.sh → Status line script (model, cost, context %) — hardco
 memory.md    → tracked session-memory buffer
 ```
 
-**EDIT AT THE SOURCE, not through the symlink**: every `brain-*` command, `brain-manager.md`, and `skills/brain-conventions` is a symlink into `/Users/marcinjucha/Prywatne/projects/brain-vault/.brain/.claude/` — edit them THERE. The symlinks are created by `brain-vault/.brain/scripts/link-commands.sh` (idempotent, links `commands/*.md`). **Why:** editing via the `~/.claude` path writes through into `brain-vault/.brain` with no diff visible here — and the 8 untracked ones must never be committed in `~/.claude`, since their source of truth is `brain-vault/.brain`. The 4 that ARE committed (brain-load, brain-publish, brain-pull, brain-update) are stored as symlink blobs holding an absolute machine-specific path — they resolve only on this machine.
+**EDIT AT THE SOURCE, not through the symlink**: every `brain-*` command, `brain-manager.md`, and `skills/brain-conventions` is a symlink into `/Users/marcinjucha/Prywatne/projects/brain-vault/.brain/.claude/` — edit them THERE. The symlinks are created by `brain-vault/.brain/scripts/link-commands.sh` (idempotent, links `commands/*.md`, `skills/*/` and `agents/*.md`). **Why:** editing via the `~/.claude` path writes through into `brain-vault/.brain` with no diff visible here — and the 8 untracked ones must never be committed in `~/.claude`, since their source of truth is `brain-vault/.brain`. The 4 that ARE committed (brain-load, brain-publish, brain-pull, brain-update) are stored as symlink blobs holding an absolute machine-specific path — they resolve only on this machine.
 
 ## Weird Parts / Key Patterns
 

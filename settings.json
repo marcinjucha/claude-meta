@@ -137,6 +137,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/marcinjucha/Prywatne/projects/brain-vault/.brain/scripts/pl-replace.py --hook"
+          }
+        ],
+        "matcher": "Write|Edit|MultiEdit|Bash"
+      }
     ]
   },
   "worktree": {
