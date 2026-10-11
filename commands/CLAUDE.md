@@ -17,6 +17,8 @@ Slash commands for managing Claude Code artifacts and utilities. All `ai-*` arti
 | `/ai-curate-memory` | Promote mature memory entries to CLAUDE.md files | none (inline) |
 | `/ai-solve` | Universal non-technical task executor (presentations, planning, research) | general-purpose |
 
+Also here: `council.md`, `improve-process.md` (native), and 12 `brain-*` symlinks into `brain-vault/.brain` (edit at source; 4 committed as symlink blobs, 8 untracked). `/brain-social` moved to `claude-marketing/commands` on 2026-10-11.
+
 ## Weird Parts / Key Patterns
 
 **Tri-modal pattern (ai-* artifact family)**: Phase 0 always detects intent from natural language → CREATE, AUDIT, or MODIFY. Then adaptive phases follow. **Why:** users describe what they want naturally ("update the skill", "check quality", "create new agent") — the command figures out the mode, so one command handles three operations per artifact type.
@@ -27,7 +29,7 @@ Slash commands for managing Claude Code artifacts and utilities. All `ai-*` arti
 
 **/ai-git is the simplest command**: No agent invocation, no phases — reads staged diff, generates commit message, shows for review. **Why:** commit messages don't need the full clarifying-questions ceremony. Prerequisites: must have staged changes first.
 
-**/ai-extract-memory is fully automatic**: Unlike ai-* artifact commands, it runs without any clarifying questions or confirmations. **Why:** memory extraction is low-risk (appends to memory.md, doesn't modify artifacts) and speed matters — asking questions would make users avoid running it.
+**/ai-extract-memory is fully automatic**: Unlike ai-* artifact commands, it runs without any clarifying questions or confirmations. Sole exception: inside the brain vault it targets the per-context buffer `01-Projects/<ctx>/memory.md` (the root `memory.md` no longer exists) and asks which context when the session doesn't make it clear; `/ai-curate-memory` does the same. **Why:** memory extraction is low-risk (appends to memory.md, doesn't modify artifacts) and speed matters — asking questions would make users avoid running it.
 
 **/ai-curate-memory is the bridge between memory and CLAUDE.md**: Reads memory.md → discovers all CLAUDE.md files → promotes mature entries to the right CLAUDE.md → removes from memory.md. **Why:** memory.md is quick capture; CLAUDE.md is permanent knowledge. Curation prevents memory.md from growing unbounded while ensuring learnings reach the right documentation.
 

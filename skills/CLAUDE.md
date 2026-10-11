@@ -23,7 +23,6 @@ Global skills only: the **ai-*** meta-skills (artifact management, used by `ai-m
 | `human-language-check` | 79 | yes | Two-pass review of reader-facing text: correctness, then de-AI/clarity. Cleans only audience text, never scaffolding. Mandated by `../CLAUDE.md` for all human-facing text. |
 | `summary-signal-first` | 124 | yes | Summary/status/recap for a named recipient: decides what gets cut and what leads (the recipient's decision). Runs BEFORE `human-language-check`. |
 | `brainstorming` | 78 | no (new) | Turn-by-turn variant-narrowing loop: 3 variants → one recommendation → his pick is the next base, variants push along named axes; he closes it; rejection CRITERIA recorded. |
-| `brain-learn` | 54 | no (this machine only) | Teaches a discipline from the vault's `02-Areas/<discipline>/` notes via an explicit labeled-step walk on a real project, logs the rep. |
 | `brain-conventions` | 91 | SYMLINK → brain-vault/.brain | Brain conventions + knowledge-distillation discipline. Edit at source in `brain-vault/.brain`. |
 
 ## Other Directories

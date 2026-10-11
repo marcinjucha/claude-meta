@@ -1,5 +1,5 @@
 ---
-description: "Curate memory — promote mature entries to most relevant CLAUDE.md files across project. Usage: /ai-curate-memory"
+description: "Curate memory — promote mature entries to most relevant CLAUDE.md files across project. Usage: /ai-curate-memory [path-to-memory.md]"
 ---
 
 # Curate Memory
@@ -12,7 +12,7 @@ You are curating the project's memory files. Follow these steps exactly:
 
 ### Step 1: Discover and Read
 
-1. Read `memory.md` from the project root directory. If it does not exist or is empty, tell the user and stop.
+1. Read the memory buffer: a `memory.md` path given in `$ARGUMENTS` → that file; otherwise `memory.md` at the project root. **Exception — brain vault** (cwd inside `/Users/marcinjucha/Prywatne/projects/brain-vault`): the root `memory.md` does not exist there by design (split per context 2026-08-08); buffers live at `01-Projects/<ctx>/memory.md`. List the existing ones (`ls 01-Projects/*/memory.md`) and ask the user which context to curate — never report "no memory.md" and stop, never create a root one. If the chosen file does not exist or is empty, tell the user and stop.
 2. Discover ALL `CLAUDE.md` files across the project:
    - Use Glob: `**/CLAUDE.md`
    - **Exclude:** `.claude/` directory (EXCEPT `.claude/CLAUDE.md`) and `worktree-*` folders

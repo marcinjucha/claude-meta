@@ -21,12 +21,21 @@ This command delegates ALL work to a **fork** of the current conversation. The o
 - ❌ Read memory.md yourself
 - ❌ Analyze the conversation yourself
 - ❌ Edit memory.md yourself
-- ❌ Ask clarifying questions (this command is fully automatic)
+- ❌ Ask clarifying questions (this command is fully automatic) — sole exception: the vault context question in **Target Path** below
 
 **DO:**
 - ✅ Immediately invoke Task tool with subagent_type="fork"
+- ✅ Resolve the target path (see **Target Path**) and pass it to the fork as `<target>`
 - ✅ Forward any $ARGUMENTS to the fork prompt
 - ✅ Report the fork's output to the user verbatim
+
+### Target Path
+
+- `$ARGUMENTS` contains a path to a `memory.md` → use it.
+- cwd is inside the brain vault (`/Users/marcinjucha/Prywatne/projects/brain-vault`) → the root `memory.md` does NOT exist there by design (split per context 2026-08-08); target = `01-Projects/<ctx>/memory.md` of the context this session's work belonged to. Context unclear from the session → ask the user once which context. Never create a root `memory.md` in the vault.
+- Otherwise → `memory.md` at the project root.
+
+**WHY:** the project-root default points at a vault file that no longer exists, so a run there would recreate the deleted all-contexts buffer instead of writing to the one the context reads.
 
 ### Socratic Self-Reflection Gate
 
@@ -50,6 +59,7 @@ You are a memory extraction agent. Your task: analyze the current conversation a
 **This is fully automatic — no clarifying questions, no confirmations. Just do the work.**
 
 **User arguments (if any):** $ARGUMENTS
+**Target file:** <target>
 
 SELF-REFLECTION INSTRUCTION:
 Before extracting, ask yourself: what was genuinely surprising this session?
@@ -58,7 +68,7 @@ Skip obvious learnings — only extract what's non-obvious and actionable.
 
 ## Steps
 
-1. **Read** `memory.md` at the project root. If the file does not exist, **create it** with this default structure:
+1. **Read** the target file (`<target>` above — never substitute the project root). If the file does not exist, **create it** with this default structure:
    ```markdown
    # Memory
 
