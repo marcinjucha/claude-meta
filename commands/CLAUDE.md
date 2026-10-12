@@ -16,8 +16,9 @@ Slash commands for managing Claude Code artifacts and utilities. All `ai-*` arti
 | `/ai-extract-memory` | Auto-extract session learnings to memory.md | none (inline) |
 | `/ai-curate-memory` | Promote mature memory entries to CLAUDE.md files | none (inline) |
 | `/ai-solve` | Universal non-technical task executor (presentations, planning, research) | general-purpose |
+| `/website` | Professional website/landing page from a brief: real-site references → impeccable build → motion → verification | impeccable (+ its agents), inline orchestration |
 
-Also here: `council.md`, `improve-process.md` (native), and 12 `brain-*` symlinks into `brain-vault/.brain` (edit at source; 4 committed as symlink blobs, 8 untracked). `/brain-social` moved to `claude-marketing/commands` on 2026-10-11.
+Also here: `council.md`, `improve-process.md`, `website.md` (native), and 12 `brain-*` symlinks into `brain-vault/.brain` (edit at source; 4 committed as symlink blobs, 8 untracked). `/brain-social` moved to `claude-marketing/commands` on 2026-10-11.
 
 ## Weird Parts / Key Patterns
 
@@ -32,6 +33,8 @@ Also here: `council.md`, `improve-process.md` (native), and 12 `brain-*` symlink
 **/ai-extract-memory is fully automatic**: Unlike ai-* artifact commands, it runs without any clarifying questions or confirmations. Sole exception: inside the brain vault it targets the per-context buffer `01-Projects/<ctx>/memory.md` (the root `memory.md` no longer exists) and asks which context when the session doesn't make it clear; `/ai-curate-memory` does the same. **Why:** memory extraction is low-risk (appends to memory.md, doesn't modify artifacts) and speed matters — asking questions would make users avoid running it.
 
 **/ai-curate-memory is the bridge between memory and CLAUDE.md**: Reads memory.md → discovers all CLAUDE.md files → promotes mature entries to the right CLAUDE.md → removes from memory.md. **Why:** memory.md is quick capture; CLAUDE.md is permanent knowledge. Curation prevents memory.md from growing unbounded while ensuring learnings reach the right documentation.
+
+**/website deliberately breaks the house template**: no 3-5 question block after each phase; Marcin decides only at reference pick, comp approval (impeccable's own gate) and ship. References enter impeccable as text and direction-page steer, never as `--ref` images. **Why:** impeccable takes the look from its dealt world, and external screenshots passed as `--ref` would override it. It also does not re-spawn `impeccable-finish-reviewer`, because impeccable already runs it; the command acts on its outcome. Figma is not a preview surface: rendering an impeccable pick there draws the same design twice and only approximates the coded page. Preview = impeccable comps, `/impeccable live`, Playwright shots. Figma stays as an input branch (Figma URL) and an on-request push.
 
 **Sufficient context principle**: Commands must pass ALL necessary context to ai-manager-agent. The agent has isolated context — it cannot "look up" conversation history. Inline phases (Phase 0) extract and prepare context before agent invocation.
 

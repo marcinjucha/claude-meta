@@ -6,12 +6,14 @@ This IS `~/.claude` — the live global Claude Code config, loaded into every se
 
 **Domain artifacts live elsewhere:** project-specific agents/skills/commands stay in their own repos (`claude-dev` = programming/infra, `claude-marketing` = go-to-market) and are symlinked into each project's `.claude/`. Only meta-tooling + global behavior belongs here. **Why:** keeps each repo's skill-description routing budget focused on one domain.
 
+**Exception — third-party UI/design skills are global (Marcin's decision, 2026-10-12):** the 15 skills from `emilkowalski/skills` (installed with `npx skills add emilkowalski/skills -g -a claude-code`, updated with `npx skills update -g`) sit as copies in `skills/` and are listed one by one in `.gitignore`, because they are not authored here. The `taste-skill` plugin (installed via `/plugin`) is global for the same reason. Do not move them to `claude-dev`, and never edit them in place: an update overwrites local changes. `/website` (`commands/website.md`, 2026-10-12) is global on the same basis but is OURS (tracked, editable): it orchestrates these third-party tools (impeccable as backbone, emilkowalski skills, Playwright + Figma MCP) and adds only the step none of them cover, real-site reference capture.
+
 ## Structure
 
 ```
 agents/      → ai-manager-agent.md (opus, tracked) + brain-manager.md (SYMLINK → brain-vault/.brain, untracked)
              + agents/CLAUDE.md
-commands/    → 23 .md: 11 native (8 ai-* + council.md + improve-process.md + commands/CLAUDE.md)
+commands/    → 24 .md: 12 native (8 ai-* + council.md + improve-process.md + website.md + commands/CLAUDE.md)
              + 12 brain-* SYMLINKS → brain-vault/.brain (4 committed as symlinks, 8 untracked)
              (/brain-social moved to claude-marketing/commands 2026-10-11 — no longer global)
 skills/      → 7 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
@@ -19,6 +21,8 @@ skills/      → 7 meta skills (ai-agent-creator, ai-claude-md, ai-command-creat
              + human-language-check, summary-signal-first (tracked)
              + brainstorming (UNTRACKED, new)
              + brain-conventions (SYMLINK → brain-vault/.brain, untracked)
+             + 15 emilkowalski/skills (animate*, review/improve-animations, emil-design-eng,
+               apple-design, write-swift, break-ui, prototype, … — GITIGNORED, third-party)
   resources/ → 4 shared reference files used across multiple skills via @../resources/
   synced/    → synced anthropic-skills:* copies (untracked, not authored here)
 docs/        → Official Claude Code documentation (agents-doc.md, skill-doc.md)
