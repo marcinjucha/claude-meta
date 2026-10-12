@@ -58,7 +58,9 @@ Goal: rank opinions on accuracy + insight without identity bias.
 1. **Anonymize:** strip perspective names and authorship. Relabel the opinions **Option 1, 2, 3…** (shuffle so Option-number ≠ Member-letter). Never tell a reviewer which option is "theirs".
 2. Spawn reviewers (reuse the same N perspectives, or a smaller neutral panel) **in parallel**. Each reviewer receives the **full anonymized set** and must:
    - rank all options best→worst on accuracy and on insight,
-   - justify in 1–2 lines each, and flag any option that is wrong/unsupported.
+   - justify in 1–2 lines each, and flag any option that is wrong/unsupported,
+   - **re-rate the SEVERITY of every blocker/critical finding** in the set (keep / downgrade to should-fix / downgrade to wording), with one line of why.
+   **Expect Stage 2 to LOWER severities, not just add findings.** A blind member reads its own lens in isolation and maximizes severity; cross-review exists to scale consequences correctly. Origin: a contract council (2026-06-29) where two single-lens "BLOCKERS" (penalty clause → voidness; GDPR requiring a full art. 26/28 instrument) were overrated by individual members and downgraded to should-fix / wording in adjudication.
 3. Aggregate rankings (e.g. mean rank per option, plus any "flagged-wrong" notes). Surface disagreement explicitly — a split vote is signal, not noise.
 
 ## Stage 3 — Chairman synthesis
@@ -67,6 +69,7 @@ One **Chairman** produces the single final answer. The orchestrator may BE the c
 
 Chairman input: all opinions (de-anonymized is fine now) + the aggregated rankings. Chairman must:
 - weight by the panel's rankings but **not blindly follow the majority** — graft the best ideas from runners-up, discard flagged-wrong claims;
+- carry the **Stage-2 calibrated severity**, not the Stage-1 one — a finding downgraded in cross-review is not reported as a blocker;
 - resolve contradictions explicitly (state why one view wins);
 - output **one decision + the why + concrete next action** (and, if applicable, what would change the call).
 
@@ -103,6 +106,7 @@ Keep Stage 1/2 as scannable summaries (link to detail if asked); the Chairman de
 - ❌ **Chairman = majority vote** — synthesize, don't tally; a minority opinion can be the correct one (flag-wrong > popularity).
 - ❌ **Convening for trivia** — match council size to stakes; a 5-agent council on a one-liner is waste.
 - ❌ **Letting members see each other in Stage 1** — first opinions must be independent.
+- ❌ **Treating Stage 2 as "find more problems"** — its highest value is severity calibration; a single-lens BLOCKER that survives to the decision unre-rated is the typical overstatement.
 - ❌ **Defaulting to `general-purpose` when a specialist exists** — specialists carry project-specific skills/context; a generic agent throws that away. Match to specialists first; generic is the last resort.
 - ❌ **Running any council member or the Chairman on `haiku`** — forbidden even under an explicit "mix models" ask; overrides stay inside `opus`/`sonnet`, with `opus` the default. Model diversity is a weak lever and must never be bought with reasoning depth.
 

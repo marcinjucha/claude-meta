@@ -39,6 +39,10 @@ Orchestrates tools that are already installed. impeccable is the backbone. This 
 
 ## Phase 0: Input + brief gaps (inline)
 
+**First, before the brief: is impeccable actually loaded in THIS session?** Check that `impeccable:impeccable` is in the session's available-skills list and the `impeccable:impeccable-*` agents are in the agent list. If either is missing, stop and tell Marcin to run `/plugin` → install impeccable, then resume. **Why:** on 2026-10-12 the plugin was enabled in `settings.json` and its `SKILL.md` was on disk, yet the session answered `Unknown skill: impeccable` (also for `impeccable:impeccable`). `enabledPlugins` and files on disk are no proof of loading. Collecting the brief and references first wastes both, because Phase 2 cannot start.
+
+Also check whether image generation is available. Without it impeccable works **code-led**: its decision cards carry HTML sketches at 390×844 instead of image comps. Tell Marcin this in one line before Phase 2, so the sketches don't read as a broken run.
+
 **Detect the input from `$ARGUMENTS`:**
 
 | Input | Route |
@@ -78,7 +82,7 @@ Invoke `/impeccable` (Persuade mode for landing pages). Follow its pipeline; it 
 
 - **Hand over the finished brief** (Phase 0) plus the picked patterns as **text**, so impeccable's 2-3 questions are already answered. It still asks a compact confirmation ("skip settled facts, not the confirmation"). Answer it from the brief; don't fight it.
 - **References enter as words, never as `--ref` images.** impeccable takes "the look" from its dealt world (`concept-seed`). Its catalog card images are its only `--ref` inputs, and site screenshots passed there would compete with that world. The patterns go into: (a) the brief (constraints / proof / what the surface must prove), and (b) Marcin's **steer / re-roll** on impeccable's direction page. The screenshots stay Marcin's yardstick when he judges comps.
-- **Preview before code:** impeccable's 3 comps in `.impeccable/mocks/`. Marcin approves one through impeccable's gate.
+- **Preview before code:** impeccable's 3 comps in `.impeccable/mocks/` (code-led without image generation: HTML sketches at 390×844, see Phase 0). Marcin approves one through impeccable's gate.
 - **Preview in the running page:** once the dev server runs, `/impeccable live` hot-swaps element variants via HMR. Use it when Marcin wants to compare variants of a section in place, not as a mandatory step.
 - Build gates (comps → spec → plates → hero → sections → motion → responsive) run as impeccable defines them. DESIGN.md is written last by its documenter.
 

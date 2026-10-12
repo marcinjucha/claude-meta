@@ -167,6 +167,12 @@ not a previous one (2026-09-17, twice in one session: „BRAK komunikatu" while 
 count with `python3` `open().read().count()` (2026-09-21, two false „not on the page"). **Why:** silence
 reads exactly like absence, so the false negative passes unchallenged — and on my own verification it
 is worse than no test, because it throws away work that was fine.
+Two shell traps in the same family, where the TOOL fails rather than the data: in zsh `echo =====`
+dies with „==== not found" (`=word` is command-path expansion) and takes the whole batched read with
+it — separators via `printf '\n--- x\n'` (2026-10-01); `grep` here is ugrep, and `grep -o -E
+'.{0,50}…'` on Polish text fails with „exceeds complexity limits" — cut context around hits with
+Python `re.finditer` + slice (2026-10-07). **Why:** a dead batch reads like a missing file, so the
+next step draws its conclusion from a read that never ran.
 
 **After a fan-out onto SIBLING documents, run an aligning pass myself.** Five agents writing five docs
 for one creator folder produced five title separators and two placeholder forms, one being `[DATA ...]`
