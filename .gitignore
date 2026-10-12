@@ -33,3 +33,20 @@ mcp-needs-auth-cache.json
 /.last-update-result.json
 /.last-cleanup
 /Bing Webmaster Tools Auth.xml
+
+# Third-party skills (npx skills add emilkowalski/skills -g) — not authored here
+/skills/animate/
+/skills/animate-expo/
+/skills/animation-performance/
+/skills/animation-vocabulary/
+/skills/apple-design/
+/skills/ask-sonner/
+/skills/break-ui/
+/skills/emil-design-eng/
+/skills/find-animation-opportunities/
+/skills/improve-animations/
+/skills/mobile-native/
+/skills/pick-ui-library/
+/skills/prototype/
+/skills/review-animations/
+/skills/write-swift/

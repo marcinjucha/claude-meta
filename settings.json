@@ -140,13 +140,13 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "Write|Edit|MultiEdit|Bash",
         "hooks": [
           {
             "type": "command",
             "command": "python3 /Users/marcinjucha/Prywatne/projects/brain-vault/.brain/scripts/pl-replace.py --hook"
           }
-        ],
-        "matcher": "Write|Edit|MultiEdit|Bash"
+        ]
       }
     ]
   },
@@ -159,13 +159,27 @@
   },
   "enabledPlugins": {
     "claude-hud@claude-hud": true,
-    "frontend-design@claude-plugins-official": true
+    "frontend-design@claude-plugins-official": true,
+    "taste-skill@taste-skill": true,
+    "impeccable@impeccable": true
   },
   "extraKnownMarketplaces": {
     "claude-hud": {
       "source": {
         "source": "github",
         "repo": "jarrodwatts/claude-hud"
+      }
+    },
+    "taste-skill": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/leonxlnx/taste-skill.git"
+      }
+    },
+    "impeccable": {
+      "source": {
+        "source": "github",
+        "repo": "pbakaus/impeccable"
       }
     }
   },
