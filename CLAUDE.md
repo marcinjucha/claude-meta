@@ -171,8 +171,12 @@ Two shell traps in the same family, where the TOOL fails rather than the data: i
 dies with „==== not found" (`=word` is command-path expansion) and takes the whole batched read with
 it — separators via `printf '\n--- x\n'` (2026-10-01); `grep` here is ugrep, and `grep -o -E
 '.{0,50}…'` on Polish text fails with „exceeds complexity limits" — cut context around hits with
-Python `re.finditer` + slice (2026-10-07). **Why:** a dead batch reads like a missing file, so the
-next step draws its conclusion from a read that never ran.
+Python `re.finditer` + slice (2026-10-07); in zsh an unquoted `grep --include=*.swift` in a loop dies
+with „no matches found" each iteration and the loop prints „0 refs" for EVERY symbol (~35 live settings
+nearly classed dead 2026-10-07, again 2026-10-14) — quote the glob or run via `bash -c`. A Bash call
+the user REJECTS may have run part-way (a rejected `sed -i` + swiftgen chain had already deleted a key,
+2026-10-07): treat it as unknown state, `git diff`/re-read, tell him what landed. **Why:** a dead batch
+reads like a missing file, so the next step draws its conclusion from a read that never ran.
 
 **After a fan-out onto SIBLING documents, run an aligning pass myself.** Five agents writing five docs
 for one creator folder produced five title separators and two placeholder forms, one being `[DATA ...]`
