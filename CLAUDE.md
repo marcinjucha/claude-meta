@@ -115,6 +115,14 @@ in two sentences once unfolded) and 2026-09-22 („obietnica pierwszeństwa, WA-
 only with the film quote plus the day's timeline). **Why:** a note is written for me-who-already-knows;
 a question he cannot evaluate costs a round trip and looks like his gap, not mine.
 
+**Text for someone OUTSIDE the project (accountant, a creator on formal matters) assumes they know
+nothing:** one sentence on what the service is, one on the platform in plain terms („coś jak sklep
+internetowy z systemem płatności”), numbers without jargon, short numbered questions — and never a
+framing Marcin did not give. Origin 2026-10-21: two drafts rejected („to nie jest prosto napisane”; „ona
+nie wie, kto to Kacper, co to Whop”), and „od września nowa usługa” was my framing (he started it
+privately, as a trial). **Why:** after a day inside the project the reader's missing context is
+invisible to me — the same unfolding rule as for decision questions, applied to outsiders.
+
 ## Reviewing work WITH Marcin: one unit per turn, and show the framework's labels (global behavior)
 
 **Walk a long artifact BLOCK BY BLOCK in conversation — one block per message, ONE recommendation,
@@ -173,7 +181,9 @@ it — separators via `printf '\n--- x\n'` (2026-10-01); `grep` here is ugrep, a
 '.{0,50}…'` on Polish text fails with „exceeds complexity limits" — cut context around hits with
 Python `re.finditer` + slice (2026-10-07); in zsh an unquoted `grep --include=*.swift` in a loop dies
 with „no matches found" each iteration and the loop prints „0 refs" for EVERY symbol (~35 live settings
-nearly classed dead 2026-10-07, again 2026-10-14) — quote the glob or run via `bash -c`. A Bash call
+nearly classed dead 2026-10-07, again 2026-10-14) — quote the glob or run via `bash -c`; in zsh
+`set -- $p` in a loop does NOT word-split, so the loop runs on empty arguments with no error (2026-10-21:
+eight TinyURL calls with empty `utm_source`, empty responses) — split fields in Python or `bash -c`. A Bash call
 the user REJECTS may have run part-way (a rejected `sed -i` + swiftgen chain had already deleted a key,
 2026-10-07): treat it as unknown state, `git diff`/re-read, tell him what landed. **Why:** a dead batch
 reads like a missing file, so the next step draws its conclusion from a read that never ran.

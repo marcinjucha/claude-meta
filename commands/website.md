@@ -82,6 +82,7 @@ Invoke `/impeccable` (Persuade mode for landing pages). Follow its pipeline; it 
 
 - **Hand over the finished brief** (Phase 0) plus the picked patterns as **text**, so impeccable's 2-3 questions are already answered. It still asks a compact confirmation ("skip settled facts, not the confirmation"). Answer it from the brief; don't fight it.
 - **References enter as words, never as `--ref` images.** impeccable takes "the look" from its dealt world (`concept-seed`). Its catalog card images are its only `--ref` inputs, and site screenshots passed there would compete with that world. The patterns go into: (a) the brief (constraints / proof / what the surface must prove), and (b) Marcin's **steer / re-roll** on impeccable's direction page. The screenshots stay Marcin's yardstick when he judges comps.
+- **Two deals rejected without a steer → ask what is missing BEFORE the third.** One closed question, offering the axes in play (tone, density, type, colour). **Why:** an empty re-roll carries no signal, so the next deal is a blind shot that costs his attention. On 2026-10-12 (Basia's sales page) three directions were rejected this way.
 - **Preview before code:** impeccable's 3 comps in `.impeccable/mocks/` (code-led without image generation: HTML sketches at 390×844, see Phase 0). Marcin approves one through impeccable's gate.
 - **Preview in the running page:** once the dev server runs, `/impeccable live` hot-swaps element variants via HMR. Use it when Marcin wants to compare variants of a section in place, not as a mandatory step.
 - Build gates (comps → spec → plates → hero → sections → motion → responsive) run as impeccable defines them. DESIGN.md is written last by its documenter.
@@ -98,6 +99,7 @@ impeccable's build already has a motion gate. Review first, then add only for ga
 
 1. **Design review: its source depends on the route.**
    - **NEW / REDESIGN:** act on the outcome of impeccable's own `impeccable-finish-reviewer` (ship / fix / rebuild / recapture). Do not spawn it a second time.
+     ⚠️ **Reviewer vs. a pattern Marcin pinned:** carry a pattern he told you to bring over 1:1. If the reviewer flags it under a craft-floor ban, ask Marcin ONE AskUserQuestion: both arguments plus your recommendation. Don't argue with the reviewer in a loop, and don't silently obey it. **Why:** the reviewer cannot know the pattern is user-pinned, and it treats those bans as non-negotiable and blocks ship. Obeying it silently overrides Marcin. On 2026-10-13 the eyebrow label „Pierwsza grupa" from Kacper's offer card was flagged this way, and Marcin chose removal.
    - **FIGMA:** impeccable's new-work flow never ran, so there is no reviewer verdict. Run `/impeccable critique` on the built page and compare it against the Figma frame (`get_screenshot`).
    - **POLISH:** act on the critique / audit results from the Phase 0 route.
 2. **Playwright covers only what impeccable does not:** at 1440 and 390, check `browser_console_messages` (errors), click through the CTA and interactive elements, and take fresh screenshots, reading the files from THIS run.
