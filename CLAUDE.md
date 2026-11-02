@@ -207,6 +207,27 @@ specjalnie nie wnoszą"; the fix was updating three existing DNA files and colla
 section into a pointer. **Why:** every extra file is one more place to keep in sync and one more
 candidate for the stale copy.
 
+## Code review and bug analysis: weigh LIKELIHOOD before fixing (global behavior)
+
+**Judge every finding by how likely it is in real use of THIS system — fix what normal use triggers, record the rest.**
+Normal use includes what ONE user does alone: double click, two tabs, slow network, out-of-order requests from one page.
+Very unlikely cases (two people on the same record in the same instant, exotic sequences, theoretical paths) are NOT
+fixed: record them in the project's decisions file (what, worst outcome, return criterion) and fix when they actually
+happen. Marcin, 2026-11-02 — the rule he cares about most: „patrz na to z pragmatycznego punktu widzenia: jak
+prawdopodobne jest, że to wystąpi… wolę mieć tę lukę i naprawić ją, gdy faktycznie wystąpi, niż spędzać na niej za dużo
+czasu i przez to komplikować kod". **Strict regardless of probability:** exposing another person's data (isolation), losing
+user data, proofs a goal explicitly requires.
+**„Confirmed" ≠ „probable":** an adversarial verifier proves a failure PATH exists, not that anyone will walk it — so every
+review/agent prompt carries the filter: rate likelihood, report only normal-use / isolation / data-loss findings, list the
+accepted classes as „do not report". **Signal of overdoing it:** successive rounds hit the same new mechanism with ever
+narrower scenarios, each needing two actors at once → stop patching, question the mechanism, record the class as accepted;
+after a long review loop run an over-engineering audit (what guards cases that do not occur here? remove it with its tests).
+**Composes with „a negative result needs positive proof" and guard-off proofs:** likelihood decides WHAT gets fixed, not
+how rigorously it is proven — whatever IS fixed or claimed still needs a non-vacuous proof. Origin: pezetpetki-hub, Profil
+stage — nine whole-stage review rounds kept adding guards for millisecond races between two editors; an audit then removed
+them (~350 net lines). **Why:** a gap is cheaper than code made complex for a case that does not occur; each rare-case fix
+costs a migration, tests, proof lines and another review round, and every later change has to understand it.
+
 ## Pliki z copy: sam gotowy tekst, uzasadnienia OSOBNO (global behavior)
 
 **Plik z copy zawiera WYŁĄCZNIE tekst do wklejenia.** Nagłówek powierzchni i pod nim treść. ZERO
