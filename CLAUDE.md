@@ -175,7 +175,7 @@ not a previous one (2026-09-17, twice in one session: „BRAK komunikatu" while 
 count with `python3` `open().read().count()` (2026-09-21, two false „not on the page"). **Why:** silence
 reads exactly like absence, so the false negative passes unchallenged — and on my own verification it
 is worse than no test, because it throws away work that was fine.
-Two shell traps in the same family, where the TOOL fails rather than the data: in zsh `echo =====`
+Shell traps in the same family, where the TOOL fails rather than the data: in zsh `echo =====`
 dies with „==== not found" (`=word` is command-path expansion) and takes the whole batched read with
 it — separators via `printf '\n--- x\n'` (2026-10-01); `grep` here is ugrep, and `grep -o -E
 '.{0,50}…'` on Polish text fails with „exceeds complexity limits" — cut context around hits with
@@ -186,7 +186,10 @@ nearly classed dead 2026-10-07, again 2026-10-14) — quote the glob or run via 
 eight TinyURL calls with empty `utm_source`, empty responses) — split fields in Python or `bash -c`; never
 truncate a pipe (`| head`) on a step with a SIDE EFFECT — `send-mail.py --test … | head -1` closed the pipe
 after the `From:` line printed before sending, so whether the test went out was unknown and it went out
-twice (2026-10-26) — write to a file (`> out 2>&1`), then `grep -E 'Sent|rror' out`. A Bash call
+twice (2026-10-26) — write to a file (`> out 2>&1`), then `grep -E 'Sent|rror' out`; a batch `test ; git commit` commits despite a red test, because the
+side-effect step runs whatever the step before it proved (2026-10-29: an alias in `.brain/config.json` landed as
+`22c90c3` before the `run-all.sh` exit 1 was read) — when a check gates a commit, chain with `&&` or commit in a
+separate step after reading the result. A Bash call
 the user REJECTS may have run part-way (a rejected `sed -i` + swiftgen chain had already deleted a key,
 2026-10-07): treat it as unknown state, `git diff`/re-read, tell him what landed. **Why:** a dead batch
 reads like a missing file, so the next step draws its conclusion from a read that never ran.
