@@ -183,7 +183,11 @@ Python `re.finditer` + slice (2026-10-07); in zsh an unquoted `grep --include=*.
 with „no matches found" each iteration and the loop prints „0 refs" for EVERY symbol (~35 live settings
 nearly classed dead 2026-10-07, again 2026-10-14) — quote the glob or run via `bash -c`; in zsh
 `set -- $p` in a loop does NOT word-split, so the loop runs on empty arguments with no error (2026-10-21:
-eight TinyURL calls with empty `utm_source`, empty responses) — split fields in Python or `bash -c`; never
+eight TinyURL calls with empty `utm_source`, empty responses) — split fields in Python or `bash -c`; an
+UNQUOTED heredoc (`<<EOF`) feeding Python runs every backtick as command substitution, so markdown code
+spans vanish from the written text and the script still prints „ok" (2026-11-04: `` `main` `` and
+`` `04ab12f` `` dropped from two vault notes, only „command not found" on stderr hinted at it) — quote the
+delimiter (`<<'EOF'`) and pass shell values as `sys.argv`; never
 truncate a pipe (`| head`) on a step with a SIDE EFFECT — `send-mail.py --test … | head -1` closed the pipe
 after the `From:` line printed before sending, so whether the test went out was unknown and it went out
 twice (2026-10-26) — write to a file (`> out 2>&1`), then `grep -E 'Sent|rror' out`; a batch `test ; git commit` commits despite a red test, because the
