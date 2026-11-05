@@ -26,6 +26,9 @@ skills/      → 7 meta skills (ai-agent-creator, ai-claude-md, ai-command-creat
   resources/ → 4 shared reference files used across multiple skills via @../resources/
   synced/    → synced anthropic-skills:* copies (untracked, not authored here)
 docs/        → Official Claude Code documentation (agents-doc.md, skill-doc.md)
+evals/       → skill-ab.py (A/B eval of ONE model decision of a skill/command: tool-free `claude -p`,
+               set grader vs gold, ADOPT/REJECT/INCONCLUSIVE) + test-skill-ab.sh (offline, stub claude);
+               suites live next to what they test (e.g. brain-vault/.brain/evals/knowledge-moc/), runs in ~/.cache/skill-ab/
 statusline-command.sh → Status line script (model, cost, context %) — hardcoded macOS path
 memory.md    → tracked session-memory buffer
 ```
