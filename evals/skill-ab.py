@@ -3,7 +3,10 @@
 
 Each call is a tool-free `claude -p` with the inputs inlined and a JSON schema for the answer; a
 deterministic grader compares the answer with a hand-labelled gold set, and a fixed rule decides
-whether the candidate variant may replace the baseline. Out of scope: commands whose quality comes
+whether the candidate variant may replace the baseline. A variant's input may be staged
+({"staged": <spec giving JSON {index, parts}>} plus a suite-level "route" {system, template}): the model
+first picks parts from the index, then decides on the picked parts only, and the report counts the
+gold notes that stage 1 never showed. Out of scope: commands whose quality comes
 from multi-turn tool use or written output (use skill-creator's old-vs-new workflow for those).
 
   skill-ab.py run <suite_dir> [--variants A,B] [--reps N] [--cases id,...] [--model M] [--no-escalate]
@@ -41,6 +44,16 @@ class Precondition(Exception):
     pass
 
 
+class Staged(str):
+    """A two-stage input: the model first picks parts from `index`, then decides on the picked parts
+    only. As text it is the index followed by every part, which is what coverage and hashes see."""
+
+    def __new__(cls, index, parts):
+        obj = super().__new__(cls, "\n\n".join([index] + [parts[k] for k in sorted(parts)]))
+        obj.index, obj.parts = index, parts
+        return obj
+
+
 # ---------- suite and inputs ----------
 
 def load_suite(suite_dir):
@@ -55,6 +68,21 @@ def subst(v, s):
 
 
 def resolve_one(spec, s):
+    if "staged" in spec:
+        raw = resolve_one(spec["staged"], s)
+        try:
+            d = json.loads(raw)
+            index, parts = d["index"], d["parts"]
+        except (json.JSONDecodeError, KeyError, TypeError):
+            raise Precondition("a staged input must produce JSON {\"index\": str, \"parts\": {id: str}}")
+        if not parts or not all(isinstance(t, str) for t in parts.values()):
+            raise Precondition("a staged input has no parts")
+        unnamed = sorted(k for k in parts if k not in index)
+        if unnamed:
+            raise Precondition(f"staged index does not name parts: {', '.join(unnamed)}")
+        if "route" not in s:
+            raise Precondition("a staged input needs a suite-level 'route' {system, template}")
+        return Staged(index, parts)
     if "file" in spec:
         p = Path(subst(spec["file"], s))
         if not p.exists():
@@ -125,7 +153,9 @@ def check_preconditions(s, inputs):
     cover = s.get("coverage_input")
     if cover:
         for v, ins in inputs.items():
-            missing = sorted(pool - set(WIKILINK.findall(ins[cover])))
+            text = ins[cover]
+            linked = set(WIKILINK.findall("\n".join(text.parts.values()) if isinstance(text, Staged) else text))
+            missing = sorted(pool - linked)
             if missing:
                 errs.append(f"variant {v}: {len(missing)} pool notes not linked in '{cover}': {', '.join(missing)}")
     if errs:
@@ -189,13 +219,39 @@ def run_calls(s, inputs, cases, variants, reps, model, run_dir, rep_offset=0):
 
     def work(job):
         cid, v, r, prompt = job
-        res = call_with_retry(prompt, system, model)
-        res.update(case=cid, variant=v, rep=r, prompt_chars=len(prompt) + len(system))
+        staged = next(((k, x) for k, x in inputs[v].items() if isinstance(x, Staged)), None)
+        route = None
+        if staged:
+            prompt, route = route_then_prompt(s, inputs[v], staged, cid, cases, model)
+        if route is not None and route["status"] != "ok":
+            res = dict(status="error", reason=f"route: {route.get('reason')}", attempts=route.get("attempts"))
+        else:
+            res = call_with_retry(prompt, system, model)
+        if route is not None:
+            res["route"] = route
+        res.update(case=cid, variant=v, rep=r, prompt_chars=len(prompt or "") + len(system))
         (raw / f"{cid}__{v}__{r}.json").write_text(json.dumps(res, ensure_ascii=False), encoding="utf-8")
         return res
 
     with cf.ThreadPoolExecutor(max_workers=WORKERS) as ex:
         return list(ex.map(work, jobs))
+
+
+def route_then_prompt(s, ins, staged, cid, cases, model):
+    """Stage 1 of a staged variant: pick parts from the index. Returns the stage-2 prompt, built from
+    the picked parts only, and the route record (picked part ids and the note ids they make visible)."""
+    name, st = staged
+    problem = next(c["problem"] for c in cases if c["id"] == cid)
+    rsys = (s["_dir"] / s["route"]["system"]).read_text(encoding="utf-8")
+    fields = dict(ins, problem=problem, index=st.index)
+    res = call_with_retry(s["route"]["template"].format(**fields), rsys, model)
+    if res["status"] != "ok":
+        return None, res
+    picked = [norm(x) for x in res["cli"]["structured_output"]["selected"]]
+    shown = [k for k in dict.fromkeys(picked) if k in st.parts]
+    text = "\n\n".join(st.parts[k] for k in shown)
+    res.update(parts=shown, unknown=sorted(set(picked) - set(st.parts)), visible=sorted(set(WIKILINK.findall(text))))
+    return s["template"].format(**dict(ins, problem=problem, **{name: text})), res
 
 
 def smoke(s, model):
@@ -237,13 +293,20 @@ def grade(s, results, baseline, candidate):
         must = set(c["must"]) if c.get("must") is not None else None
         okset = set(c.get("ok") or [])
         tsel = input_tokens(r["cli"]) + (r["cli"].get("usage") or {}).get("output_tokens", 0)
+        route = r.get("route")
+        cost = r["cli"].get("total_cost_usd", 0.0)
+        if route:
+            tsel += input_tokens(route["cli"]) + (route["cli"].get("usage") or {}).get("output_tokens", 0)
+            cost += route["cli"].get("total_cost_usd", 0.0)
+        unseen = sorted((must or set()) - set(route["visible"]) - sel) if route else []
         tload = sum(sizes.get(i, 0) for i in sel & pool) / cpt
         rows.append(dict(case=r["case"], variant=r["variant"], rep=r["rep"], sel=sorted(sel),
                          recall=(len(sel & must) / len(must)) if must else None,
                          noise=len(sel - (must or set()) - okset) if must is not None else None,
                          invalid=sorted(sel - pool), unjudged=sorted((sel & pool) - (must or set()) - okset),
                          size=len(sel), cap=len(sel) > c.get("max_selected", 10 ** 6),
-                         tokens=tsel + tload, cost=r["cli"].get("total_cost_usd", 0.0)))
+                         tokens=tsel + tload, cost=cost, unseen=unseen,
+                         parts=route["parts"] if route else None))
     errors = {v: sum(1 for r in results if r["variant"] == v and r["status"] != "ok") for v in (baseline, candidate)}
     calls = {v: sum(1 for r in results if r["variant"] == v) for v in (baseline, candidate)}
     return rows, errors, calls
@@ -271,6 +334,10 @@ def hits(rows, cases):
     return h
 
 
+def cases_by_id(cases, cid):
+    return next((c for c in cases if c["id"] == cid), {})
+
+
 def aggregates(rows, cases, v):
     """Every metric is averaged per case first, so a case that lost reps to errors keeps its weight."""
     def per_case(key, only_graded=False):
@@ -278,7 +345,9 @@ def aggregates(rows, cases, v):
         return [mean([r[key] for r in rows if r["case"] == c["id"] and r["variant"] == v]) for c in cs]
     vr = [r for r in rows if r["variant"] == v]
     R, N, T = per_case("recall", True), per_case("noise"), per_case("tokens")
+    missed = sum(len(set(cases_by_id(cases, r["case"]).get("must") or []) - set(r["sel"])) for r in vr)
     return dict(R=mean(R), R_sd=sd(R), N=mean(N), N_sd=sd(N),
+                miss=missed, miss_route=sum(len(r.get("unseen", [])) for r in vr),
                 I=sum(len(r["invalid"]) for r in vr), C=sum(r["cap"] for r in vr),
                 T=mean(T), T_sd=sd(T),
                 cost=sum(r["cost"] for r in vr), n=len(vr))
@@ -391,6 +460,9 @@ def write_report(s, run_dir, baseline, candidate, meta):
         L.append(f"{name:10} {fmt(a['R']):>7}±{fmt(a['R_sd'],2):<6} {fmt(a['N'],2):>6}±{fmt(a['N_sd'],2):<5} "
                  f"{a['I']:>8} {a['C']:>4} {fmt(a['T'],0):>9}±{fmt(a['T_sd'],0):<6} {calls[name]:>6} {errors[name]:>6}")
     L.append(f"cost usd: {fmt(A['cost'] + B['cost'], 3)}")
+    for name, a in ((baseline, A), (candidate, B)):
+        if any(r.get("parts") is not None for r in rows if r["variant"] == name):
+            L.append(f"{name}: must notes missed {a['miss']}, of which never shown after stage 1: {a['miss_route']}")
     L.append("\nper case (mean recall / noise / size):")
     for c in s["cases"]:
         def m(v_, k):

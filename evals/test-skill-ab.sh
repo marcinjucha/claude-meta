@@ -22,6 +22,13 @@ def bump(key):
     open(p, "w").write(str(n + 1)); return n
 bump("calls")
 m = re.search(r"CASE:(\w+)", prompt); v = re.search(r"<!-- v:(\w+) -->", prompt)
+if prompt.startswith("ROUTE"):  # stage 1 of a staged variant
+    if sc == "route_fail": sys.exit(1)
+    parts = ["p2"] if sc == "route_miss" and m.group(1) == "c1" else ["p1", "p2"]
+    print(json.dumps({"is_error": False, "structured_output": {"selected": parts},
+                      "usage": {"input_tokens": 100000 if sc == "route_heavy" else len(prompt) // 4, "output_tokens": 5},
+                      "total_cost_usd": 0.001}))
+    sys.exit(0)
 if not m:  # smoke call
     tok = 99999 if sc == "smoke_heavy" else 100
     print(json.dumps({"is_error": False, "structured_output": {"selected": []}, "usage": {"input_tokens": tok, "output_tokens": 1}, "total_cost_usd": 0}))
@@ -40,6 +47,7 @@ if sc == "no_struct":
 if sc == "lost" and var == "B" and case == "c1": sel = ["n2", "n3"]
 if sc == "flicker" and var == "B" and case == "c1" and n < 3: sel = ["n2", "n3"]
 if sc == "b_case_gone" and var == "A" and case == "c2": sel = []
+if var == "S": sel = [x for x in sel if f"[[{x}]]" in prompt]  # stage 2 sees only routed parts
 if sc == "cap" and var == "A" and case == "c1": sel = ["n1", "n2", "n3", "n4"]
 print(json.dumps({"is_error": False, "structured_output": {"selected": sel},
                   "usage": {"input_tokens": len(prompt) // 4, "output_tokens": 10}, "total_cost_usd": 0.001}))
@@ -52,12 +60,15 @@ mk_suite() {  # $1 = dir, $2 = B moc body extra, $3 = extra json for case c1
   printf '<!-- v:A -->\n## S\n- [[n1]] long hand hook one\n- [[n2]] long hand hook two\n- [[n3]] long hand hook three\n- [[n4]] long hand hook four with a lot of extra words to make A expensive\n' > "$d/A.md"
   printf '<!-- v:B -->\n## S\n- [[n1]] t1\n- [[n2]] t2\n- [[n3]] t3\n%s\n' "${2:-- [[n4]] t4}" > "$d/B.md"
   sed 's/v:A/v:CTRL/' "$d/A.md" > "$d/CTRL.md"
-  printf 'spec text\n' > "$d/spec.md"; printf 'system\n' > "$d/prompt.md"
+  printf 'spec text\n' > "$d/spec.md"; printf 'system\n' > "$d/prompt.md"; printf 'route system\n' > "$d/route.md"
+  printf '{"index": "<!-- v:S --> p1 notes one two; p2 notes three four", "parts": {"p1": "<!-- v:S -->\\n- [[n1]] h\\n- [[n2]] h", "p2": "<!-- v:S -->\\n- [[n3]] h\\n- [[n4]] h"}}\n' > "$d/S.json"
   cat > "$d/suite.json" <<JSON
 {"name": "t$(basename "$d")", "model": "stub", "pool_dir": "$d/pool", "system": "prompt.md",
  "template": "CASE:{problem}\n{spec}\n{moc}", "coverage_input": "moc", "reps": 3, "escalate_reps": 5,
  "inputs": {"spec": {"file": "$d/spec.md"},
-            "moc": {"A": {"file": "$d/A.md"}, "B": {"file": "$d/B.md"}, "CTRL": {"file": "$d/CTRL.md"}}},
+            "moc": {"A": {"file": "$d/A.md"}, "B": {"file": "$d/B.md"}, "CTRL": {"file": "$d/CTRL.md"},
+                    "S": {"staged": {"file": "$d/S.json"}}}},
+ "route": {"system": "route.md", "template": "ROUTE CASE:{problem}\n{index}"},
  "decision": {"recall_tolerance": 0.05, "recall_reject": 0.10, "noise_tolerance": 1.0, "min_token_saving": 0.15,
               "ctrl_min_drop": 0.15, "max_error_rate": 0.10, "smoke_max_input_tokens": 8000},
  "cases": [{"id": "c1", "problem": "c1", "must": $c1must, "ok": ["n3"], "max_selected": 3},
@@ -140,6 +151,19 @@ check "k3 prompt changed after calibration -> calibration no longer applies" $(h
 
 run m perfect run "$W/s1" --cases c1
 check "m run over a subset of cases -> marked partial" $(has m "partial run: 1 of 2"; echo $?) m
+
+mk_suite "$W/s6"
+run s1 perfect run "$W/s6" --variants A,S
+check "s1 staged variant, both parts routed -> recall 1, nothing lost at stage 1" $([ $RC -eq 0 ] && grep -E -q "^S +1\.000±" "$W/out-s1.txt" && has s1 "S: must notes missed 0, of which never shown after stage 1: 0"; echo $?) s1
+run s2 route_miss run "$W/s6" --variants A,S
+check "s2 stage 1 drops the part holding c1's notes -> every miss attributed to stage 1" $([ $RC -eq 0 ] && grep -E -q "S: must notes missed ([1-9][0-9]*), of which never shown after stage 1: \1$" "$W/out-s2.txt" && ! has s2 "VERDICT: ADOPT"; echo $?) s2
+run s5 route_heavy run "$W/s6" --variants A,S
+check "s5 stage-1 tokens count toward the variant's cost -> not ADOPT" $([ $RC -eq 0 ] && grep -E -q "^S .* 1[0-9]{5}±" "$W/out-s5.txt" && ! has s5 "VERDICT: ADOPT"; echo $?) s5
+run s3 route_fail run "$W/s6" --variants A,S
+check "s3 stage 1 call fails -> counted as an error, INVALID" $([ $RC -eq 3 ] && has s3 "VERDICT: INVALID"; echo $?) s3
+python3 -c "import sys,json; p=sys.argv[1]; d=json.load(open(p)); d['index']=d['index'].replace('p2','pX'); json.dump(d,open(p,'w'))" "$W/s6/S.json"
+run s4 perfect run "$W/s6" --variants A,S
+check "s4 index does not name a part -> exit 2 before any call" $([ $RC -eq 2 ] && [ "$CALLS" = 0 ] && has s4 "does not name parts: p2"; echo $?) s4
 
 run l cap run "$W/s1"
 check "l A over max_selected -> cap violation counted" $([ $RC -eq 0 ] && grep -E -q '^A +[0-9.]+±[0-9.]+ +[0-9.]+±[0-9.]+ +[0-9]+ +[1-9]' "$W/out-l.txt"; echo $?) l
