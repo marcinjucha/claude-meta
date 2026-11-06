@@ -142,7 +142,7 @@ check "k2 failed calibration -> ADOPT marked NOT TRUSTWORTHY" $(has k2 "NOT TRUS
 
 python3 -c "import sys; p=sys.argv[1]; t=open(p).read(); open(p,'w').write(t.replace('\"max_selected\": 3','\"max_selected\": 4'))" "$W/s1/suite.json"
 run k4 perfect run "$W/s1"
-check "k4 a case's cap changed after calibration -> calibration no longer applies" $(has k4 "no calibration for these inputs" && ! has k4 "calibration failed"; echo $?) k4
+check "k4 a case's cap changed after calibration -> calibration still applies (caps change no prompt)" $(has k4 "calibration failed" && ! has k4 "no calibration for these inputs"; echo $?) k4
 python3 -c "import sys; p=sys.argv[1]; t=open(p).read(); open(p,'w').write(t.replace('\"max_selected\": 4','\"max_selected\": 3'))" "$W/s1/suite.json"
 
 printf 'system v2\n' > "$W/s1/prompt.md"

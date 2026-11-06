@@ -503,9 +503,10 @@ def over_error_budget(s, errors, calls):
 
 
 def setup_sha(s):
-    """What the model is asked: system prompt, template, pool and every case's question and cap."""
+    """What the model is asked: system prompt, template, pool and every case's question. Grading
+    settings (caps, gold) are not in it: they change no prompt, and a report re-grades with them."""
     system = (s["_dir"] / s["system"]).read_text(encoding="utf-8")
-    qs = [(c["id"], c["problem"], c.get("max_selected")) for c in s["cases"]]
+    qs = [(c["id"], c["problem"]) for c in s["cases"]]
     return hashlib.sha256(json.dumps([system, s["template"], pool_sha(s), qs]).encode()).hexdigest()[:12]
 
 
