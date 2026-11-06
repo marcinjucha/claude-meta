@@ -29,6 +29,8 @@ if not m:  # smoke call
 case, var = m.group(1), v.group(1)
 n = bump(f"{case}-{var}")
 if sc == "all_fail": sys.exit(1)
+if sc == "b_fail_one" and var == "B" and case == "c1" and n < 2: sys.exit(1)  # both attempts of one rep
+if sc == "b_case_gone" and var == "B" and case == "c2": sys.exit(1)
 if sc == "fail_once" and n % 2 == 0 and bump(f"f-{case}-{var}-{n}") == 0:
     sys.exit(1)
 must = {"c1": ["n1", "n2"], "c2": ["n3"]}[case]
@@ -37,6 +39,7 @@ if sc == "no_struct":
     print(json.dumps({"is_error": False, "result": "plain text", "usage": {"input_tokens": 1, "output_tokens": 1}})); sys.exit(0)
 if sc == "lost" and var == "B" and case == "c1": sel = ["n2", "n3"]
 if sc == "flicker" and var == "B" and case == "c1" and n < 3: sel = ["n2", "n3"]
+if sc == "b_case_gone" and var == "A" and case == "c2": sel = []
 if sc == "cap" and var == "A" and case == "c1": sel = ["n1", "n2", "n3", "n4"]
 print(json.dumps({"is_error": False, "structured_output": {"selected": sel},
                   "usage": {"input_tokens": len(prompt) // 4, "output_tokens": 10}, "total_cost_usd": 0.001}))
@@ -48,7 +51,7 @@ mk_suite() {  # $1 = dir, $2 = B moc body extra, $3 = extra json for case c1
   for i in 1 2 3 4; do printf -- '---\nstatus: emerging\n---\n# Note n%s thesis\nbody %s\n' "$i" "$i" > "$d/pool/n$i.md"; done
   printf '<!-- v:A -->\n## S\n- [[n1]] long hand hook one\n- [[n2]] long hand hook two\n- [[n3]] long hand hook three\n- [[n4]] long hand hook four with a lot of extra words to make A expensive\n' > "$d/A.md"
   printf '<!-- v:B -->\n## S\n- [[n1]] t1\n- [[n2]] t2\n- [[n3]] t3\n%s\n' "${2:-- [[n4]] t4}" > "$d/B.md"
-  cp "$d/A.md" "$d/CTRL.md"; sed -i '' 's/v:A/v:CTRL/' "$d/CTRL.md"
+  sed 's/v:A/v:CTRL/' "$d/A.md" > "$d/CTRL.md"
   printf 'spec text\n' > "$d/spec.md"; printf 'system\n' > "$d/prompt.md"
   cat > "$d/suite.json" <<JSON
 {"name": "t$(basename "$d")", "model": "stub", "pool_dir": "$d/pool", "system": "prompt.md",
@@ -92,6 +95,13 @@ check "d every call fails -> exit 3, verdict INVALID" $([ $RC -eq 3 ] && ! has d
 run d2 no_struct run "$W/s1"
 check "d2 answers without structured_output -> errors, exit 3" $([ $RC -eq 3 ]; echo $?) d2
 
+run d3 b_fail_one run "$W/s1"
+check "d3 one B call lost (over the 10% budget), rest perfect -> INVALID, not ADOPT" $([ $RC -eq 3 ] && has d3 "VERDICT: INVALID" && ! has d3 "VERDICT: ADOPT"; echo $?) d3
+
+mk_suite "$W/s5"; python3 -c "import sys; p=sys.argv[1]; t=open(p).read(); open(p,'w').write(t.replace('\"max_error_rate\": 0.10','\"max_error_rate\": 0.6'))" "$W/s5/suite.json"
+run d4 b_case_gone run "$W/s5"
+check "d4 B has no answer for c2 (A scored 0 there) -> c2 left out of both means" $([ $RC -eq 0 ] && grep -E -q "^A +1\.000±" "$W/out-d4.txt"; echo $?) d4
+
 run e fail_once run "$W/s1"
 check "e first attempt fails -> retried, run counts" $([ $RC -eq 0 ] && has e "VERDICT: ADOPT B"; echo $?) e
 
@@ -119,9 +129,17 @@ check "k CTRL identical to A -> calibration fails" $([ $RC -eq 1 ] && has k "con
 run k2 perfect run "$W/s1"
 check "k2 failed calibration -> ADOPT marked NOT TRUSTWORTHY" $(has k2 "NOT TRUSTWORTHY: calibration failed"; echo $?) k2
 
+python3 -c "import sys; p=sys.argv[1]; t=open(p).read(); open(p,'w').write(t.replace('\"max_selected\": 3','\"max_selected\": 4'))" "$W/s1/suite.json"
+run k4 perfect run "$W/s1"
+check "k4 a case's cap changed after calibration -> calibration no longer applies" $(has k4 "no calibration for these inputs" && ! has k4 "calibration failed"; echo $?) k4
+python3 -c "import sys; p=sys.argv[1]; t=open(p).read(); open(p,'w').write(t.replace('\"max_selected\": 4','\"max_selected\": 3'))" "$W/s1/suite.json"
+
 printf 'system v2\n' > "$W/s1/prompt.md"
 run k3 perfect run "$W/s1"
 check "k3 prompt changed after calibration -> calibration no longer applies" $(has k3 "no calibration for these inputs" && ! has k3 "calibration failed"; echo $?) k3
+
+run m perfect run "$W/s1" --cases c1
+check "m run over a subset of cases -> marked partial" $(has m "partial run: 1 of 2"; echo $?) m
 
 run l cap run "$W/s1"
 check "l A over max_selected -> cap violation counted" $([ $RC -eq 0 ] && grep -E -q '^A +[0-9.]+±[0-9.]+ +[0-9.]+±[0-9.]+ +[0-9]+ +[1-9]' "$W/out-l.txt"; echo $?) l

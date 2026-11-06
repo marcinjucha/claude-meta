@@ -213,7 +213,8 @@ def smoke(s, model):
 # ---------- grading ----------
 
 def norm(i):
-    return i.strip().removeprefix("[[").removesuffix("]]").removesuffix(".md").split("/")[-1]
+    i = i.strip().removeprefix("[[").removesuffix("]]")
+    return re.split(r"[|#]", i)[0].strip().removesuffix(".md").split("/")[-1]
 
 
 def load_results(run_dir):
@@ -271,13 +272,15 @@ def hits(rows, cases):
 
 
 def aggregates(rows, cases, v):
-    graded = [c for c in cases if c.get("must")]
-    per_case = [mean([r["recall"] for r in rows if r["case"] == c["id"] and r["variant"] == v]) for c in graded]
+    """Every metric is averaged per case first, so a case that lost reps to errors keeps its weight."""
+    def per_case(key, only_graded=False):
+        cs = [c for c in cases if c.get("must")] if only_graded else cases
+        return [mean([r[key] for r in rows if r["case"] == c["id"] and r["variant"] == v]) for c in cs]
     vr = [r for r in rows if r["variant"] == v]
-    return dict(R=mean(per_case), R_sd=sd(per_case),
-                N=mean([r["noise"] for r in vr]), N_sd=sd([r["noise"] for r in vr]),
+    R, N, T = per_case("recall", True), per_case("noise"), per_case("tokens")
+    return dict(R=mean(R), R_sd=sd(R), N=mean(N), N_sd=sd(N),
                 I=sum(len(r["invalid"]) for r in vr), C=sum(r["cap"] for r in vr),
-                T=mean([r["tokens"] for r in vr]), T_sd=sd([r["tokens"] for r in vr]),
+                T=mean(T), T_sd=sd(T),
                 cost=sum(r["cost"] for r in vr), n=len(vr))
 
 
@@ -300,9 +303,9 @@ def lost_notes(h, baseline, candidate, d):
     return cand, confirmed
 
 
-def borderline_cases(rows, cases, h, baseline, candidate):
+def borderline_cases(rows, cases, h, baseline, candidate, d):
     out = set()
-    cand, _ = lost_notes(h, baseline, candidate, {})
+    cand, _ = lost_notes(h, baseline, candidate, d)
     out |= {c[0] for c in cand}
     for c in cases:
         if not c.get("must"):
@@ -373,6 +376,9 @@ def write_report(s, run_dir, baseline, candidate, meta):
         v = f"INVALID: too many failed calls {errors} of {calls}"
     L = []
     banners = calibration_banners(s, meta, baseline)
+    ran = meta.get("cases")
+    if ran is not None and len(ran) < len(s["cases"]):
+        banners.append(f"partial run: {len(ran)} of {len(s['cases'])} cases")
     L += [f"!! {b}" for b in banners]
     shown = v if not (banners and v.startswith("ADOPT")) else f"{v}, NOT TRUSTWORTHY: {'; '.join(banners)}"
     L.append(f"VERDICT: {shown}")
@@ -424,12 +430,18 @@ def over_error_budget(s, errors, calls):
     return any(calls[x] and errors[x] / calls[x] > maxerr for x in calls)
 
 
-def calibration_key(s, meta, base):
-    """Gold, model, system prompt, template, pool and the baseline's inputs: change any and the
-    stored calibration no longer applies."""
+def setup_sha(s):
+    """What the model is asked: system prompt, template, pool and every case's question and cap."""
     system = (s["_dir"] / s["system"]).read_text(encoding="utf-8")
+    qs = [(c["id"], c["problem"], c.get("max_selected")) for c in s["cases"]]
+    return hashlib.sha256(json.dumps([system, s["template"], pool_sha(s), qs]).encode()).hexdigest()[:12]
+
+
+def calibration_key(s, meta, base):
+    """Gold, model, the setup the run was made with and the baseline's inputs: change any and the
+    stored calibration no longer applies."""
     ins = sorted((k, v) for k, v in meta.get("input_sha", {}).items() if k.endswith(f"-{base}"))
-    fp = hashlib.sha256(json.dumps([system, s["template"], pool_sha(s), ins]).encode()).hexdigest()[:12]
+    fp = hashlib.sha256(json.dumps([meta.get("setup_sha"), ins]).encode()).hexdigest()[:12]
     return f"{gold_sha(s)}:{meta.get('model')}:{fp}"
 
 
@@ -479,13 +491,15 @@ def execute(s, variants, reps, model, case_ids, escalate, alias=None):
         for name, text in ins.items():
             (run_dir / "inputs" / f"{name}-{v}.txt").write_text(text, encoding="utf-8")
             shas[f"{name}-{v}"] = hashlib.sha256(text.encode()).hexdigest()[:12]
-    meta = dict(model=model, cli=cli_version(), variants=variants, reps=reps, input_sha=shas, alias=alias or {})
+    meta = dict(model=model, cli=cli_version(), variants=variants, reps=reps, input_sha=shas, alias=alias or {},
+                setup_sha=setup_sha(s), cases=[c["id"] for c in cases])
+    (run_dir / "meta.json").write_text(json.dumps(meta, indent=1), encoding="utf-8")
     print(f"run dir: {run_dir}")
     results = run_calls(s, inputs, cases, variants, reps, model, run_dir)
     base, cand = variants[0], variants[1]
     if escalate:
         rows, _, _ = grade(s, results, base, cand)
-        border = borderline_cases(rows, cases, hits(rows, cases), base, cand)
+        border = borderline_cases(rows, cases, hits(rows, cases), base, cand, s.get("decision", {}))
         if border:
             print(f"escalating {len(border)} borderline cases: {', '.join(sorted(border))}")
             more = s.get("escalate_reps", 5)
@@ -559,7 +573,8 @@ def cmd_calibrate(a):
     rows_ctrl = paired(rows_aa, base, ctrl)
     A_c, C = aggregates(rows_ctrl, cases, base), aggregates(rows_ctrl, cases, ctrl)
     graded = None not in (A["R"], A2["R"], A_c["R"], C["R"])
-    quality = [k for k in checks_aa if not k.startswith("tokens") and k != "no unresolved lost-note candidate"]
+    sampling = ("tokens", "no unresolved lost-note candidate", "invalid and cap")
+    quality = [k for k in checks_aa if not k.startswith(sampling)]
     aa_ok = graded and all(checks_aa[k] for k in quality) and abs(A["R"] - A2["R"]) <= d.get("recall_tolerance", 0.05)
     disc_ok = graded and C["R"] <= A_c["R"] - d.get("ctrl_min_drop", 0.15)
     why = []
