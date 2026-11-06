@@ -7,11 +7,11 @@ whether the candidate variant may replace the baseline. Out of scope: commands w
 from multi-turn tool use or written output (use skill-creator's old-vs-new workflow for those).
 
   skill-ab.py run <suite_dir> [--variants A,B] [--reps N] [--cases id,...] [--model M] [--no-escalate]
-  skill-ab.py report <run_dir> [--suite <suite_dir>]   re-grade stored answers, no model calls
-  skill-ab.py candidates <run_dir> [--suite <suite_dir>]   write candidates.md for gold labelling
+  skill-ab.py report <run_dir> --suite <suite_dir>     re-grade stored answers, no model calls
+  skill-ab.py candidates <run_dir> --suite <suite_dir> write candidates.md for gold labelling
   skill-ab.py calibrate <suite_dir> [--model M]        A/A + negative-control check of the eval itself
 
-Exit codes: 0 verdict printed, 2 precondition failed, 3 too many failed calls.
+Exit codes: 0 verdict printed, 1 calibration failed, 2 precondition failed, 3 too many failed calls.
 """
 import argparse
 import concurrent.futures as cf
@@ -63,7 +63,7 @@ def resolve_one(spec, s):
         if "between" in spec:
             start, end = spec["between"]
             i = next((k for k, ln in enumerate(text.split("\n")) if ln.startswith(start)), None)
-            j = next((k for k, ln in enumerate(text.split("\n")) if ln.startswith(end)), None)
+            j = None if i is None else next((k for k, ln in enumerate(text.split("\n")) if k > i and ln.startswith(end)), None)
             if i is None or j is None or j <= i:
                 raise Precondition(f"slice markers not found in {p}: {spec['between']}")
             text = "\n".join(text.split("\n")[i:j])
@@ -222,7 +222,7 @@ def load_results(run_dir):
 
 def grade(s, results, baseline, candidate):
     pool = pool_ids(s)
-    sizes = {p.stem: p.stat().st_size for p in Path(s["pool_dir"]).glob("*.md")}
+    sizes = {p.stem: len(p.read_text(encoding="utf-8")) for p in Path(s["pool_dir"]).glob("*.md")}
     cases = {c["id"]: c for c in s["cases"]}
     ok = [r for r in results if r["status"] == "ok"]
     ratios = [r["prompt_chars"] / max(1, input_tokens(r["cli"])) for r in ok]
@@ -282,7 +282,8 @@ def aggregates(rows, cases, v):
 
 
 def lost_notes(h, baseline, candidate, d):
-    """Candidates at stage 1; a note is confirmed lost only on pooled counts (n >= 8)."""
+    """A note is judged on pooled counts once both variants have lost_confirm_n answers; below that a
+    note B never picked is an unresolved candidate, which blocks ADOPT."""
     cand, confirmed = [], []
     for cid, per in h.items():
         if baseline not in per or candidate not in per:
@@ -291,7 +292,7 @@ def lost_notes(h, baseline, candidate, d):
             kb, nb = per[candidate][note]
             if na == 0 or nb == 0:
                 continue
-            if na >= 8 and nb >= 8:
+            if min(na, nb) >= d.get("lost_confirm_n", 6):
                 if ka / na >= d.get("lost_a_rate", 0.6) and kb <= nb * d.get("lost_b_rate", 0.125):
                     confirmed.append((cid, note, ka, na, kb, nb))
             elif ka / na >= 2 / 3 and kb == 0:
@@ -313,9 +314,16 @@ def borderline_cases(rows, cases, h, baseline, candidate):
     return out
 
 
+def paired(rows, baseline, candidate):
+    """Keep only cases answered by both variants, so A and B are averaged over the same cases."""
+    both = {r["case"] for r in rows if r["variant"] == baseline} & {r["case"] for r in rows if r["variant"] == candidate}
+    return [r for r in rows if r["case"] in both]
+
+
 def verdict(s, rows, baseline, candidate):
     d = s.get("decision", {})
     cases = s["cases"]
+    rows = paired(rows, baseline, candidate)
     h = hits(rows, cases)
     A, B = aggregates(rows, cases, baseline), aggregates(rows, cases, candidate)
     cand, confirmed = lost_notes(h, baseline, candidate, d)
@@ -327,6 +335,7 @@ def verdict(s, rows, baseline, candidate):
     off = [c for c in cases if c.get("must") == []]
     off_ok = all(all(not r["cap"] for r in rows if r["case"] == c["id"] and r["variant"] == candidate) for c in off)
     checks["no confirmed lost note"] = not confirmed
+    checks["no unresolved lost-note candidate"] = not cand
     checks[f"recall B >= A - {tol}"] = B["R"] >= A["R"] - tol
     checks[f"noise B <= A + {d.get('noise_tolerance', 1.0)}"] = B["N"] <= A["N"] + d.get("noise_tolerance", 1.0)
     checks["invalid and cap violations B <= A"] = B["I"] <= A["I"] and B["C"] <= A["C"]
@@ -360,8 +369,10 @@ def write_report(s, run_dir, baseline, candidate, meta):
     results = load_results(run_dir)
     rows, errors, calls = grade(s, results, baseline, candidate)
     v, checks, A, B, cand, confirmed = verdict(s, rows, baseline, candidate)
+    if over_error_budget(s, errors, calls):
+        v = f"INVALID: too many failed calls {errors} of {calls}"
     L = []
-    banners = calibration_banners(s, meta.get("model"))
+    banners = calibration_banners(s, meta, baseline)
     L += [f"!! {b}" for b in banners]
     shown = v if not (banners and v.startswith("ADOPT")) else f"{v}, NOT TRUSTWORTHY: {'; '.join(banners)}"
     L.append(f"VERDICT: {shown}")
@@ -408,14 +419,28 @@ def write_report(s, run_dir, baseline, candidate, meta):
     return v, text, errors, calls
 
 
-def calibration_banners(s, model):
+def over_error_budget(s, errors, calls):
+    maxerr = s.get("decision", {}).get("max_error_rate", 0.10)
+    return any(calls[x] and errors[x] / calls[x] > maxerr for x in calls)
+
+
+def calibration_key(s, meta, base):
+    """Gold, model, system prompt, template, pool and the baseline's inputs: change any and the
+    stored calibration no longer applies."""
+    system = (s["_dir"] / s["system"]).read_text(encoding="utf-8")
+    ins = sorted((k, v) for k, v in meta.get("input_sha", {}).items() if k.endswith(f"-{base}"))
+    fp = hashlib.sha256(json.dumps([system, s["template"], pool_sha(s), ins]).encode()).hexdigest()[:12]
+    return f"{gold_sha(s)}:{meta.get('model')}:{fp}"
+
+
+def calibration_banners(s, meta, base):
     p = CACHE / s["name"] / "calibration.json"
-    key = f"{gold_sha(s)}:{model}"
+    key = calibration_key(s, meta, base)
     if not p.exists():
-        return ["no calibration for this gold and model (run: skill-ab.py calibrate)"]
+        return ["no calibration for these inputs, gold and model (run: skill-ab.py calibrate)"]
     cal = json.loads(p.read_text(encoding="utf-8")).get(key)
     if not cal:
-        return ["no calibration for this gold and model (run: skill-ab.py calibrate)"]
+        return ["no calibration for these inputs, gold and model (run: skill-ab.py calibrate)"]
     if not cal.get("passed"):
         return [f"calibration failed: {cal.get('why')}"]
     return []
@@ -473,16 +498,14 @@ def execute(s, variants, reps, model, case_ids, escalate, alias=None):
 def finish(s, run_dir, meta, base, cand):
     v, text, errors, calls = write_report(s, run_dir, base, cand, meta)
     print(text)
-    maxerr = s.get("decision", {}).get("max_error_rate", 0.10)
-    if any(calls[x] and errors[x] / calls[x] > maxerr for x in (base, cand)):
-        print(f"too many failed calls: {errors} of {calls}")
-        return 3, v
-    return 0, v
+    return (3 if v.startswith("INVALID") else 0), v
 
 
 def cmd_run(a):
     s = load_suite(a.suite)
     variants = a.variants.split(",") if a.variants else s.get("default_variants", ["A", "B"])
+    if len(variants) != 2:
+        raise Precondition(f"--variants takes exactly two, baseline first: {variants}")
     model = a.model or s.get("model", "opus")
     reps = a.reps or s.get("reps", 3)
     case_ids = set(a.cases.split(",")) if a.cases else None
@@ -490,22 +513,15 @@ def cmd_run(a):
     return finish(s, run_dir, meta, variants[0], variants[1])[0]
 
 
-def suite_for_run(a):
-    if a.suite:
-        return load_suite(a.suite)
-    meta = json.loads((Path(a.run_dir) / "meta.json").read_text())
-    raise Precondition(f"pass --suite <dir> (run used variants {meta.get('variants')})")
-
-
 def cmd_report(a):
-    s = suite_for_run(a)
+    s = load_suite(a.suite)
     meta = json.loads((Path(a.run_dir) / "meta.json").read_text())
     v = meta["variants"]
     return finish(s, Path(a.run_dir), meta, v[0], v[1])[0]
 
 
 def cmd_candidates(a):
-    s = suite_for_run(a)
+    s = load_suite(a.suite)
     results = [r for r in load_results(a.run_dir) if r["status"] == "ok"]
     pool = Path(s["pool_dir"])
     bodies = {p.stem: p.read_text(encoding="utf-8").lower() for p in pool.glob("*.md") if p.name not in s.get("pool_exclude", [])}
@@ -537,21 +553,29 @@ def cmd_calibrate(a):
     cases = [c for c in s["cases"] if c["id"] in case_ids]
     sub = dict(s, cases=cases)
     rows_aa, _, _ = grade(sub, results, base, twin)
+    errors = {v: sum(1 for r in results if r["variant"] == v and r["status"] != "ok") for v in (base, twin, ctrl)}
+    calls = {v: sum(1 for r in results if r["variant"] == v) for v in (base, twin, ctrl)}
     va, checks_aa, A, A2, _, _ = verdict(sub, rows_aa, base, twin)
-    quality = [k for k in checks_aa if not k.startswith("tokens")]
-    aa_ok = all(checks_aa[k] for k in quality) and abs(A["R"] - A2["R"]) <= d.get("recall_tolerance", 0.05)
-    C = aggregates(rows_aa, cases, ctrl)
-    _, ctrl_conf = lost_notes(hits(rows_aa, cases), base, ctrl, d)
-    disc_ok = C["R"] is not None and (C["R"] <= A["R"] - d.get("ctrl_min_drop", 0.15) or bool(ctrl_conf))
+    rows_ctrl = paired(rows_aa, base, ctrl)
+    A_c, C = aggregates(rows_ctrl, cases, base), aggregates(rows_ctrl, cases, ctrl)
+    graded = None not in (A["R"], A2["R"], A_c["R"], C["R"])
+    quality = [k for k in checks_aa if not k.startswith("tokens") and k != "no unresolved lost-note candidate"]
+    aa_ok = graded and all(checks_aa[k] for k in quality) and abs(A["R"] - A2["R"]) <= d.get("recall_tolerance", 0.05)
+    disc_ok = graded and C["R"] <= A_c["R"] - d.get("ctrl_min_drop", 0.15)
     why = []
-    if not aa_ok:
+    if over_error_budget(s, errors, calls):
+        aa_ok = False
+        why.append(f"too many failed calls {errors} of {calls}")
+    elif not graded:
+        why.append("no graded answers for one of the variants")
+    elif not aa_ok:
         why.append(f"A/A gap {fmt(abs(A['R'] - A2['R']))} or a quality check failed on identical inputs")
     if not disc_ok:
-        why.append(f"control not caught: recall {fmt(C['R'])} vs {fmt(A['R'])}")
+        why.append(f"control not caught: recall {fmt(C['R'])} vs {fmt(A_c['R'])}")
     rec = dict(passed=aa_ok and disc_ok, why="; ".join(why), A=A["R"], A2=A2["R"], CTRL=C["R"], run=str(run_dir))
     p = CACHE / s["name"] / "calibration.json"
     allcal = json.loads(p.read_text()) if p.exists() else {}
-    allcal[f"{gold_sha(s)}:{model}"] = rec
+    allcal[calibration_key(s, meta, base)] = rec
     p.write_text(json.dumps(allcal, indent=1))
     print(json.dumps(rec, indent=1))
     return 0 if rec["passed"] else 1
@@ -570,7 +594,7 @@ def main():
     for name in ("report", "candidates"):
         p = sp.add_parser(name)
         p.add_argument("run_dir")
-        p.add_argument("--suite")
+        p.add_argument("--suite", required=True)
     c = sp.add_parser("calibrate")
     c.add_argument("suite")
     c.add_argument("--model")

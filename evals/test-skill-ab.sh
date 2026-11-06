@@ -80,11 +80,14 @@ check "a perfect picks (+ an ok note), B cheaper -> recall exactly 1, ADOPT" $([
 run b lost run "$W/s1"
 check "b B always drops n1 -> escalated, confirmed lost, REJECT" $([ $RC -eq 0 ] && has b "escalating" && has b "CONFIRMED LOST NOTES" && has b "VERDICT: REJECT B"; echo $?) b
 
+run b2 lost run "$W/s1" --no-escalate
+check "b2 lost note without escalation -> unresolved candidate, not ADOPT" $([ $RC -eq 0 ] && has b2 "lost-note candidates" && has b2 "\[ \] no unresolved lost-note candidate" && ! has b2 "VERDICT: ADOPT"; echo $?) b2
+
 run c flicker run "$W/s1"
 check "c B misses n1 only at stage 1 -> no confirmed lost note, not REJECT" $([ $RC -eq 0 ] && has c "escalating" && ! has c "CONFIRMED LOST" && ! has c "VERDICT: REJECT"; echo $?) c
 
 run d all_fail run "$W/s1"
-check "d every call fails -> exit 3, no verdict from errors" $([ $RC -eq 3 ] && ! has d "0.000±"; echo $?) d
+check "d every call fails -> exit 3, verdict INVALID" $([ $RC -eq 3 ] && ! has d "0.000±" && has d "VERDICT: INVALID"; echo $?) d
 
 run d2 no_struct run "$W/s1"
 check "d2 answers without structured_output -> errors, exit 3" $([ $RC -eq 3 ]; echo $?) d2
@@ -104,7 +107,7 @@ mk_suite "$W/s4" "- [[n4]] $(printf 'x%.0s' $(seq 1 3000))"
 run h perfect run "$W/s4"
 check "h B more expensive -> not ADOPT" $([ $RC -eq 0 ] && ! has h "VERDICT: ADOPT"; echo $?) h
 
-RUN_A="$(ls -d "$SKILL_AB_CACHE"/ts1/*/ | head -1)"
+RUN_A="$(sed -n 's/^run dir: //p' "$W/out-a.txt")"
 run i perfect report "$RUN_A" --suite "$W/s1"
 check "i report re-grades with zero calls, same verdict" $([ $RC -eq 0 ] && [ "$CALLS" = 0 ] && has i "VERDICT: ADOPT B"; echo $?) i
 
@@ -115,6 +118,10 @@ run k perfect calibrate "$W/s1"
 check "k CTRL identical to A -> calibration fails" $([ $RC -eq 1 ] && has k "control not caught"; echo $?) k
 run k2 perfect run "$W/s1"
 check "k2 failed calibration -> ADOPT marked NOT TRUSTWORTHY" $(has k2 "NOT TRUSTWORTHY: calibration failed"; echo $?) k2
+
+printf 'system v2\n' > "$W/s1/prompt.md"
+run k3 perfect run "$W/s1"
+check "k3 prompt changed after calibration -> calibration no longer applies" $(has k3 "no calibration for these inputs" && ! has k3 "calibration failed"; echo $?) k3
 
 run l cap run "$W/s1"
 check "l A over max_selected -> cap violation counted" $([ $RC -eq 0 ] && grep -E -q '^A +[0-9.]+±[0-9.]+ +[0-9.]+±[0-9.]+ +[0-9]+ +[1-9]' "$W/out-l.txt"; echo $?) l
