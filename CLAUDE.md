@@ -4,7 +4,7 @@
 
 This IS `~/.claude` — the live global Claude Code config, loaded into every session in every project, and itself a git repo (`.gitignore` excludes runtime dirs: `cache`, `projects`, `history.jsonl`, `plugins`, `backups`, `debug`, `shell-snapshots`, `.DS_Store`, …). It holds the **meta-artifact toolchain** natively (tools for creating, auditing, and maintaining other Claude Code artifacts) and receives the `brain-*` family by symlink from `brain-vault/.brain` (the engine, formerly the `claude-brain` repo, merged into the vault repo 2026-10-01).
 
-**Domain artifacts live elsewhere:** project-specific agents/skills/commands stay in their own repos (`claude-dev` = programming/infra, `claude-marketing` = go-to-market) and are symlinked into each project's `.claude/`. Only meta-tooling + global behavior belongs here. **Why:** keeps each repo's skill-description routing budget focused on one domain.
+**Domain artifacts live elsewhere:** project-specific agents/skills/commands stay out of `~/.claude`: programming/infra artifacts live in the `claude-dev` repo (symlinked into each project's `.claude/`), go-to-market artifacts live in the brain vault's `.claude/` (`brain-vault/.claude`, merged from `claude-marketing` 2026-11-06, loaded only in sessions inside the vault). Only meta-tooling + global behavior belongs here. **Why:** keeps each repo's skill-description routing budget focused on one domain.
 
 **Exception — third-party UI/design skills are global (Marcin's decision, 2026-10-12):** the 15 skills from `emilkowalski/skills` (installed with `npx skills add emilkowalski/skills -g -a claude-code`, updated with `npx skills update -g`) sit as copies in `skills/` and are listed one by one in `.gitignore`, because they are not authored here. The `taste-skill` plugin (installed via `/plugin`) is global for the same reason. Do not move them to `claude-dev`, and never edit them in place: an update overwrites local changes. `/website` (`commands/website.md`, 2026-10-12) is global on the same basis but is OURS (tracked, editable): it orchestrates these third-party tools (impeccable as backbone, emilkowalski skills, Playwright + Figma MCP) and adds only the step none of them cover, real-site reference capture.
 
@@ -15,7 +15,7 @@ agents/      → ai-manager-agent.md (opus, tracked) + brain-manager.md (SYMLINK
              + agents/CLAUDE.md
 commands/    → 24 .md: 12 native (8 ai-* + council.md + improve-process.md + website.md + commands/CLAUDE.md)
              + 12 brain-* SYMLINKS → brain-vault/.brain (4 committed as symlinks, 8 untracked)
-             (/brain-social moved to claude-marketing/commands 2026-10-11 — no longer global)
+             (/brain-social moved out 2026-10-11, now brain-vault/.claude/commands — no longer global)
 skills/      → 7 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
                ai-git-commit-patterns, ai-skill-creator, ai-skill-fine-tuning, ai-skill-lifecycle)
              + human-language-check, summary-signal-first (tracked)

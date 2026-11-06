@@ -18,7 +18,7 @@ Slash commands for managing Claude Code artifacts and utilities. All `ai-*` arti
 | `/ai-solve` | Universal non-technical task executor (presentations, planning, research) | general-purpose |
 | `/website` | Professional website/landing page from a brief: real-site references → impeccable build → motion → verification | impeccable (+ its agents), inline orchestration |
 
-Also here: `council.md`, `improve-process.md`, `website.md` (native), and 12 `brain-*` symlinks into `brain-vault/.brain` (edit at source; 4 committed as symlink blobs, 8 untracked). `/brain-social` moved to `claude-marketing/commands` on 2026-10-11.
+Also here: `council.md`, `improve-process.md`, `website.md` (native), and 12 `brain-*` symlinks into `brain-vault/.brain` (edit at source; 4 committed as symlink blobs, 8 untracked). `/brain-social` moved out on 2026-10-11; it now lives in `brain-vault/.claude/commands`.
 
 ## Weird Parts / Key Patterns
 

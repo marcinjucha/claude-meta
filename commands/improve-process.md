@@ -61,7 +61,7 @@ TAK:
 
 **1. Faza 1 jest INLINE.** Orkiestrator sam wypisuje kandydatów z TEJ konwersacji. Delegacja
 dopuszczalna WYŁĄCZNIE do agenta dziedziczącego kontekst sesji; na tej maszynie taki agent
-**nie istnieje** (`~/.claude/agents/`: ai-manager-agent, brain-manager · `claude-marketing/agents/`:
+**nie istnieje** (`~/.claude/agents/`: ai-manager-agent, brain-manager · `brain-vault/.claude/agents/`:
 mrk-agent, so-agent), więc **delegacji w Fazie 1 nie ma**. Świeży agent w Fazie 1 = wymyślone lekcje.
 Źródłem lekcji jest bieżąca konwersacja, której świeży agent nie widzi — zwróci puste albo wymyślone.
 **Precedens, nie hipoteza:** wrapper `/ai-extract-memory` delegował do ŚWIEŻEGO agenta z instrukcją

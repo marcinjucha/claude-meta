@@ -2,7 +2,7 @@
 
 ## Overview
 
-Global skills only: the **ai-*** meta-skills (artifact management, used by `ai-manager-agent`) plus a few domain-agnostic **working-style** skills that apply in every project. Domain skills (vps-*, copy-*, so-* …) live in `claude-dev` / `claude-marketing`, not here.
+Global skills only: the **ai-*** meta-skills (artifact management, used by `ai-manager-agent`) plus a few domain-agnostic **working-style** skills that apply in every project. Domain skills (vps-*, copy-*, so-* …) live in `claude-dev` / the brain vault's `.claude/skills`, not here.
 
 ## AI Meta-Skills (ai-manager-agent)
 
