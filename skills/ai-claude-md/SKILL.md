@@ -25,7 +25,7 @@ Create and maintain focused, actionable CLAUDE.md documentation that Claude actu
 - Skills reference wrong file paths or line numbers
 - Pattern no longer used (needs deprecation)
 
-**Note:** Fact-based and signal-only rules enforced by ai-manager-agent system prompt.
+**Note:** Fact-based and signal-only rules enforced by ai-manager-agent system prompt. So when this skill is loaded in the main loop (typing `/ai-claude-md` — there is no command of that name), hand the writing to `ai-manager-agent` instead of editing inline.
 
 ## Core Philosophy
 
@@ -191,8 +191,9 @@ Project/Module/FeatureB/CLAUDE.md (FeatureB)
 ```
 
 2. **Apply standard structure:**
-   - Required: Quick Orientation → The Weird Parts → Critical Mistakes → Quick Reference
-   - Optional: Architecture Overview, Common Pitfalls, Deprecated Patterns
+   - Required: Overview + Weird Parts / Key Patterns — nothing else
+   - Optional, only when there is real content: Critical Mistakes, Quick Reference, Cross-References, Deprecated Patterns
+   - No empty or placeholder sections
 
 3. **Apply 80/20 rule:**
    - Keep: Project-specific oddities, critical mistakes
@@ -200,7 +201,7 @@ Project/Module/FeatureB/CLAUDE.md (FeatureB)
 
 **Example:** 300 lines → 80 lines by removing generic architecture/data layer patterns, keeping only project-specific content.
 
-**Verify:** Each section project-specific, WHY context included, Quick Reference scannable, <500 lines.
+**Verify:** Each section project-specific, WHY context included, <500 lines.
 
 ### Pattern 5: Cross-Referencing Skills
 
@@ -287,12 +288,15 @@ Apply signal-vs-noise:
 
 ## Template
 
-```markdown
-# [Feature] - Quick Orientation
+Only Overview + Weird Parts are required; add the other sections only when there is content for them.
 
+```markdown
+# [Feature]
+
+## Overview
 [1-2 sentence description]
 
-## The Weird Parts
+## Weird Parts / Key Patterns
 
 ### [Weird Thing #1]
 **Why**: [Real problem we hit]
@@ -318,8 +322,8 @@ Before committing CLAUDE.md:
 2. **Specificity**: Is this project-specific? → Keep
 3. **WHY context**: Do I explain WHY? → Required (see Core Philosophy)
 4. **Actionability**: Would this help me in 6 months? → Keep
-5. **Structure**: Standard sections applied? → Required
-6. **Scannable**: Quick Reference in bullet form? → Required
+5. **Structure**: Overview + Weird Parts present, no empty sections? → Required
+6. **Cross-references**: Every referenced file and skill exists? → Required
 
 ---
 

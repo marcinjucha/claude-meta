@@ -10,7 +10,6 @@ Slash commands for managing Claude Code artifacts and utilities. All `ai-*` arti
 |---------|---------|------------|
 | `/ai-skill` | Create, audit, or modify skills | ai-manager-agent |
 | `/ai-agent` | Create, audit, or modify agents | ai-manager-agent |
-| `/ai-claude-md` | Create, audit, or modify CLAUDE.md files | ai-manager-agent |
 | `/ai-commands` | Create, audit, or modify multi-phase commands | ai-manager-agent |
 | `/ai-git` | Generate commit messages from staged changes | none (inline) |
 | `/ai-extract-memory` | Auto-extract session learnings to memory.md | none (inline) |
@@ -23,6 +22,8 @@ Also here: `council.md`, `improve-process.md`, `website.md` (native), and 12 `br
 ## Weird Parts / Key Patterns
 
 **Tri-modal pattern (ai-* artifact family)**: Phase 0 always detects intent from natural language → CREATE, AUDIT, or MODIFY. Then adaptive phases follow. **Why:** users describe what they want naturally ("update the skill", "check quality", "create new agent") — the command figures out the mode, so one command handles three operations per artifact type.
+
+**No `/ai-claude-md` command — it is the skill**: typing `/ai-claude-md` loads `skills/ai-claude-md/SKILL.md`, which delegates the writing to ai-manager-agent. **Why:** a skill shadows a same-named command; the old command never ran and was deleted 2026-11-11. Never name a command after an existing skill.
 
 **ai-* artifact commands use ai-manager-agent; /ai-solve uses general-purpose**: The ai-* artifact commands are artifact-specific (need meta-skills). /ai-solve handles arbitrary non-technical tasks (presentations, research) — doesn't need artifact knowledge.
 
