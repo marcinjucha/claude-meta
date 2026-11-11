@@ -14,7 +14,6 @@ Slash commands for managing Claude Code artifacts and utilities. All `ai-*` arti
 | `/ai-git` | Generate commit messages from staged changes | none (inline) |
 | `/ai-extract-memory` | Auto-extract session learnings to memory.md | none (inline) |
 | `/ai-curate-memory` | Promote mature memory entries to CLAUDE.md files | none (inline) |
-| `/ai-solve` | Universal non-technical task executor (presentations, planning, research) | general-purpose |
 | `/website` | Professional website/landing page from a brief: real-site references → impeccable build → motion → verification | impeccable (+ its agents), inline orchestration |
 
 Also here: `council.md`, `improve-process.md`, `website.md` (native), and 12 `brain-*` symlinks into `brain-vault/.brain` (edit at source; 4 committed as symlink blobs, 8 untracked). `/brain-social` moved out on 2026-10-11; it now lives in `brain-vault/.claude/commands`.
@@ -24,8 +23,6 @@ Also here: `council.md`, `improve-process.md`, `website.md` (native), and 12 `br
 **Tri-modal pattern (ai-* artifact family)**: Phase 0 always detects intent from natural language → CREATE, AUDIT, or MODIFY. Then adaptive phases follow. **Why:** users describe what they want naturally ("update the skill", "check quality", "create new agent") — the command figures out the mode, so one command handles three operations per artifact type.
 
 **No `/ai-claude-md` command — it is the skill**: typing `/ai-claude-md` loads `skills/ai-claude-md/SKILL.md`, which delegates the writing to ai-manager-agent. **Why:** a skill shadows a same-named command; the old command never ran and was deleted 2026-11-11. Never name a command after an existing skill.
-
-**ai-* artifact commands use ai-manager-agent; /ai-solve uses general-purpose**: The ai-* artifact commands are artifact-specific (need meta-skills). /ai-solve handles arbitrary non-technical tasks (presentations, research) — doesn't need artifact knowledge.
 
 **Ask once, only about assumptions; one consent point**: ai-* artifact commands ask the user in ONE message, and only when assuming scope, location (claude-dev / brain-vault/.claude / ~/.claude / the source of a symlink) or what the change applies to; otherwise they merge phases and act. The only gate is plan → approval → ai-manager-agent writes. `ai-command-creation` teaches the same rule, so new commands inherit it. **Why:** the old per-phase paraphrase + 3-5 questions + Socratic gate + continue/skip footer ran in zero observed sessions (audit 2026-11-11), and Marcin's rule is "decide yourself, ask only about assumptions".
 

@@ -13,7 +13,7 @@ This IS `~/.claude` — the live global Claude Code config, loaded into every se
 ```
 agents/      → ai-manager-agent.md (opus, tracked) + brain-manager.md (SYMLINK → brain-vault/.brain, untracked)
              + agents/CLAUDE.md
-commands/    → 23 .md: 11 native (7 ai-* + council.md + improve-process.md + website.md + commands/CLAUDE.md)
+commands/    → 22 .md: 10 native (6 ai-* + council.md + improve-process.md + website.md + commands/CLAUDE.md)
              + 12 brain-* SYMLINKS → brain-vault/.brain (4 committed as symlinks, 8 untracked)
              (/brain-social moved out 2026-10-11, now brain-vault/.claude/commands — no longer global)
 skills/      → 6 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
