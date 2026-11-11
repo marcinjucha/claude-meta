@@ -181,7 +181,7 @@ name: deep-research
 context: fork
 agent: Explore
 ---
-Research $ARGUMENTS:
+Research the topic given as arguments (all-arguments placeholder, see 6.5):
 1. Find files with Glob
 2. Analyze code
 3. Summarize findings
@@ -261,27 +261,11 @@ This skill limits Claude to read-only operations: Read, Grep, Glob
 - Skill accepts arguments (issue numbers, file paths, search patterns)
 - Need session-specific identifiers
 
-**Available substitutions:**
-- `$ARGUMENTS` - All arguments as string
-- `$0` or `$ARGUMENTS[0]` - First argument
-- `$1` or `$ARGUMENTS[1]` - Second argument
-- `${CLAUDE_SESSION_ID}` - Current session ID
+**Available substitutions (in words — never write the literals here):** a dollar sign followed by ARGUMENTS in capitals = all arguments as one string; the same with a zero-based index in square brackets, or the short form dollar sign + digit (zero for the first, one for the second) = one positional argument; dollar sign + braces around CLAUDE_SESSION_ID = the current session id. Literal forms: `~/.claude/docs/skill-doc.md`.
 
-**Minimal example:**
-```yaml
----
-name: fix-issue
-argument-hint: [issue-number]
----
-Fix GitHub issue $ARGUMENTS:
+**⚠️ Never write the literals in a SKILL.md that documents them.** The CLI substitutes them in every SKILL.md body when the skill loads — including skills preloaded into `ai-manager-agent` — so a literal example here reaches the agent as an empty string or the real session id, not as an example.
 
-```bash
-gh issue view $ARGUMENTS
-git checkout -b fix-$ARGUMENTS
-```
-
-Reference issue in commit message.
-```
+**Minimal example (in words):** a `fix-issue` skill with `argument-hint: [issue-number]` in frontmatter; the body says "Fix GitHub issue" followed by the all-arguments placeholder, runs `gh issue view` and `git checkout -b fix-` each followed by the same placeholder, and asks to reference the issue in the commit message.
 
 **Complete implementation guide:** See `@resources/advanced-features.md` for:
 - Step-by-step implementation details
@@ -427,7 +411,7 @@ Need live data? → Add dynamic injection (exclamation + backtick syntax)
 Need script execution? → Add scripts/ directory + reference in SKILL.md
 Deterministic parse/extract/filter/count over large input? → scripts/ helper returning only the relevant slice (NOT for reasoning)
 Need tool restrictions? → Add frontmatter: allowed-tools: [list]
-Need arguments? → Add frontmatter: argument-hint, use $ARGUMENTS in body
+Need arguments? → Add frontmatter: argument-hint, use the all-arguments placeholder in body (6.5)
 ```
 
 ### Should I Add Advanced Features?
@@ -437,7 +421,7 @@ Skill runs research/analysis without conversation context? → Add context: fork
 Skill needs live PR/git data? → Add dynamic injection (! + backtick + command)
 Skill generates visual output? → Add script integration (scripts/ dir)
 Skill should limit tool access? → Add allowed-tools
-Skill takes arguments? → Add argument-hint + $ARGUMENTS
+Skill takes arguments? → Add argument-hint + the all-arguments placeholder (6.5)
 Skill only for manual use? → Add disable-model-invocation: true
 Skill is background knowledge? → Add user-invocable: false
 ```
