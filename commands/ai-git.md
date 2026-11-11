@@ -221,6 +221,7 @@ NOT needed:
 
 ```
 Generate git commit message for staged changes.
+First call the Skill tool with ai-git-commit-patterns (it is not preloaded).
 
 STAGED CHANGES:
 [git diff --cached output]
@@ -395,7 +396,7 @@ Next steps:
 - ✅ Modified file contents (entire files, not just diff sections)
 - ✅ Change categorization (type, ticket number)
 - ✅ Recent commits (for style consistency)
-- ✅ Commit message skills (preloaded via agent)
+- ✅ Instruction to load ai-git-commit-patterns via Skill call (not preloaded by the agent)
 
 **Do NOT provide:**
 - ❌ Full git history (just recent 5 commits)

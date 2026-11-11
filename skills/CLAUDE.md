@@ -6,6 +6,8 @@ Global skills only: the **ai-*** meta-skills (artifact management, used by `ai-m
 
 ## AI Meta-Skills (ai-manager-agent)
 
+All six are used by `ai-manager-agent`; `ai-agent-creator` and `ai-git-commit-patterns` are NOT preloaded (rarely needed, loaded via explicit Skill call — see `../agents/CLAUDE.md`).
+
 | Skill | Lines | Purpose |
 |-------|-------|---------|
 | `ai-agent-creator` | 433 | Create/evaluate subagents. Thin router architecture, tool restrictions, frontmatter, system prompt. |

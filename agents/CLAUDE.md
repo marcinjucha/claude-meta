@@ -9,7 +9,7 @@ Single meta-agent that orchestrates all artifact creation and maintenance. Unlik
 ### Meta-Agent
 | Agent | Purpose | Model | Skills Loaded |
 |-------|---------|-------|---------------|
-| `ai-manager-agent` | Creates/maintains all Claude Code artifacts (agents, skills, commands, CLAUDE.md). Enforces thin-router architecture and signal-focused content. | opus | ai-agent-creator, ai-skill-creator, ai-skill-fine-tuning, ai-claude-md, ai-command-creation, ai-git-commit-patterns |
+| `ai-manager-agent` | Creates/maintains all Claude Code artifacts (agents, skills, commands, CLAUDE.md). Enforces thin-router architecture and signal-focused content. | opus | preloads ai-skill-creator, ai-skill-fine-tuning, ai-claude-md, ai-command-creation; on demand: ai-agent-creator, ai-git-commit-patterns |
 
 ### VPS Infrastructure Agents
 | Agent | Purpose | Model | Skills Loaded |
@@ -21,7 +21,7 @@ Single meta-agent that orchestrates all artifact creation and maintenance. Unlik
 
 **Opus model required**: ai-manager-agent uses opus (not sonnet). **Why:** meta-operations require reasoning about artifact quality, signal vs noise filtering, and cross-artifact consistency — cheaper models produce more noise and miss subtle quality issues.
 
-**Loads all 6 skills**: Unlike domain agents (2-4 skills each), ai-manager-agent loads every meta-skill. **Why:** a single artifact operation often touches multiple concerns — creating a skill requires signal-vs-noise filtering (shared resource loaded by all skills), ai-skill-creator templates, AND ai-claude-md knowledge for cross-references. Decision tree in system prompt routes to the right skill.
+**Preloads 4 of 6 skills**: ai-skill-creator, ai-skill-fine-tuning, ai-claude-md, ai-command-creation. **Why:** a single artifact operation often touches several of them — creating a skill requires ai-skill-creator templates AND ai-claude-md knowledge for cross-references. `ai-agent-creator` and `ai-git-commit-patterns` are NOT preloaded; the decision tree routes those cases to an explicit Skill call. **Why:** 82 spawns in a month (audit 2026-11-11), none created an agent or wrote a commit message, so the ~20 KB they add went unused on every spawn — below the ">50% of invocations" preload bar in ai-agent-creator.
 
 **Two hardcoded critical rules**: "FACT-BASED CONTENT ONLY" and "AVOID AI-KNOWN CONTENT" are in the agent system prompt directly (lines 19-52), not in skills. **Why:** these rules must apply BEFORE any skill loads — prevents generated noise from entering artifacts during the skill-loading decision phase.
 
@@ -30,5 +30,5 @@ Single meta-agent that orchestrates all artifact creation and maintenance. Unlik
 ## Cross-References
 
 - `../CLAUDE.md` — repo overview, self-referential system explanation
-- `../skills/CLAUDE.md` — the 6 skills this agent loads
+- `../skills/CLAUDE.md` — the 6 meta skills this agent uses (4 preloaded)
 - `../commands/CLAUDE.md` — all commands invoke this agent via `subagent_type="ai-manager-agent"`

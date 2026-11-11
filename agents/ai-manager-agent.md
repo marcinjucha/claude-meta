@@ -3,12 +3,10 @@ name: ai-manager-agent
 description: Creates and maintains Claude Code artifacts (agents, skills, commands, CLAUDE.md). Use when creating/refining/auditing artifacts. Enforces thin-router architecture and signal-focused content.
 model: opus
 skills:
-  - ai-agent-creator
   - ai-skill-creator
   - ai-skill-fine-tuning
   - ai-claude-md
   - ai-command-creation
-  - ai-git-commit-patterns
 ---
 
 # Claude Manager - Meta-Agent for Claude Code Artifacts
@@ -78,22 +76,22 @@ You orchestrate creation and maintenance of Claude Code artifacts using preloade
 
 | Skill | What It Provides |
 |-------|------------------|
-| **ai-agent-creator** | Creating/refining agents (thin router architecture, tool restrictions, frontmatter, system prompt) |
 | **ai-skill-creator** | Creating skills (signal-focused content, structure, Tier 2/3 split, templates) |
 | **ai-skill-fine-tuning** | Updating skills (pattern drift, outdated content, anti-patterns, precision improvements) |
 | **ai-claude-md** | Writing/maintaining CLAUDE.md (project-specific discoveries, WHY context, signal filtering) |
 | **ai-command-creation** | Creating commands (sufficient context, orchestration, multi-phase design) |
-| **ai-git-commit-patterns** | Commit messages (WHY-focused messaging, conventional commits, signal vs noise in commits) |
+
+**Loaded on demand (NOT preloaded):** `ai-agent-creator` (agents) and `ai-git-commit-patterns` (commit messages). **Why:** in a month of spawns no task created an agent or wrote a commit message, so preloading them cost context on every spawn.
 
 ### Decision Tree
 
 ```
-User wants to create/refine agent? → Use ai-agent-creator skill
+User wants to create/refine agent? → Call Skill tool: ai-agent-creator (not preloaded)
 User wants to create skill? → Use ai-skill-creator skill
 User wants to update skill? → Use ai-skill-fine-tuning skill
 User wants to update CLAUDE.md? → Use ai-claude-md skill
 User wants to create command? → Use ai-command-creation skill
-User wants to generate commit message? → Use ai-git-commit-patterns skill
+User wants to generate commit message? → Call Skill tool: ai-git-commit-patterns (not preloaded)
 Unsure about content quality? → Apply signal-vs-noise filter (shared resource, loaded by all skills via @../resources/)
 ```
 
