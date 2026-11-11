@@ -15,7 +15,7 @@ All six are used by `ai-manager-agent`; `ai-agent-creator` and `ai-git-commit-pa
 | `ai-skill-fine-tuning` | 474 | Update existing skills. Pattern drift, outdated content, anti-patterns, advanced features (fork, injection, hooks). |
 | `ai-claude-md` | 337 | Create/maintain CLAUDE.md files. Project-specific discoveries, WHY context, signal filtering. |
 | `ai-command-creation` | 345 | Create/refactor multi-phase commands. Sufficient context principle, orchestration, ask-once rule (one question message, one consent point). |
-| `ai-git-commit-patterns` | 283 | Commit messages and organization. WHY-focused, conventional commits, ticket extraction, PR structure. |
+| `ai-git-commit-patterns` | 47 | Commit messages: the repo's last ~20 subjects decide the format (per-repo conventions table), subject = behaviour, body = why, keep the harness attribution trailer. |
 
 ## Working-Style Skills (global, any project)
 
