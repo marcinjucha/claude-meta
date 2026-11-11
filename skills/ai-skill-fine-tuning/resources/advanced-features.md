@@ -86,7 +86,7 @@ Continue the implementation we discussed.
 
 **Case 2: Skill with dynamic injection needs conversation**
 ```yaml
-# If using \! `command` injection, fork is OK (commands run before isolation)
+# If using dynamic injection, fork is OK (commands run before isolation)
 ---
 name: pr-analysis
 context: fork
@@ -299,7 +299,7 @@ def main(target: Path):
 
 ### Complete Implementation
 
-**Syntax:** Place `\! ` before backtick-wrapped command: `\! `command``
+**Syntax:** an exclamation mark IMMEDIATELY followed by a backtick-wrapped command (no backslash, no space) — see `../SKILL.md` § 6.3 and `~/.claude/docs/skill-doc.md` § "Inject dynamic context". The examples in this file are escaped with a backslash + space so they never run; they are illustrations, not working syntax.
 
 ```yaml
 ---
@@ -324,7 +324,7 @@ Analyze this PR for:
 ### How It Works
 
 **Preprocessing (before Claude sees prompt):**
-1. CLI finds all `\! `command`` patterns
+1. CLI finds every injection pattern
 2. Executes each command
 3. Replaces pattern with command output
 4. Sends fully-rendered prompt to Claude

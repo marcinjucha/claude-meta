@@ -150,8 +150,8 @@ A step that is deterministic work (parse, extract, filter, count) over a large i
 - Output is verbose (research, analysis)
 
 **Dynamic injection** - Use when:
-- Need current file content, user input, or environment variables
-- Pattern: `{{{ user_message }}}`, `{{{ active_file_contents }}}`
+- Need live data at invocation time (git status, PR diff, file contents)
+- Syntax and the load-time execution trap: `ai-skill-fine-tuning` § 6.3 (the only place it is described)
 
 **Tool restrictions** - Use when:
 - Prevent dangerous operations (Write during review)
@@ -292,13 +292,13 @@ Before finalizing skill, verify:
 
 ```bash
 mkdir -p .claude/skills/my-skill-name
-cp .claude/skills/ai-skill-creator/skill-template.md .claude/skills/my-skill-name/SKILL.md
+cp ~/.claude/skills/ai-skill-creator/resources/skill-template.md .claude/skills/my-skill-name/SKILL.md
 # Edit: frontmatter, sections, verify <500 lines
 ```
 
 **Example skills:** data-access-patterns, ai-claude-md (see `.claude/skills/`)
 
-**Advanced patterns:** See `@resources/forked-execution.md` (context: fork), `@../resources/skill-ecosystem-reference.md` (dynamic injection, scripts)
+**Advanced patterns:** See `@resources/forked-execution.md` (context: fork), `@../resources/skill-ecosystem-reference.md` (scripts), `ai-skill-fine-tuning` § 6.3 (dynamic injection)
 
 ---
 

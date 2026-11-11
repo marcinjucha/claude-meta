@@ -224,25 +224,12 @@ Creates `output.html` with interactive visualization.
 - Inject file contents for context
 - Any data that must be fresh at invocation time
 
-**Syntax:** `\! `command`` (backslash + exclamation + space + backtick + command + backtick)
+**Syntax (in words — this is the ONE place the meta-skills describe it):** an exclamation mark IMMEDIATELY followed by a backtick-wrapped shell command — no backslash, no space between them. Literal form and a PR example: `~/.claude/docs/skill-doc.md` § "Inject dynamic context".
+
+**⚠️ Never write the literal in a SKILL.md that documents it.** The CLI preprocesses every SKILL.md body when the skill loads — including skills preloaded into `ai-manager-agent` — so a literal example here would RUN on every load. Describe it in words; the escaped examples in `@resources/advanced-features.md` are illustrations, not working syntax.
 
 **How it works:**
 Commands execute BEFORE skill sent to Claude → output replaces placeholder → Claude sees fully-rendered prompt with actual data.
-
-**Minimal example:**
-```yaml
----
-name: pr-analysis
-context: fork
-agent: Explore
----
-## Pull request context
-\! `gh pr diff`
-\! `gh pr view --comments`
-
-## Task
-Analyze this PR for quality and breaking changes.
-```
 
 #### 6.4 Adding Tool Restrictions
 

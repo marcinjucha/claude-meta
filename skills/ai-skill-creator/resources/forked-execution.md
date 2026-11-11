@@ -287,57 +287,7 @@ Research components authentication:
 
 ## Dynamic Context Injection
 
-Use `\! `command`` syntax to run shell commands before skill executes:
-
-```yaml
----
-name: pr-summary
-description: Summarize pull request changes
-context: fork
-agent: Explore
-allowed-tools: Bash(gh *)
----
-
-## Pull request context
-
-- PR diff: \! `gh pr diff`
-- PR comments: \! `gh pr view --comments`
-- Changed files: \! `gh pr diff --name-only`
-
-## Your task
-
-Summarize this pull request:
-1. What changed (from diff above)
-2. Why (from comments above)
-3. Impact on codebase
-```
-
-**How it works:**
-
-1. Commands execute BEFORE skill sent to Claude (preprocessing)
-2. Output replaces the injection placeholder
-3. Claude receives fully-rendered prompt with actual data
-
-**Example output after injection:**
-
-```markdown
-## Pull request context
-
-- PR diff:
-  ```diff
-  + const newFeature = ...
-  - const oldCode = ...
-  ```
-- PR comments: "This fixes the authentication bug"
-- Changed files:
-  src/auth/login.ts
-  src/auth/validator.ts
-
-## Your task
-
-Summarize this pull request:
-[Claude sees actual PR data, not commands]
-```
+Works in forked skills too (commands run before the fork starts). Syntax and the load-time execution trap are described in ONE place: `ai-skill-fine-tuning` SKILL.md § 6.3; literal form in `~/.claude/docs/skill-doc.md` § "Inject dynamic context".
 
 ---
 
