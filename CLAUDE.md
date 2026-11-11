@@ -31,6 +31,9 @@ docs/        → Official Claude Code documentation (agents-doc.md, skill-doc.md
 evals/       → skill-ab.py (A/B eval of ONE model decision of a skill/command: tool-free `claude -p`,
                set grader vs gold, ADOPT/REJECT/INCONCLUSIVE) + test-skill-ab.sh (offline, stub claude);
                suites live next to what they test (e.g. brain-vault/.brain/evals/knowledge-moc/), runs in ~/.cache/skill-ab/
+scripts/     → artifact-usage.py (use counts of agents/commands/skills from transcripts — input to the audit)
+workflows/   → audit-claude-artifacts.js (saved workflow: read-only audit + adversarial verify, 8 groups; quarterly,
+               next run in brain CO TERAZ; walkthrough file brain-vault/01-Projects/brain/audyt-claude-<rrrr-mm>.md)
 statusline-command.sh → Status line script (model, cost, context %) — hardcoded macOS path
 memory.md    → tracked session-memory buffer
 ```
