@@ -13,8 +13,9 @@ This IS `~/.claude` — the live global Claude Code config, loaded into every se
 ```
 agents/      → ai-manager-agent.md (opus, tracked) + brain-manager.md (SYMLINK → brain-vault/.brain, untracked)
              + agents/CLAUDE.md
-commands/    → 22 .md: 10 native (6 ai-* + council.md + improve-process.md + website.md + commands/CLAUDE.md)
-             + 12 brain-* SYMLINKS → brain-vault/.brain (4 committed as symlinks, 8 untracked)
+commands/    → 20 .md: 10 native (6 ai-* + council.md + improve-process.md + website.md + commands/CLAUDE.md)
+             + 10 brain-* SYMLINKS → brain-vault/.brain (3 committed as symlinks, 7 untracked)
+             (/brain-inbox, /brain-pull archived 2026-11-11 to brain-vault/.brain/.claude/archive — no symlink)
              (/brain-social moved out 2026-10-11, now brain-vault/.claude/commands — no longer global)
 skills/      → 6 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
                ai-git-commit-patterns, ai-skill-creator, ai-skill-fine-tuning)
@@ -34,7 +35,7 @@ statusline-command.sh → Status line script (model, cost, context %) — hardco
 memory.md    → tracked session-memory buffer
 ```
 
-**EDIT AT THE SOURCE, not through the symlink**: every `brain-*` command, `brain-manager.md`, and `skills/brain-conventions` is a symlink into `/Users/marcinjucha/Prywatne/projects/brain-vault/.brain/.claude/` — edit them THERE. The symlinks are created by `brain-vault/.brain/scripts/link-commands.sh` (idempotent, links `commands/*.md`, `skills/*/` and `agents/*.md`). **Why:** editing via the `~/.claude` path writes through into `brain-vault/.brain` with no diff visible here — and the 8 untracked ones must never be committed in `~/.claude`, since their source of truth is `brain-vault/.brain`. The 4 that ARE committed (brain-load, brain-publish, brain-pull, brain-update) are stored as symlink blobs holding an absolute machine-specific path — they resolve only on this machine.
+**EDIT AT THE SOURCE, not through the symlink**: every `brain-*` command, `brain-manager.md`, and `skills/brain-conventions` is a symlink into `/Users/marcinjucha/Prywatne/projects/brain-vault/.brain/.claude/` — edit them THERE. The symlinks are created by `brain-vault/.brain/scripts/link-commands.sh` (idempotent, links `commands/*.md`, `skills/*/` and `agents/*.md`). **Why:** editing via the `~/.claude` path writes through into `brain-vault/.brain` with no diff visible here — and the 7 untracked ones must never be committed in `~/.claude`, since their source of truth is `brain-vault/.brain`. The 3 that ARE committed (brain-load, brain-publish, brain-update) are stored as symlink blobs holding an absolute machine-specific path — they resolve only on this machine.
 
 ## Weird Parts / Key Patterns
 
