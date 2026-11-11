@@ -1,0 +1,16 @@
+{
+  "limit": 4000,
+  "goalPrefix": "/goal ",
+  "doneMarkers": ["Gotowe, gdy:", "Skrót warunku ukończenia:"],
+  "scopeMarker": "Poza zakresem",
+  "closingMarker": "Zamknięcie (dla stop hooka):",
+  "advisorMarker": "Advisor:",
+  "processLabel": "Process line for the goal",
+  "quoteOpen": "„",
+  "quoteClose": "”",
+  "specSuffix": "-wymagania",
+  "intro": "Wykonaj etap „{name}” w {repo} według {dir}/{slug}-wymagania.md. Przeczytaj cały plik przed pracą: to on jest specyfikacją (decyzje produktu, zależności od etapów, „Poza zakresem”, [decyzja Marcina] / [do decyzji w decisions.md], przyrosty, advisor). Gotowe, gdy:\n",
+  "goalTitle": "# {name}: cel",
+  "specTitleSuffix": ": wymagania",
+  "pointer": "> Pełna specyfikacja etapu. Cel do wklejenia w `/goal` (limit 4000 znaków): `{slug}.md`."
+}

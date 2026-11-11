@@ -1,0 +1,13 @@
+# Marki: cel
+
+/goal Wykonaj etap „Marki” w course-platform według docs/goals/marki-wymagania.md. Przeczytaj cały plik przed pracą: to on jest specyfikacją (punkty 0–8, „Poza zakresem”, [decyzja Marcina] / [do decyzji w decisions.md], przyrosty, advisor). Skrót warunku ukończenia:
+0. Linia bazowa na d853a23 przed zmianami: Supabase pezetpetki-hub zatrzymany, zielone pnpm check z testami bazy, e2e na kontenerze, prove-buyer-isolation.sh (SUMMARY: 0), check-ops.sh; błędy po zmianie nazwy osobnym commitem.
+1. Marka = rekord w bazie (nazwa, domeny, stan); każda tabela z danymi marki ma markę, a reguły w bazie ograniczają odczyt i zapis do marki bieżącego żądania, także dzisiejsze pojedyncze rekordy, slugi, storage, kolejki, cron, metryki i logi (lista w pliku).
+2. Marka z Host dopasowanego do domen marki; nieznany adres nie pokazuje żadnej marki; adres kanoniczny, linki w mailach i sitemap z rekordu marki.
+3. Członek panelu należy do marki i widzi tylko jej dane; operator agencji zakłada markę i jej pierwszego administratora (zakres jego odczytu w decisions.md).
+4. Jedno konto Auth na wszystkie marki; profil, regulamin, zgody, dostępy i zamówienia per marka; marka B nie zdradza adresu znanego w marce A; maile Auth niosą markę żądania.
+5. Druga marka w seedzie; e2e przechodzi na obu.
+6. Anon, kupujący i członek panelu marki A nie czytają ani nie zapisują niczego z marki B; podmiana Host lub identyfikatora marki nic nie daje; każdy negatyw między markami z guard-off w prove script, strażniki server fn wyłączone ręcznie i zapisane w decisions.md.
+7. CLAUDE.md i docs/decisions.md bez niczego, co wiąże model jednej marki.
+8. pnpm check, obraz Dockera, e2e na kontenerze, layout.spec na obu markach, zrzuty obejrzane, teksty po human-language-check.
+Przyrosty 0–7 osobno, każdy z review (≤6 agentów), Playwright MCP, e2e, kontenerem i własnym commitem; na koniec review całego etapu do zera potwierdzonych znalezisk. Testy jak kod produkcyjny, poprawki przy okazji jawnie, osobnym commitem. Poprawki według prawdopodobieństwa (normalne użycie, wyciek cudzych danych, utrata danych); rzadkie przypadki do decisions.md.

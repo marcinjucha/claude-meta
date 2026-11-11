@@ -1,0 +1,6 @@
+[Summary of earlier turns, 2026-11-10 → 2026-11-11, repo course-platform:
+- Point 0: baseline on cc1a363 (d853a23 + goal docs only; `git diff --stat d853a23 cc1a363` = CLAUDE.md + 14 docs/goals files): pezetpetki-hub Supabase stopped; pnpm check "Tests 866 passed (866)"; container e2e "166 passed (2.2m)"; prove script "SUMMARY: 0 line(s) are not proofs"; check-ops "OPS CHECK: OK". Baseline green, no rename-fix commit needed.
+- Increments 0–7 each committed separately (d5aad04 Marki 1 … 0566f75 Marki 7), each with a review (≤6 agents), a Playwright MCP click-through, e2e and a container run; findings fixed in their own commits.
+- Points 1–7 shown with evidence in each increment's report (brand record, Host resolution, panel members per brand, operator setup, one Auth account, seed brand B, cross-brand negatives with guard-off lines, manual server-fn guard-offs recorded in docs/decisions.md, CLAUDE.md/decisions.md cleaned of single-brand statements).
+- Point 8: layout.spec runs every page on both brands (commit d659021); all 307 screenshots viewed; texts passed human-language-check.
+- Last code commit: 137d826 (e2e/layout.spec.ts). On 137d826: whole-stage review, 4 dimensions: "WYNIK: zero potwierdzonych znalezisk" ×4.]
