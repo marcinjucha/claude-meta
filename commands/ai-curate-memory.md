@@ -112,6 +112,8 @@ Then ask: **"Do you approve these changes? You can approve all, or specify which
 
 After user confirms, execute in this order:
 
+**Size measurement (before 4a, again after 4b):** for every CLAUDE.md that will receive entries, record its size in CHARACTERS before the first agent writes to it and after the last one finishes: `python3 -c "import sys; print(len(open(sys.argv[1], encoding='utf-8').read()))" <path>` (a file being created counts as 0). Not `wc -c`: it counts bytes and overstates Polish text. **Why:** measurement only, no writing rule — CLAUDE.md files regrow after promotions (shadow-operator/CLAUDE.md 23.5k → 14.7k on 2026-10-21, back at 22k three weeks later), and the 2026-11-11 eval showed the cause is text added per promotion, not merge-vs-new; these numbers feed Step 6.
+
 **Step 4a: Update/Create non-root CLAUDE.md files (PARALLEL)**
 
 **SELF-REFLECTION GATE: Reflect before invoking agents (see Socratic Self-Reflection Gate section below).**
@@ -277,8 +279,8 @@ Done.
 - Discovered: [N] CLAUDE.md files across project (incl. .claude/CLAUDE.md if present)
 - Discovered skills: [N] (from .claude/skills/CLAUDE.md)
 - Promoted: [N] entries total
-  - [path/CLAUDE.md]: [n] entries
-  - [path/CLAUDE.md]: [n] entries
+  - [path/CLAUDE.md]: [before] → [after] chars (+[delta], [n] entries)
+  - [path/CLAUDE.md]: [before] → [after] chars (+[delta], [n] entries)
   - ...
 - Created: [N] new CLAUDE.md files
 - Promoted to skills: [N] entries
