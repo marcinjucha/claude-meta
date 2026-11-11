@@ -13,8 +13,8 @@ Automatically detects intent from natural language and executes appropriate skil
 0: Intent Detection + Decision Framework    (orchestrator - inline + clarifying questions)
 1: Signal Extraction                         (ai-manager-agent)
 2: Structure Design                          (ai-manager-agent)
-3: File Creation                             (orchestrator - inline)
-4: Verification                              (orchestrator - inline)
+3: File Creation                             (ai-manager-agent — writes skill files)
+4: Verification                              (orchestrator - inline, read-only)
 ```
 
 **AUDIT Mode:**
@@ -23,15 +23,15 @@ Automatically detects intent from natural language and executes appropriate skil
 1: Structure Compliance                      (ai-manager-agent)
 2: Content Quality Audit                     (ai-manager-agent)
 3: Recommendations                           (ai-manager-agent)
-4: Implementation                            (orchestrator - inline if approved)
+4: Implementation                            (ai-manager-agent — applies approved fixes)
 ```
 
 **MODIFY Mode:**
 ```
 0: Intent Detection + Change Scope           (orchestrator - inline + clarifying questions)
 1: Change Analysis                           (ai-manager-agent)
-2: Implementation                            (orchestrator - inline)
-3: Verification                              (orchestrator - inline)
+2: Implementation                            (ai-manager-agent — applies approved changes)
+3: Verification                              (orchestrator - inline, read-only)
 ```
 
 ---
@@ -46,7 +46,7 @@ Use Task tool with `subagent_type="ai-manager-agent"`, description, prompt param
 
 ### Critical Rules
 
-1. **INVOKE with Task tool** - Every phase requires actual Task tool call (except Phase 0 and inline phases)
+1. **INVOKE with Task tool** - Every phase requires actual Task tool call (except Phase 0 and Verification which are inline). Implementation/File Creation phases MUST use ai-manager-agent — never do file edits inline. Inline Verification is read-only: any fix it finds goes back to ai-manager-agent, not into an inline Edit/Write.
 2. **Sufficient context** - Each ai-manager-agent invocation gets ONLY critical decisions (not full conversation history)
 3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
 4. **User checkpoints** - Get approval after confirmation before proceeding
@@ -369,23 +369,38 @@ Ready to proceed? (continue/skip/back/stop)
 
 ---
 
-### Phase 3: File Creation (Inline)
-**You do this - no agent**
+### Phase 3: File Creation (ai-manager-agent)
+**Agent**: ai-manager-agent
 
-Create skill files at `.claude/skills/[skill-name]/`:
+**Socratic Self-Reflection Gate (Quick — mechanical file creation from approved structure):**
 
+Orchestrator reflects on: Does the approved structure have gaps the agent would have to fill by guessing? Is the target path (project vs global `skills/`) correct?
+
+Include key insights in the agent prompt as additional context.
+
+**Prompt to agent**:
 ```
-.claude/skills/skill-name/
-├── SKILL.md
-├── resources/    (if Tier 3 needed)
-│   └── example.md
-└── scripts/      (if scripts needed)
-    └── utility.sh
-```
+MODE: CREATE skill files
 
-- Create SKILL.md with structure from Phase 2, frontmatter, required sections, `@resources/` references
-- Create resources/ files (detailed examples, referenced FROM SKILL.md, self-contained, no nested references)
-- Create scripts/ files (proper shebang, `chmod +x`, usage docs)
+SKILL NAME: [name]
+TARGET PATH: [.claude/skills/[skill-name]/ or ~/.claude/skills/[skill-name]/]
+
+APPROVED STRUCTURE (from Phase 2):
+[SKILL.md section breakdown, resources/ files, scripts/ files, references plan]
+
+EXTRACTED SIGNAL (from Phase 1): [core patterns with WHY, examples, scripts]
+USER DECISIONS (from Phase 1-2 clarifying questions): [corrections, inclusions, exclusions]
+
+Task: Write the skill files yourself (Edit/Write) exactly per the approved structure.
+
+1. SKILL.md: frontmatter (name + description with WHEN-to-use keyword triggers), required sections, @resources/ references
+2. resources/ files (if Tier 3): self-contained, referenced FROM SKILL.md, ONE LEVEL DEEP
+3. scripts/ files (if any): proper shebang, chmod +x, usage documented in SKILL.md
+
+⚠️ CRITICAL: NEVER INVENT CONTENT — only approved signal; placeholder when data missing.
+
+Output: Files created (absolute paths) + any point where the approved structure was ambiguous.
+```
 
 No clarifying questions (file creation is mechanical based on approved structure).
 
@@ -394,7 +409,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 4: Verification (Inline)
-**You do this - no agent**
+**You do this - no agent (read-only).** Read the files and run the checklist. If fixes are needed, spawn ai-manager-agent with the issue list (MODE: CREATE skill files - fixes) — never Edit/Write the skill files yourself.
 
 ```yaml
 Structure:
@@ -629,17 +644,43 @@ Ready to proceed with implementation? (continue/skip/back/stop)
 
 ---
 
-### Phase 4: Implementation (Inline - Conditional)
-**You do this - no agent**
+### Phase 4: Implementation (ai-manager-agent)
+**Agent**: ai-manager-agent
 
 **Only if user approved in Phase 3.**
 
-Apply per skill (in priority order):
+**Socratic Self-Reflection Gate (Quick — mechanical fix application):**
 
-1. **Structure fixes** - add missing sections, fix broken references, reorganize Tier 3
-2. **Content refactoring** - cut noise, add WHY, replace historical timeline
-3. **Tier 3 reorganization** - move content >50 lines to resources/, add @resources/ references, verify ONE LEVEL DEEP
-4. **Verify per skill** - structure checklist, Signal vs Noise, WHY context, references
+Orchestrator reflects on: Are all approved fixes compatible? Could applying one fix invalidate another recommendation?
+
+Include key insights in the agent prompt as additional context.
+
+**Prompt to agent**:
+```
+MODE: AUDIT implementation
+
+⚠️ CRITICAL: NEVER INVENT OR HALLUCINATE CONTENT
+
+SKILLS TO FIX: [list from Phase 3, priority order]
+
+APPROVED RECOMMENDATIONS:
+[Extracted per-skill fixes the user approved]
+
+USER DECISIONS: [scope — all vs critical+high, priorities from Phase 3 confirmation]
+
+Task: Apply approved fixes to the skill files yourself (Edit/Write), per skill in priority order.
+
+1. Structure fixes - add missing sections, fix broken references, reorganize Tier 3
+2. Content refactoring - cut noise, add WHY, replace historical timeline
+3. Tier 3 reorganization - move content >50 lines to resources/, add @resources/ references, verify ONE LEVEL DEEP
+4. Verify per skill - structure checklist, Signal vs Noise, WHY context, references
+
+Apply ONLY approved items — no extra improvements riding along.
+
+Output: Summary of changes made, per file (absolute paths).
+```
+
+**After agent**:
 
 ```
 Let me verify my understanding:
@@ -757,16 +798,36 @@ Ready to proceed? (continue/skip/back/stop)
 
 ---
 
-### Phase 2: Implementation (Inline)
-**You do this - no agent**
+### Phase 2: Implementation (ai-manager-agent)
+**Agent**: ai-manager-agent
 
-Apply modifications from Phase 1 plan:
+**Socratic Self-Reflection Gate (Quick — mechanical application of approved plan):**
 
-```yaml
+Orchestrator reflects on: Does the approved plan leave any change the agent would have to interpret? Did the user's Phase 1 adjustments make it into the plan?
+
+Include key insights in the agent prompt as additional context.
+
+**Prompt to agent**:
+```
+MODE: MODIFY skill - implementation
+
+SKILL: [name and path]
+
+APPROVED CHANGE PLAN (from Phase 1):
+[Section-by-section changes, Tier 3 changes, scripts changes, implementation steps]
+
+USER DECISIONS (from Phase 0-1 clarifying questions): [corrections, approach choices]
+
+Task: Apply the approved plan to the skill files yourself (Edit/Write).
+
 Pattern updates: Replace outdated, enhance with WHY, apply Signal vs Noise
 Drift fixes: UPDATE existing content in-place, replace with current state
 Tier 3 reorganization: Move >50 lines to resources/, add @resources/ refs, verify ONE LEVEL DEEP
 Script additions: Create scripts/ with shebang, chmod +x, add usage to SKILL.md
+
+⚠️ CRITICAL: NEVER INVENT CONTENT. Apply ONLY approved changes — no extra improvements riding along.
+
+Output: Changes made per file (absolute paths).
 ```
 
 No clarifying questions (implementation is mechanical based on approved plan).
@@ -776,7 +837,7 @@ Ready to proceed? (continue/skip/back/stop)
 ---
 
 ### Phase 3: Verification (Inline)
-**You do this - no agent**
+**You do this - no agent (read-only).** Read the files and run the checklist. If fixes are needed, spawn ai-manager-agent with the issue list (MODE: MODIFY skill - fixes) — never Edit/Write the skill files yourself.
 
 ```yaml
 Structure:
