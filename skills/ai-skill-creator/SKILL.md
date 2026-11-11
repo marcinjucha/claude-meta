@@ -140,6 +140,7 @@ Tier 3 files: Optional detailed examples
 
 ### Step 4: Create Supporting Files (Optional)
 Move detailed examples (>50 lines), sufficient guides (focused, not exhaustive), or utility scripts to separate files.
+A step that is deterministic work (parse, extract, filter, count) over a large input gets a `scripts/` helper returning only the relevant slice; reasoning stays in-context.
 
 ### Step 4a: Advanced Frontmatter Patterns (Optional)
 

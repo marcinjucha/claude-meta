@@ -193,6 +193,7 @@ Research $ARGUMENTS:
 - Generate visual output (charts, graphs, HTML reports)
 - Process data with complex logic (easier in Python than bash)
 - Reusable analysis that's separate from skill prompt
+- A step is DETERMINISTIC work (parse, extract, filter, count, reshape) over a LARGE input → `scripts/` helper that returns ONLY the relevant slice. **Why:** cheaper and more reliable than reading the whole input in context, and keeps context for judgment. **Boundary:** never script reasoning/judgment.
 
 **Key pattern:**
 1. Create `~/.claude/skills/my-skill/scripts/script.py`
@@ -437,6 +438,7 @@ Integration changed? → Update "Integration with Other Skills"
 Need isolation? → Add frontmatter: context: fork, agent: [type]
 Need live data? → Add dynamic injection (exclamation + backtick syntax)
 Need script execution? → Add scripts/ directory + reference in SKILL.md
+Deterministic parse/extract/filter/count over large input? → scripts/ helper returning only the relevant slice (NOT for reasoning)
 Need tool restrictions? → Add frontmatter: allowed-tools: [list]
 Need arguments? → Add frontmatter: argument-hint, use $ARGUMENTS in body
 ```

@@ -30,5 +30,5 @@ Single meta-agent that orchestrates all artifact creation and maintenance. Unlik
 ## Cross-References
 
 - `../CLAUDE.md` — repo overview, self-referential system explanation
-- `../skills/CLAUDE.md` — the 7 skills this agent loads
+- `../skills/CLAUDE.md` — the 6 skills this agent loads
 - `../commands/CLAUDE.md` — all commands invoke this agent via `subagent_type="ai-manager-agent"`

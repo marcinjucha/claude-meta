@@ -16,8 +16,8 @@ agents/      → ai-manager-agent.md (opus, tracked) + brain-manager.md (SYMLINK
 commands/    → 23 .md: 11 native (7 ai-* + council.md + improve-process.md + website.md + commands/CLAUDE.md)
              + 12 brain-* SYMLINKS → brain-vault/.brain (4 committed as symlinks, 8 untracked)
              (/brain-social moved out 2026-10-11, now brain-vault/.claude/commands — no longer global)
-skills/      → 7 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
-               ai-git-commit-patterns, ai-skill-creator, ai-skill-fine-tuning, ai-skill-lifecycle)
+skills/      → 6 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
+               ai-git-commit-patterns, ai-skill-creator, ai-skill-fine-tuning)
              + human-language-check, summary-signal-first (tracked)
              + brainstorming (UNTRACKED, new)
              + brain-conventions (SYMLINK → brain-vault/.brain, untracked)
@@ -39,7 +39,7 @@ memory.md    → tracked session-memory buffer
 
 **Self-referential system**: `ai-manager-agent` uses the meta-skills to build/maintain artifacts — including itself and this file. When modifying ai-manager-agent or its skills, changes affect the tool doing the work.
 
-**Two agents, one of which does all meta work**: `ai-manager-agent` (opus) performs every artifact operation (create/audit/modify agents, skills, commands, CLAUDE.md) and preloads **6** of the 7 meta skills in its frontmatter — `ai-skill-lifecycle` exists on disk but is NOT preloaded. **Why one agent with skill routing:** all meta-operations share the same quality principles (signal vs noise, WHY over HOW, no invented content), so routing by skill beats a fleet of near-identical agents. `brain-manager` is a separate router for brain/vault operations and shares none of that.
+**Two agents, one of which does all meta work**: `ai-manager-agent` (opus) performs every artifact operation (create/audit/modify agents, skills, commands, CLAUDE.md) and preloads all 6 meta skills in its frontmatter. **Why one agent with skill routing:** all meta-operations share the same quality principles (signal vs noise, WHY over HOW, no invented content), so routing by skill beats a fleet of near-identical agents. `brain-manager` is a separate router for brain/vault operations and shares none of that.
 
 **Tri-modal command pattern**: All `ai-*` artifact commands (ai-skill, ai-agent, ai-commands) share identical phase structure: Phase 0 detects intent (CREATE/AUDIT/MODIFY), then adaptive phases follow. **Why:** consistent UX — user always gets clarifying questions → agent work → verification, regardless of artifact type. CLAUDE.md work has NO command: `/ai-claude-md` loads the skill `skills/ai-claude-md`. **Why:** a same-named skill shadows a command, so the 38 KB `commands/ai-claude-md.md` never reached context and was deleted 2026-11-11 — never give a command the name of an existing skill.
 
@@ -47,7 +47,7 @@ memory.md    → tracked session-memory buffer
 
 **Artifact-file writes MUST route through ai-manager-agent, never the orchestrator inline**: The `ai-*` command family (ai-commands, ai-skill, ai-agent, ai-extract-memory) mandates that any file creation / implementation / edit to an artifact-definition file (`commands/*.md`, `skills/**/SKILL.md`, `agents/*.md`) goes through the `ai-manager-agent` subagent — the main loop must not write those files itself, even with full context. **Why:** a session running `/ai-commands` rationalized writing the command files inline ("I have context, it's procedural") and bypassed the command's explicit "must use ai-manager-agent" rule; user caught it. Rationalizations ("simpler", "full context") do NOT override an explicit MUST. Mechanical backstop: a global `~/.claude/settings.json` `PreToolUse` hook (matcher `Write|Edit`) fires a non-blocking reminder (via `hookSpecificOutput.additionalContext`) whenever an artifact-definition path is touched — non-blocking (exit 0) so the legitimate path (the subagent itself writing the files) is never blocked. CLAUDE.md files are intentionally out of scope (editable via the agent but not gated). Rule originates in the `ai-*` command bodies; enforcement hook lives in `~/.claude/settings.json`.
 
-**Shared resources at `skills/resources/`**: 4 reference files (signal-vs-noise, skill-ecosystem, skill-structure, why-over-how) shared across the meta skills via `@../resources/` paths. **Why:** avoids duplicating foundational reference content across 7 skills.
+**Shared resources at `skills/resources/`**: 4 reference files (signal-vs-noise, skill-ecosystem, skill-structure, why-over-how) shared across the meta skills via `@../resources/` paths. **Why:** avoids duplicating foundational reference content across 6 skills.
 
 **statusline-command.sh has hardcoded macOS path**: Line 8 reads `.effortLevel` from `/Users/marcinjucha/.claude/settings.json` via `jq` — only works on the original dev machine, not on VPS.
 

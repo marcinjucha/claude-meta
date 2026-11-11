@@ -9,12 +9,11 @@ Global skills only: the **ai-*** meta-skills (artifact management, used by `ai-m
 | Skill | Lines | Purpose |
 |-------|-------|---------|
 | `ai-agent-creator` | 433 | Create/evaluate subagents. Thin router architecture, tool restrictions, frontmatter, system prompt. |
-| `ai-skill-creator` | 321 | Create/evaluate/refactor skills. Signal-focused content, Tier 2/3 structure, templates. |
-| `ai-skill-fine-tuning` | 472 | Update existing skills. Pattern drift, outdated content, anti-patterns, advanced features (fork, injection, hooks). |
+| `ai-skill-creator` | 322 | Create/evaluate/refactor skills. Signal-focused content, Tier 2/3 structure, templates. |
+| `ai-skill-fine-tuning` | 474 | Update existing skills. Pattern drift, outdated content, anti-patterns, advanced features (fork, injection, hooks). |
 | `ai-claude-md` | 337 | Create/maintain CLAUDE.md files. Project-specific discoveries, WHY context, signal filtering. |
 | `ai-command-creation` | 555 | Create/refactor multi-phase commands. Sufficient context principle, orchestration, clarifying questions pattern. |
 | `ai-git-commit-patterns` | 283 | Commit messages and organization. WHY-focused, conventional commits, ticket extraction, PR structure. |
-| `ai-skill-lifecycle` | 417 | Full skill lifecycle (create + maintain + advanced features) in one skill. **NOT preloaded** by `ai-manager-agent`. |
 
 ## Working-Style Skills (global, any project)
 
@@ -33,8 +32,6 @@ Global skills only: the **ai-*** meta-skills (artifact management, used by `ai-m
 | `synced/<id>/` | 22 synced `anthropic-skills:*` copies (untracked). Not authored here — don't edit or register them. |
 
 ## Weird Parts / Key Patterns
-
-**`ai-manager-agent` preloads 6 of 7 ai-* skills**: `ai-skill-lifecycle` is on disk but not in the agent's `skills:` frontmatter, so it only loads on demand.
 
 **signal-vs-noise absorbed into shared resource**: Previously a standalone skill, now lives entirely in `resources/signal-vs-noise-reference.md`. **Why absorbed:** every skill already referenced the shared resource — the standalone skill was redundant indirection.
 
