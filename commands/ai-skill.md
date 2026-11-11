@@ -8,28 +8,30 @@ Automatically detects intent from natural language and executes appropriate skil
 
 ## Phases (Adaptive)
 
+Phases are a checklist, not separate stops: merge them into as few ai-manager-agent spawns as the context allows.
+
 **CREATE Mode:**
 ```
-0: Intent Detection + Decision Framework    (orchestrator - inline + clarifying questions)
+0: Intent Detection + Decision Framework    (orchestrator - inline)
 1: Signal Extraction                         (ai-manager-agent)
-2: Structure Design                          (ai-manager-agent)
+2: Structure Design = PLAN                   (ai-manager-agent) → user approval
 3: File Creation                             (ai-manager-agent — writes skill files)
 4: Verification                              (orchestrator - inline, read-only)
 ```
 
 **AUDIT Mode:**
 ```
-0: Intent Detection + Scope                  (orchestrator - inline + clarifying questions)
+0: Intent Detection + Scope                  (orchestrator - inline)
 1: Structure Compliance                      (ai-manager-agent)
 2: Content Quality Audit                     (ai-manager-agent)
-3: Recommendations                           (ai-manager-agent)
+3: Recommendations = PLAN                    (ai-manager-agent) → user approval
 4: Implementation                            (ai-manager-agent — applies approved fixes)
 ```
 
 **MODIFY Mode:**
 ```
-0: Intent Detection + Change Scope           (orchestrator - inline + clarifying questions)
-1: Change Analysis                           (ai-manager-agent)
+0: Intent Detection + Change Scope           (orchestrator - inline)
+1: Change Analysis = PLAN                    (ai-manager-agent) → user approval
 2: Implementation                            (ai-manager-agent — applies approved changes)
 3: Verification                              (orchestrator - inline, read-only)
 ```
@@ -48,68 +50,12 @@ Use Task tool with `subagent_type="ai-manager-agent"`, description, prompt param
 
 1. **INVOKE with Task tool** - Every phase requires actual Task tool call (except Phase 0 and Verification which are inline). Implementation/File Creation phases MUST use ai-manager-agent — never do file edits inline. Inline Verification is read-only: any fix it finds goes back to ai-manager-agent, not into an inline Edit/Write.
 2. **Sufficient context** - Each ai-manager-agent invocation gets ONLY critical decisions (not full conversation history)
-3. **Clarifying questions MANDATORY** - After Phase 0 and EVERY agent phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
-4. **User checkpoints** - Get approval after confirmation before proceeding
-5. **Track phase** - Remember current position and mode (CREATE/AUDIT/MODIFY)
-6. **Socratic Self-Reflection Gate** - Before EVERY agent invocation, conduct self-reflection (2-5 essence-probing questions scaled by complexity). Include key insights in the agent prompt. See Socratic Self-Reflection Gate section below.
-7. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
-8. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data. Placeholder when missing: `[User to provide: real metric/incident]`
-9. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic framework knowledge. Focus on project-specific patterns with WHY context. Example: ❌ "Repository pattern separates data access from business logic" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod)"
-10. **Tier 3 organization** - Detailed examples >50 lines → move to `resources/`. SKILL.md references via `@resources/filename.md`. ONE LEVEL DEEP (no nested `@resources/ → @resources/`).
-
-### Socratic Self-Reflection Gate (MANDATORY)
-
-Before EVERY agent invocation, the orchestrator MUST pause and conduct self-reflection. This is NOT optional — it directly impacts output quality by catching bad assumptions, identifying edge cases, and deepening understanding before delegating.
-
-**Socratic Questioning — probe essence, not surface:**
-
-Questions must challenge assumptions and cut to what truly matters — not check boxes. Four Socratic moves:
-1. **Question assumptions** — "I assumed X. Is that actually true?"
-2. **Probe the essence** — "What MUST this skill capture to be valuable?"
-3. **Expose contradictions** — "My approach does X, but the requirement says Y."
-4. **Consider consequences** — "If this breaks, what's the blast radius?"
-
-Surface questions (avoid): "Is the context sufficient?" / "What pattern should I use?"
-Socratic questions (use): "What would the agent misunderstand?" / "What constraint makes the obvious approach fail?"
-
-**Complexity-based depth (orchestrator decides based on task):**
-
-| Depth | When | Questions | Passes |
-|-------|------|-----------|--------|
-| Quick | Routine/structured: ai-manager-agent for file creation, structure compliance | 2-3 | Single |
-| Deep | Novel/uncertain: ai-manager-agent for signal extraction (what's project-specific vs generic?), structure design (Tier 2 vs Tier 3 decisions) | 4-5 | Single |
-| Deep + Iteration | Highly complex: content quality audit (filtering noise from skills), recommendations (skill boundaries and overlap) | 5+ | Answer then ask follow-ups from answers then answer again |
-
-**Complexity signals for this command's agents:**
-- **Quick:** ai-manager-agent for file creation, structure compliance
-- **Deep:** ai-manager-agent for signal extraction (what's project-specific vs generic?), structure design (Tier 2 vs Tier 3 decisions)
-- **Deep + Iteration:** content quality audit (filtering noise from skills), recommendations (skill boundaries and overlap)
-
-**Format:**
-
-```
-* Insight -----------------------------------------------
-**Self-reflection before ai-manager-agent:**
-
-Q: [Question about the task/approach/edge cases]
-A: [Answer based on codebase knowledge and context]
-
-Q: [Question about alternatives/risks]
-A: [Answer with reasoning]
-
-[Deep + Iteration only:]
-Q (follow-up from above): [Question arising from previous answers]
-A: [Refined answer]
-
-**Key insights for agent:**
-- [Insight 1 that shapes the agent prompt]
-- [Insight 2]
--------------------------------------------------
-```
-
-**"Key insights for agent" MUST be included in the agent prompt.** These are the distilled conclusions from self-reflection that give the agent better context than it would have without reflection.
-
-**WHY this matters:** Without self-reflection, the orchestrator acts as a mechanical router — passing context without understanding it. Self-reflection forces the orchestrator to think about what could go wrong, what the agent needs to know, and what the best approach is. This catches Tier 2/3 misclassifications, missing WHY context, and skill boundary errors BEFORE they become problems downstream.
+3. **Ask once, only about assumptions; one consent point** - Ask the user in ONE message, and only when you are assuming something about scope, location (claude-dev / brain-vault/.claude / ~/.claude / the source of a symlink) or what the change applies to; otherwise merge phases and act. The only gate: present the plan → user approves (an approval already given in the request counts) → ai-manager-agent writes. **Why:** the old per-phase questions/paraphrase/gate ceremony ran in zero observed sessions, and Marcin's rule is "decide yourself, ask only about assumptions".
+4. **Track mode** - Remember mode (CREATE/AUDIT/MODIFY) and what is already done
+5. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
+6. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data. Placeholder when missing: `[User to provide: real metric/incident]`
+7. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic framework knowledge. Focus on project-specific patterns with WHY context. Example: ❌ "Repository pattern separates data access from business logic" → ✅ "Never query same table in RLS policy → infinite recursion (crashed prod)"
+8. **Tier 3 organization** - Detailed examples >50 lines → move to `resources/`. SKILL.md references via `@resources/filename.md`. ONE LEVEL DEEP (no nested `@resources/ → @resources/`).
 
 ---
 
@@ -154,37 +100,13 @@ ls -d .claude/skills/*/ | sed 's|.claude/skills/||;s|/$||'
 ```yaml
 Mode: [CREATE / AUDIT / MODIFY]
 Scope:
-  CREATE: [skill name from request or ask]
+  CREATE: [skill name from request]
   AUDIT: [specific skill or "all"]
   MODIFY: [skill name + changes requested]
-Confidence: [HIGH / MEDIUM / LOW]
+Location: [claude-dev / brain-vault/.claude / ~/.claude / source of a symlink]
 ```
 
-**Step 4: If Confidence LOW - Ask Clarifying Questions**
-
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase]
-
-Clarifying questions (3-5, scale with complexity):
-1. Intent: Should I [CREATE new / AUDIT existing / MODIFY existing] skill?
-2. Scope: Which skill - [detected name or list options]?
-3. Goal: What's the primary objective - [inferred goal]?
-[4. Priority: What's most important - [structure / content / both]?]
-[5. Action: Should I [specific action] or did you mean [alternative]?]
-
-Does this match exactly what you want?
-```
-
-[WAIT for confirmation]
-
-**Step 5: Proceed to Mode-Specific Phase 0**
-
-- CREATE → Phase 0: Decision Framework
-- AUDIT → Phase 0: Scope Selection
-- MODIFY → Phase 0: Change Scope
-
-Ready to proceed? (continue/skip/back/stop)
+**Step 4:** If mode, scope, location or target is an assumption rather than something the request states, ask about it in ONE message (Critical Rule 3). Otherwise go straight to the mode's phases.
 
 ---
 
@@ -206,34 +128,12 @@ VERDICT:
   1 YES or less: Don't create (add to CLAUDE.md instead)
 ```
 
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of decision results]
-
-Clarifying questions (3-5, scale with complexity):
-1. Source material location - where is the signal to extract?
-2. Skill complexity - will this need Tier 3 resources/ (detailed examples >50 lines)?
-3. Scripts needed - will the skill do any DETERMINISTIC work (parsing, extracting, filtering, counting, reshaping) over a LONG/LARGE input? If so, that work belongs in a `scripts/` helper that returns only the relevant slice instead of loading the whole input into context (cheaper, faster, more reliable signal-finding). Judgment/reasoning stays in-context.
-[4. Related skills - should this reference other existing skills?]
-[5. Target: Skill should help Claude decide [specific decision] - correct?]
-
-Does this match exactly what you want?
-```
-
-[WAIT for user confirmation]
-
-Ready to proceed? (continue/skip/back/stop)
+Settle inline: where the source material is, whether Tier 3 `resources/` is needed, and whether the skill does DETERMINISTIC work (parsing, extracting, filtering, counting, reshaping) over a LONG/LARGE input — that work belongs in a `scripts/` helper returning only the relevant slice; judgment stays in-context.
 
 ---
 
 ### Phase 1: Signal Extraction
-**Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Deep — what's project-specific vs generic?):**
-
-Orchestrator reflects on: Is this content truly project-specific or could Claude infer it from framework documentation? What patterns would actually prevent bugs vs just adding noise? Are there anti-patterns from production that must be documented?
-
-Include key insights in the agent prompt as additional context.
+**Agent**: ai-manager-agent (may be merged with Phase 2 into one spawn)
 
 **Prompt to agent**:
 ```
@@ -272,42 +172,12 @@ Output:
 **Detailed Examples (resources/):** [list examples >50 lines]
 **Scripts (scripts/):** [list utility scripts]
 **Noise Cut:** [what was excluded and why]
-
-SELF-REFLECTION INSTRUCTION:
-Before extracting signal, ask yourself 2-3 questions about the best approach.
-Answer them based on the source material and existing skills in the codebase. Document your reasoning.
-Focus on essence: what MUST this skill capture that no existing skill covers, what assumption about project-specificity could be wrong, what would break if this pattern is missing.
-If complexity is high, iterate: ask follow-up questions based on your answers.
 ```
-
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of signal extracted and categorization]
-
-Clarifying questions (3-5, scale with complexity):
-1. Extracted [N] patterns - complete or missing [specific pattern]?
-2. Categorized [X] items as Tier 3 resources/ - should [item Y] be in SKILL.md instead?
-3. Agent cut [noise items] as generic - do you want any included?
-[4. Scripts identified: [list] - are these the right utilities?]
-[5. Missing production context for [pattern Z] - add placeholder or skip?]
-
-Does this match exactly what you want?
-```
-
-[WAIT for confirmation]
-
-Ready to proceed? (continue/skip/back/stop)
 
 ---
 
-### Phase 2: Structure Design
+### Phase 2: Structure Design (the plan)
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Deep — Tier 2 vs Tier 3 and section organization):**
-
-Orchestrator reflects on: Should detailed examples stay in SKILL.md (interconnected context) or move to resources/ (self-contained)? Is the skill scope too broad (should be split) or too narrow (should be merged)? Are the frontmatter description keywords sufficient for agent lazy-loading discovery?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -319,7 +189,6 @@ EXTRACTED SIGNAL (from Phase 1):
 Core Patterns: [patterns with WHY]
 Detailed Examples: [for resources/]
 Scripts: [utility scripts]
-USER ADJUSTMENTS: [from Phase 1]
 
 Task: Design skill structure including Tier 2/3 decision and resource organization.
 
@@ -349,34 +218,12 @@ Output:
 **References Plan:** [where SKILL.md references resources/ and scripts/]
 ```
 
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of skill structure]
-
-Clarifying questions (3-5, scale with complexity):
-1. SKILL.md has [N] sections - right scope?
-2. resources/ includes [files] - should [content Y] be in SKILL.md instead?
-3. Structure puts [pattern X] in [section] - does this make sense?
-[4. scripts/ includes [script A] - needed or over-engineering?]
-[5. Cross-references: SKILL.md references [files] - complete?]
-
-Does this match exactly what you want?
-```
-
-[WAIT for confirmation]
-
-Ready to proceed? (continue/skip/back/stop)
+**Consent point:** show the plan (target path + structure) and wait for approval before Phase 3.
 
 ---
 
 ### Phase 3: File Creation (ai-manager-agent)
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Quick — mechanical file creation from approved structure):**
-
-Orchestrator reflects on: Does the approved structure have gaps the agent would have to fill by guessing? Is the target path (project vs global `skills/`) correct?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -389,7 +236,7 @@ APPROVED STRUCTURE (from Phase 2):
 [SKILL.md section breakdown, resources/ files, scripts/ files, references plan]
 
 EXTRACTED SIGNAL (from Phase 1): [core patterns with WHY, examples, scripts]
-USER DECISIONS (from Phase 1-2 clarifying questions): [corrections, inclusions, exclusions]
+USER DECISIONS (from plan approval): [corrections, inclusions, exclusions]
 
 Task: Write the skill files yourself (Edit/Write) exactly per the approved structure.
 
@@ -401,10 +248,6 @@ Task: Write the skill files yourself (Edit/Write) exactly per the approved struc
 
 Output: Files created (absolute paths) + any point where the approved structure was ambiguous.
 ```
-
-No clarifying questions (file creation is mechanical based on approved structure).
-
-Ready to proceed? (continue/skip/back/stop)
 
 ---
 
@@ -435,22 +278,7 @@ References:
   - [ ] Cross-references to other skills valid (if present)
 ```
 
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of verification results]
-
-Clarifying questions (3-5, scale with complexity):
-1. Verification found [N] issues - fix automatically or show you first?
-2. Missing [section/item X] - add now or optional?
-3. Signal vs Noise check: [item Y] seems generic - remove or keep with WHY?
-[4. Skill ready at [path] - commit or review first?]
-
-Does this match your expectations?
-```
-
-[WAIT for confirmation]
-
-Skill creation complete!
+Report the result (path, issues fixed or open). Skill creation complete.
 
 ---
 
@@ -470,34 +298,10 @@ SKILLS_FOUND:
   - Note resources/ and scripts/ presence
 ```
 
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of audit scope]
-
-Clarifying questions (3-5, scale with complexity):
-1. Should I audit [N] skills found, or exclude some?
-2. Priority focus - structure compliance, Signal vs Noise, or both?
-3. If issues found, auto-fix or just report?
-[4. Should audit check Tier 3 resources/ organization?]
-[5. Success criterion - all compliant, or report only?]
-
-Does this match what you want?
-```
-
-[WAIT for confirmation]
-
-Ready to proceed? (continue/skip/back/stop)
-
 ---
 
 ### Phase 1: Structure Compliance
-**Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Quick — structured checklist):**
-
-Orchestrator reflects on: Which skills are most likely to have structure issues? Are there orphaned resource files or missing frontmatter fields?
-
-Include key insights in the agent prompt as additional context.
+**Agent**: ai-manager-agent (Phases 1-3 may run as one spawn)
 
 **Prompt to agent**:
 ```
@@ -505,7 +309,6 @@ MODE: AUDIT skills (structure compliance)
 
 SKILLS: [list from Phase 0]
 FOCUS: [structure/content/both]
-AUTO_FIX: [yes/no]
 
 Task: Analyze skill structure compliance.
 
@@ -519,34 +322,10 @@ For each skill, check:
 Output per skill: compliance score, missing sections/files, invalid references, issues (specific)
 ```
 
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of compliance results]
-
-Clarifying questions (3-5, scale with complexity):
-1. Found [N] skills with structure issues - fix or just report?
-2. Skill [X] missing [section Y] - critical or optional?
-3. Broken @resources/ references - auto-fix or ask per skill?
-[4. Priority: missing sections / broken references / Tier 3 organization?]
-[5. Proceed to content audit or fix structure first?]
-
-Does this match your expectations?
-```
-
-[WAIT for confirmation]
-
-Ready to proceed? (continue/skip/back/stop)
-
 ---
 
 ### Phase 2: Content Quality Audit
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Deep + Iteration — filtering noise from skills):**
-
-Orchestrator reflects on: What content in these skills looks like signal but might be generic knowledge Claude already has? Are there invented metrics or anti-patterns without real production incidents? Is WHY context genuinely present or just formulaic? Are skill boundaries correct (overlap between skills)?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -554,7 +333,6 @@ MODE: AUDIT skills (content quality)
 
 SKILLS: [list]
 STRUCTURE RESULTS: [from Phase 1]
-USER DECISIONS: [auto-fix or report, priorities]
 
 Task: Audit content for Signal vs Noise and WHY over HOW violations.
 
@@ -577,34 +355,10 @@ For each skill, check:
 Output per skill: violations (quote/issue/fix), WHY missing, Tier 3 violations, severity (critical/moderate/minor)
 ```
 
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of violations found]
-
-Clarifying questions (3-5, scale with complexity):
-1. Found [N] Signal vs Noise violations - cut completely?
-2. Skill [X] has patterns without WHY - add placeholders or skip?
-3. Historical timeline sections found - replace with current state?
-[4. [Skill Z] has detailed examples in SKILL.md - move to resources/?]
-[5. Tier 3 organization fixes needed - proceed now or defer?]
-
-Does this match your expectations?
-```
-
-[WAIT for confirmation]
-
-Ready to proceed? (continue/skip/back/stop)
-
 ---
 
-### Phase 3: Recommendations
+### Phase 3: Recommendations (the plan)
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Deep — skill boundaries and overlap):**
-
-Orchestrator reflects on: Are recommendations consistent across skills? Could fixing one skill require updating agents that reference it? What is the right priority order to minimize cascading changes? Should any skills be merged or split?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -612,7 +366,6 @@ MODE: AUDIT recommendations
 
 STRUCTURE RESULTS: [Phase 1]
 CONTENT RESULTS: [Phase 2]
-USER DECISIONS: [priorities, preferences]
 
 Task: Create actionable recommendations for skill improvements.
 
@@ -625,22 +378,7 @@ For each skill with issues:
 Output per skill: priority, structure fixes, content refactoring, Tier 3 changes, migration steps (ordered)
 ```
 
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of recommendations]
-
-Clarifying questions (3-5, scale with complexity):
-1. [N] critical fixes - do these in Phase 4?
-2. Priority order: [skill A] → [skill B] - correct?
-3. Tier 3 reorganization needed - proceed?
-[4. Implement all recommendations or just critical + high priority?]
-
-Does this match your expectations?
-```
-
-[WAIT for confirmation]
-
-Ready to proceed with implementation? (continue/skip/back/stop)
+**Consent point:** show the recommendations and wait for approval (all, or which items) before Phase 4.
 
 ---
 
@@ -648,12 +386,6 @@ Ready to proceed with implementation? (continue/skip/back/stop)
 **Agent**: ai-manager-agent
 
 **Only if user approved in Phase 3.**
-
-**Socratic Self-Reflection Gate (Quick — mechanical fix application):**
-
-Orchestrator reflects on: Are all approved fixes compatible? Could applying one fix invalidate another recommendation?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -666,7 +398,7 @@ SKILLS TO FIX: [list from Phase 3, priority order]
 APPROVED RECOMMENDATIONS:
 [Extracted per-skill fixes the user approved]
 
-USER DECISIONS: [scope — all vs critical+high, priorities from Phase 3 confirmation]
+USER DECISIONS: [scope — all vs critical+high, from plan approval]
 
 Task: Apply approved fixes to the skill files yourself (Edit/Write), per skill in priority order.
 
@@ -680,24 +412,7 @@ Apply ONLY approved items — no extra improvements riding along.
 Output: Summary of changes made, per file (absolute paths).
 ```
 
-**After agent**:
-
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of changes made]
-
-Clarifying questions (3-5, scale with complexity):
-1. Made [N] changes to [M] skills - commit these?
-2. Created [X] new resources/ files - organized correctly?
-3. Some skills still have minor issues [list] - fix now or later?
-[4. Verification passed for [N] skills - what about remaining [M]?]
-
-Does this match your expectations?
-```
-
-[WAIT for confirmation]
-
-Audit complete!
+Report the changes. Audit complete.
 
 ---
 
@@ -719,34 +434,10 @@ CHANGE_CATEGORIES:
   script_addition: Add utility scripts
 ```
 
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of changes to make]
-
-Clarifying questions (3-5, scale with complexity):
-1. Scope: Changes affect [specific sections] or entire skill?
-2. Category: Primarily [category A] or [category B]?
-3. Approach: [approach A] or [approach B] for [specific change]?
-[4. Update strategy: UPDATE existing (replace wrong) or ADD section?]
-[5. Verification: Full quality check or just changed sections?]
-
-Does this match exactly what you want?
-```
-
-[WAIT for confirmation]
-
-Ready to proceed? (continue/skip/back/stop)
-
 ---
 
-### Phase 1: Change Analysis
+### Phase 1: Change Analysis (the plan)
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Deep — analyzing skill change impact):**
-
-Orchestrator reflects on: Could these changes affect agents that load this skill? Will modifications shift the Tier 2/3 balance? Is the change actually needed or is the existing content still accurate? Could this change introduce noise?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -755,7 +446,6 @@ MODE: MODIFY skill
 SKILL: [name and path]
 CHANGES REQUESTED: [from Phase 0]
 CATEGORIES: [pattern_update, clarification, anti_pattern, drift_fix, tier3_reorganization, script_addition]
-USER ADJUSTMENTS: [from Phase 0]
 
 Task: Analyze current skill state and plan modifications.
 
@@ -778,34 +468,12 @@ Read skill file(s) and analyze:
 Output: Current State, Change Plan (section by section), Tier 3 Changes, Scripts Changes, Dependencies, Implementation Steps, Verification Checklist
 ```
 
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of change plan]
-
-Clarifying questions (3-5, scale with complexity):
-1. Plan suggests [N] modifications - complete or should I add [X]?
-2. Change order: [A] → [B] → [C] - correct priority?
-3. Section [X] will be [modified/enhanced/replaced] - is this what you want?
-[4. Updates existing content - correct approach?]
-[5. After changes, skill will [outcome] - matches your goal?]
-
-Does this match exactly what you want?
-```
-
-[WAIT for confirmation]
-
-Ready to proceed? (continue/skip/back/stop)
+**Consent point:** show the change plan and wait for approval before Phase 2.
 
 ---
 
 ### Phase 2: Implementation (ai-manager-agent)
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Quick — mechanical application of approved plan):**
-
-Orchestrator reflects on: Does the approved plan leave any change the agent would have to interpret? Did the user's Phase 1 adjustments make it into the plan?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to agent**:
 ```
@@ -816,7 +484,7 @@ SKILL: [name and path]
 APPROVED CHANGE PLAN (from Phase 1):
 [Section-by-section changes, Tier 3 changes, scripts changes, implementation steps]
 
-USER DECISIONS (from Phase 0-1 clarifying questions): [corrections, approach choices]
+USER DECISIONS (from plan approval): [corrections, approach choices]
 
 Task: Apply the approved plan to the skill files yourself (Edit/Write).
 
@@ -829,10 +497,6 @@ Script additions: Create scripts/ with shebang, chmod +x, add usage to SKILL.md
 
 Output: Changes made per file (absolute paths).
 ```
-
-No clarifying questions (implementation is mechanical based on approved plan).
-
-Ready to proceed? (continue/skip/back/stop)
 
 ---
 
@@ -860,29 +524,4 @@ Tier 3 (if reorganized):
   - [ ] ONE LEVEL DEEP (no nested references)
 ```
 
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of changes and verification status]
-
-Clarifying questions (3-5, scale with complexity):
-1. Made [N] changes to [sections] - all correct?
-2. Verification found [N] issues - fix automatically or show you?
-3. Modified skill ready at [path] - commit or review first?
-[4. Changes improve [aspect] - does this achieve your goal?]
-
-Does this match your expectations?
-```
-
-[WAIT for confirmation]
-
-Modification complete!
-
----
-
-## Commands
-
-- `continue` - Next phase
-- `skip` - Skip current phase
-- `back` - Previous phase
-- `status` - Show progress (current phase, mode)
-- `stop` - Exit command
+Report the result (changes, issues fixed or open). Modification complete.

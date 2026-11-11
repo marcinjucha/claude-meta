@@ -10,27 +10,27 @@ Automatically detects intent from natural language and executes appropriate agen
 
 **CREATE Mode:**
 ```
-0: Intent Detection + Decision Framework    (orchestrator - inline + clarifying questions)
+0: Intent Detection + Decision Framework    (orchestrator - inline)
 1: Signal Extraction                         (ai-manager-agent)
-2: Structure Design                          (ai-manager-agent)
+2: Structure Design = PLAN                   (ai-manager-agent) → user approval
 3: File Creation                             (ai-manager-agent)
 4: Verification                              (ai-manager-agent)
 ```
 
 **AUDIT Mode:**
 ```
-0: Intent Detection + Scope                  (orchestrator - inline + clarifying questions)
+0: Intent Detection + Scope                  (orchestrator - inline)
 1: Structure Compliance                      (ai-manager-agent)
 2: Content Quality                           (ai-manager-agent)
 3: Integration Check                         (ai-manager-agent)
-4: Recommendations                           (ai-manager-agent)
+4: Recommendations = PLAN                    (ai-manager-agent) → user approval
 5: Implementation                            (ai-manager-agent - if approved)
 ```
 
 **MODIFY Mode:**
 ```
-0: Intent Detection + Change Scope           (orchestrator - inline + clarifying questions)
-1: Change Analysis                           (ai-manager-agent)
+0: Intent Detection + Change Scope           (orchestrator - inline)
+1: Change Analysis = PLAN                    (ai-manager-agent) → user approval
 2: Implementation                            (ai-manager-agent)
 3: Verification                              (ai-manager-agent)
 ```
@@ -66,93 +66,11 @@ Launching ai-manager-agent...
 
 1. **INVOKE with Task tool** - Every phase requires actual Task tool call to ai-manager-agent
 2. **Signal extraction** - Domain knowledge goes in skills, NOT agents (thin router principle)
-3. **User checkpoints** - Get approval after each phase (prevents wasted work)
-4. **Track phase** - Remember current position (user can skip/back)
-5. **Clarifying questions** - After EVERY phase, paraphrase + 3-5 questions (scale with complexity) + confirmation
-6. **Socratic Self-Reflection Gate** - Before EVERY agent invocation, conduct self-reflection (2-5 essence-probing questions scaled by complexity). Include key insights in the agent prompt. See Socratic Self-Reflection Gate section below.
-8. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
-9. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
-10. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic agent patterns Claude already knows. Focus on project-specific tool restrictions, hooks, and agent design decisions with WHY context. Example: ❌ "Agents route tasks to specialized execution contexts" → ✅ "Read-only agent prevents accidental edits during code review (incident: deleted config file)"
-
-### Clarifying Questions Pattern
-
-**After EVERY phase (including Phase 0), you MUST:**
-
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of what was produced/decided in this phase]
-
-Clarifying questions (3-5, scale with complexity):
-1. [Question about scope/constraint from this phase]
-2. [Question about tool restrictions/requirements]
-3. [Question about priority/approach]
-[4. Question about integration with skills/commands]
-[5. Question about validation criteria]
-
-Does this match exactly what you want to achieve? If not, what should I adjust?
-```
-
-**Wait for user response.** If corrections needed:
-- Apply corrections
-- Paraphrase updated understanding
-- Ask 3-5 NEW clarifying questions about updated version
-- Repeat until user confirms "dokładnie to co chcę" / "exactly what I want"
-
-**Only after confirmation**, proceed with: "Ready to proceed? (continue/skip/back/stop)"
-
-### Socratic Self-Reflection Gate (MANDATORY)
-
-Before EVERY agent invocation, the orchestrator MUST pause and conduct self-reflection. This is NOT optional — it directly impacts output quality by catching bad assumptions, identifying edge cases, and deepening understanding before delegating.
-
-**Socratic Questioning — probe essence, not surface:**
-
-Questions must challenge assumptions and cut to what truly matters — not check boxes. Four Socratic moves:
-1. **Question assumptions** — "I assumed X. Is that actually true?"
-2. **Probe the essence** — "What MUST this agent do correctly to be valuable?"
-3. **Expose contradictions** — "My approach does X, but the requirement says Y."
-4. **Consider consequences** — "If this breaks, what's the blast radius?"
-
-Surface questions (avoid): "Is the context sufficient?" / "What pattern should I use?"
-Socratic questions (use): "What would the agent misunderstand?" / "What constraint makes the obvious approach fail?"
-
-**Complexity-based depth (orchestrator decides based on task):**
-
-| Depth | When | Questions | Passes |
-|-------|------|-----------|--------|
-| Quick | Routine/structured: ai-manager-agent for verification, file creation (mechanical from approved plan), structure compliance | 2-3 | Single |
-| Deep | Novel/uncertain: ai-manager-agent for signal extraction (what makes a good agent?), structure design (thin vs thick decisions) | 4-5 | Single |
-| Deep + Iteration | Highly complex: content quality audit (is this agent too thick? should knowledge move to skills?), integration check (does this agent conflict with existing agents?) | 5+ | Answer then ask follow-ups from answers then answer again |
-
-**Complexity signals for this command's agents:**
-- **Quick:** ai-manager-agent for verification, file creation (mechanical from approved plan), structure compliance
-- **Deep:** ai-manager-agent for signal extraction (what makes a good agent?), structure design (thin vs thick decisions)
-- **Deep + Iteration:** content quality audit (is this agent too thick? should knowledge move to skills?), integration check (does this agent conflict with existing agents?)
-
-**Format:**
-
-```
-* Insight -----------------------------------------------
-**Self-reflection before ai-manager-agent:**
-
-Q: [Question about the task/approach/edge cases]
-A: [Answer based on codebase knowledge and context]
-
-Q: [Question about alternatives/risks]
-A: [Answer with reasoning]
-
-[Deep + Iteration only:]
-Q (follow-up from above): [Question arising from previous answers]
-A: [Refined answer]
-
-**Key insights for agent:**
-- [Insight 1 that shapes the agent prompt]
-- [Insight 2]
--------------------------------------------------
-```
-
-**"Key insights for agent" MUST be included in the agent prompt.** These are the distilled conclusions from self-reflection that give the agent better context than it would have without reflection.
-
-**WHY this matters:** Without self-reflection, the orchestrator acts as a mechanical router — passing context without understanding it. Self-reflection forces the orchestrator to think about what could go wrong, what the agent needs to know, and what the best approach is. This catches thin router violations, missing skill references, and tool restriction gaps BEFORE they become problems downstream.
+3. **Ask once, only about assumptions; one consent point** - Ask the user in ONE message, and only when you are assuming something about scope, location (claude-dev / brain-vault/.claude / ~/.claude / the source of a symlink) or what the change applies to; otherwise merge phases and act. The only gate: present the plan → user approves (an approval already given in the request counts) → ai-manager-agent writes. **Why:** the old per-phase questions/paraphrase/gate ceremony ran in zero observed sessions, and Marcin's rule is "decide yourself, ask only about assumptions".
+4. **Track mode** - Remember mode (CREATE/AUDIT/MODIFY) and what is already done
+5. **Skill loading mechanism** - Agent sees ONLY skill metadata/description before deciding which skills to load. Full skill content loads only after agent's decision. Therefore: (1) skill descriptions must precisely describe WHEN to use (not "I help with X"), (2) command prompts should contain descriptive keywords matching skill descriptions (not explicit skill names - avoids tight coupling), (3) critical rules must be in command and agent system prompt - never rely solely on skills for enforcement.
+6. **NEVER INVENT CONTENT** - ai-manager-agent must NEVER make up metrics, production incidents, anti-patterns, or numbers. ONLY use user-provided data.
+7. **AVOID AI-KNOWN CONTENT** - ai-manager-agent must NOT include generic agent patterns Claude already knows. Focus on project-specific tool restrictions, hooks, and agent design decisions with WHY context. Example: ❌ "Agents route tasks to specialized execution contexts" → ✅ "Read-only agent prevents accidental edits during code review (incident: deleted config file)"
 
 ---
 
@@ -201,38 +119,20 @@ ls .claude/agents/*.md
 Mode: [CREATE / AUDIT / MODIFY]
 
 Scope:
-  CREATE: [agent name from request or ask]
+  CREATE: [agent name from request]
   AUDIT: [specific agent or "all"]
   MODIFY: [agent name + changes requested]
 
-Confidence: [HIGH / MEDIUM / LOW]
+Location: [claude-dev / brain-vault/.claude / ~/.claude / source of a symlink]
 ```
 
-**Step 4: If Confidence LOW - Ask Clarifying Questions**
-
-```
-Let me verify my understanding:
-[2-3 sentence paraphrase of detected intent]
-
-Clarifying questions (3-5, scale with complexity):
-1. Intent: Should I [CREATE new / AUDIT existing / MODIFY existing] agent?
-2. Scope: Which agent - [detected name or list options]?
-3. Goal: What's the primary objective - [inferred goal]?
-[4. Priority: What's most important - [tool restrictions / skills / system prompt]?]
-[5. Action: Should I [specific action] or did you mean [alternative]?]
-
-Does this match exactly what you want? If not, what should I adjust?
-```
-
-[WAIT for confirmation]
+**Step 4:** If mode, scope, location or target is an assumption rather than something the request states, ask about it in ONE message (Critical Rule 3).
 
 **Step 5: Proceed to Mode-Specific Phase 0**
 
 - CREATE → Continue to CREATE Mode Phase 0 (Decision Framework)
 - AUDIT → Continue to AUDIT Mode Phase 0 (Scope Selection)
 - MODIFY → Continue to MODIFY Mode Phase 0 (Change Scope)
-
-Ready to proceed? (continue/skip/back/stop)
 
 ---
 
@@ -250,19 +150,11 @@ Quick assessment before creating agent:
 
 **Decision:** If 2-3 YES → Continue. If 0-1 YES → Recommend skill or command instead.
 
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/stop)"
-
 ---
 
 ### Phase 1: Signal Extraction
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Deep — first analysis of what makes a good agent):**
-
-Orchestrator reflects on: What specialized capability does this agent truly need? Is the thin/thick boundary clear — could domain knowledge accidentally leak into the system prompt? Are tool restrictions justified by real isolation needs or just cargo-culted?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -300,27 +192,13 @@ agent_approach: [steps]
 tool_restrictions: allowed/denied/rationale
 skills_to_reference: name/provides
 domain_knowledge_removed: pattern/destination
-
-SELF-REFLECTION INSTRUCTION:
-Before extracting signal, ask yourself 2-3 questions about the best approach.
-Answer them based on the agent's purpose and existing agents in the codebase. Document your reasoning.
-Focus on essence: what MUST this agent do that no existing agent covers, what assumption about tool restrictions could be wrong, what would break if domain knowledge leaks into the system prompt.
-If complexity is high, iterate: ask follow-up questions based on your answers.
 ```
-
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
 
 ---
 
 ### Phase 2: Structure Design
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Deep — designing thin vs thick boundary):**
-
-Orchestrator reflects on: Is the system prompt focused on approach or accidentally including domain patterns? Are skill references complete — would the agent be able to do its job with these skills? Does the description trigger delegation correctly?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -347,27 +225,15 @@ Quality standards:
 - Apply Signal vs Noise: No generic explanations, only project-specific agent design
 
 Output: YAML with frontmatter fields + system prompt sections + thin router verification
-
-SELF-REFLECTION INSTRUCTION:
-Before designing structure, ask yourself 2-3 questions about the best approach.
-Answer them based on the signal extracted in Phase 1 and existing agent patterns. Document your reasoning.
-Focus on essence: what MUST this agent's system prompt convey, what would make the description fail to trigger delegation, what tool restriction could be too narrow or too broad.
-If complexity is high, iterate: ask follow-up questions based on your answers.
 ```
 
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
+**Consent point:** show the plan (location + structure) and wait for approval before Phase 3.
 
 ---
 
 ### Phase 3: File Creation
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Quick — mechanical file creation from approved plan):**
-
-Orchestrator reflects on: Does the approved structure from Phase 2 have any gaps I missed? Is the file location correct (project vs user agent)?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -397,27 +263,13 @@ Quality checks:
 - Thin router (infrastructure only)
 
 Output: Created file path + content preview + verification checklist results
-
-SELF-REFLECTION INSTRUCTION:
-Before creating the file, ask yourself 2-3 questions about the best approach.
-Answer them based on the approved structure and existing agent files. Document your reasoning.
-Focus on essence: what MUST the frontmatter get right for lazy loading to work, what formatting could break YAML parsing.
-If complexity is high, iterate: ask follow-up questions based on your answers.
 ```
-
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
 
 ---
 
 ### Phase 4: Verification
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Quick — structured checklist verification):**
-
-Orchestrator reflects on: What are the most common verification failures for agents? Is there a thin router violation I might have missed in earlier phases?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -446,15 +298,9 @@ Verification checklist:
 - [ ] Thin router: Infrastructure only, patterns in skills
 
 Output: YAML verification results with issues and recommendations
-
-SELF-REFLECTION INSTRUCTION:
-Before verifying, ask yourself 2-3 questions about what to check most carefully.
-Answer them based on the agent file and common thin router violations. Document your reasoning.
-Focus on essence: what would make this agent fail in production, what domain knowledge might have slipped in.
-If complexity is high, iterate: ask follow-up questions based on your answers.
 ```
 
-Apply clarifying questions pattern. If all checks pass: CREATE mode complete.
+If all checks pass: CREATE mode complete.
 
 ---
 
@@ -472,19 +318,11 @@ SCOPE:
 
 List found agents with paths.
 
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/stop)"
-
 ---
 
 ### Phase 1: Structure Compliance
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Quick — structured checklist):**
-
-Orchestrator reflects on: Which agents are most likely to have structure issues? Are there common frontmatter mistakes I should flag for the agent?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -511,19 +349,11 @@ Structure requirements:
 Output per agent: frontmatter_valid, name_format, description_length, system_prompt_length, issues (field/issue/severity), recommendations
 ```
 
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
-
 ---
 
 ### Phase 2: Content Quality
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Deep + Iteration — is this agent too thick? should knowledge move to skills?):**
-
-Orchestrator reflects on: What domain knowledge might be hiding in system prompts? Are there patterns that look like "approach" but are really "knowledge"? Does the agent duplicate what a skill already provides?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -554,19 +384,11 @@ Quality checks:
 Output per agent: thin_router check, domain_knowledge_found (pattern/should_be_in_skill), issues (type/description/severity), recommendations
 ```
 
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
-
 ---
 
 ### Phase 3: Integration Check
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Deep + Iteration — does this agent conflict with existing agents?):**
-
-Orchestrator reflects on: Could this agent's description overlap with another agent causing wrong delegation? Are referenced skills actually the best fit? What cross-references might be missing?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -585,19 +407,11 @@ For each agent, verify:
 Output per agent: skills_exist (skill/exists/path), tools_valid, description_triggers, referenced_by, issues (type/description/severity), recommendations
 ```
 
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
-
 ---
 
 ### Phase 4: Recommendations
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Quick — prioritizing known issues):**
-
-Orchestrator reflects on: Are the severity assessments from previous phases correct? What fix order minimizes cascading changes?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -624,7 +438,7 @@ Prioritization:
 Output: YAML recommendations per priority level + summary (total issues, critical count)
 ```
 
-Apply clarifying questions pattern, then: "Ready to proceed with implementation? (continue/skip/back/stop)"
+**Consent point:** show the recommendations and wait for approval before Phase 5.
 
 ---
 
@@ -633,12 +447,6 @@ Apply clarifying questions pattern, then: "Ready to proceed with implementation?
 **Agent**: ai-manager-agent
 
 **Only if user approved in Phase 4.**
-
-**Socratic Self-Reflection Gate (Quick — mechanical fix application):**
-
-Orchestrator reflects on: Are all approved fixes compatible with each other? Could applying one fix break another agent's references?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -663,7 +471,7 @@ Implementation steps:
 Output: fixes_applied (agent/fix/files_changed/verification), skills_created, issues_remaining
 ```
 
-Apply clarifying questions pattern. AUDIT mode complete.
+AUDIT mode complete.
 
 ---
 
@@ -678,19 +486,11 @@ Categorize changes:
 - **System prompt section** - role, steps, guidelines, output format
 - **Both** - frontmatter + system prompt
 
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/stop)"
-
 ---
 
 ### Phase 1: Change Analysis
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Deep — analyzing impact of changes on thin router principle):**
-
-Orchestrator reflects on: Could these changes accidentally add domain knowledge to the system prompt? Will the modifications affect how other commands or skills interact with this agent? Is the change scope actually what the user needs?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -722,19 +522,13 @@ Analysis checks:
 Output: YAML with changes_planned (frontmatter/system_prompt with current/new/rationale), impact (thin_router_maintained, related_updates_needed), verification checklist
 ```
 
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
+**Consent point:** show the change plan and wait for approval before Phase 2.
 
 ---
 
 ### Phase 2: Implementation
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Quick — mechanical implementation from approved plan):**
-
-Orchestrator reflects on: Does the approved plan from Phase 1 have any gaps? Are related files (skills, commands) also being updated?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -762,19 +556,11 @@ Implementation steps:
 Output: implementation results (agent_updated, related_updated, verification: structure_valid/thin_router_maintained/references_updated)
 ```
 
-Apply clarifying questions pattern, then: "Ready to proceed? (continue/skip/back/stop)"
-
 ---
 
 ### Phase 3: Verification
 
 **Agent**: ai-manager-agent
-
-**Socratic Self-Reflection Gate (Quick — structured verification of changes):**
-
-Orchestrator reflects on: What are the most likely unintended side effects of these changes? Did the implementation maintain thin router compliance?
-
-Include key insights in the agent prompt as additional context.
 
 **Prompt to ai-manager-agent**:
 ```
@@ -803,18 +589,7 @@ Verification checklist:
 Output: YAML verification with checks (structure/content/integration), issues_found, status (success/issues_found)
 ```
 
-Apply clarifying questions pattern. MODIFY mode complete.
-
----
-
-## Commands
-
-- `continue` - Next phase
-- `skip` - Skip current phase (not recommended for CREATE mode)
-- `back` - Previous phase
-- `popraw` - Correct understanding (during clarifying questions)
-- `status` - Show progress
-- `stop` - Exit command
+MODIFY mode complete.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: ai-command-creation
-description: Create or refactor multi-phase commands (multi-agent orchestration). Provides structure pattern, sufficient context principle (agents have isolated context), clarifying questions pattern (3-5 flexible), and section templates. Critical for agents receiving exactly the right information.
+description: Create or refactor multi-phase commands (multi-agent orchestration). Provides structure pattern, sufficient context principle (agents have isolated context), the ask-once rule (one question message, only about assumptions, one consent point before writes), and section templates. Critical for agents receiving exactly the right information.
 argument-hint: "[command-name]"
 ---
 
@@ -8,7 +8,7 @@ argument-hint: "[command-name]"
 
 ## Purpose
 
-Guide for creating multi-phase command files that orchestrate multiple agents across phases. Focus on **command structure pattern**, **sufficient context principle** (agents have isolated context), and **clarifying questions pattern** (3-5 questions, flexible). Documents anti-patterns in command CREATION process (not for inclusion in command files).
+Guide for creating multi-phase command files that orchestrate multiple agents across phases. Focus on **command structure pattern**, **sufficient context principle** (agents have isolated context), and **the ask-once rule** (one question message, only about assumptions; one consent point before writes). Documents anti-patterns in command CREATION process (not for inclusion in command files).
 
 **Note:** Fact-based and signal-only rules enforced by ai-manager-agent system prompt. Agent context must contain only project-specific decisions, constraints, and patterns — not generic explanations.
 
@@ -39,7 +39,7 @@ Brief explanation (1-2 sentences).
 [bash command, arguments, examples]
 
 ## Phases
-[Phase overview with inline/agent markers]
+[Phase overview with inline/agent markers; mark the PLAN phase → user approval]
 
 ## Orchestrator Instructions
 
@@ -47,16 +47,7 @@ Brief explanation (1-2 sentences).
 [Force actual Task tool invocation]
 
 ### Critical Rules
-[3-5 rules, numbered, includes clarifying questions requirement]
-
-### Clarifying Questions Pattern (MANDATORY)
-[Template with 3-5 flexible questions, guidance on count]
-
-### Socratic Self-Reflection Gate (MANDATORY)
-[Complexity-based depth table, Socratic methodology, format template, agent prompt instruction]
-
-### Phase Execution Pattern
-[Markdown template for presenting phases with clarifying questions]
+[3-5 rules, numbered, includes the ask-once rule]
 
 ## Phase Details
 
@@ -73,24 +64,16 @@ NOT needed:
 
 **Prompt to agent**: [template with placeholders]
 
-**After agent**: [how to present results with clarifying questions]
-
-## Commands
-[continue, skip, back, status, stop]
+**After agent**: [what to show; on the plan phase: the consent point]
 
 ## Sufficient Context Principle
 [Test question, signal/noise examples]
-
-### Final Phase: Knowledge Capture
-**Agent**: ai-manager-agent (or project-specific agent)
-[Post-workflow analysis: identify patterns worth capturing]
 ```
 
 **Why this structure:**
-- **Phases overview** - orchestrator sees full command before starting
+- **Phases overview** - orchestrator sees full command before starting, and where the one consent point sits
 - **Orchestrator Instructions** - forces actual Task invocation (anti-pattern: just describing)
-- **Clarifying Questions Pattern** - MANDATORY section with 3-5 flexible questions guidance
-- **Self-Reflection Gate** — orchestrator reflects before each agent invocation (catches mismatches early)
+- **Ask-once rule** - questions only where the orchestrator would otherwise assume (Section 4)
 - **Phase Details** - includes "Sufficient context for quality" section (CRITICAL)
 - **Sufficient Context Principle** - always at end (test question for context filtering)
 
@@ -120,7 +103,7 @@ description: "[Tool name] - [One-line purpose] - Usage: /command [args]"
 ```
 0: Context Analysis      (orchestrator - inline assessment)
 1: Requirements          (agent-name)
-2: Architecture          (agent-name with skill-name skill)
+2: Plan                  (agent-name with skill-name skill) → user approval
 3: Implementation        (agent-name)
 ```
 
@@ -129,13 +112,12 @@ description: "[Tool name] - [One-line purpose] - Usage: /command [args]"
 
 **Pattern:**
 - Phase 0 always inline (orchestrator assessment)
-- Mark which agent for each phase
+- Mark which agent for each phase, and which phase produces the plan
+- Phases are a checklist, not stops: the orchestrator merges them into as few spawns as context allows
 - Mention key skills if relevant
 - Estimated duration
 
 **WHY Phase 0 inline:** Orchestrator does quick categorization before launching agents. Avoids wasting agent invocation on trivial assessment (complexity check, file categorization).
-
-**CRITICAL:** Phase 0 MUST include clarifying questions pattern before proceeding to Phase 1.
 
 ### 3. Orchestrator Instructions
 
@@ -168,132 +150,29 @@ Launching requirements-analyst...
 
 ### Critical Rules
 
-1. **INVOKE with Task tool** - Every phase requires actual Task tool call
+1. **INVOKE with Task tool** - Every agent phase requires actual Task tool call
 2. **Sufficient context** - Each agent gets ONLY what it needs for quality
-3. **Clarifying questions mandatory** - Paraphrase + 3-5 questions after EVERY phase (count depends on complexity)
-4. **User checkpoints** - Get approval after each phase
-5. **Track phase** - Remember current position
-6. **Self-reflection before agents** - Reflect on approach before every Task tool invocation (depth based on complexity)
-
-### Phase Execution Pattern
-
-**UPDATED TEMPLATE** (includes clarifying questions):
-
-```
-═══════════════════════════════════════════════
-Phase N/5: [Name]
-═══════════════════════════════════════════════
-
-Launching [agent]...
-```
-
-[Invoke Task tool]
-
-```
-**Phase N Complete** ✅
-
-[Present agent output clearly]
-
-───────────────────────────────────────────────
-Let me verify my understanding:
-[2-3 sentence paraphrase of what was produced/decided]
-
-Clarifying questions (3-5 depending on phase complexity):
-1. [Question about scope/constraint]
-2. [Question about edge case/requirement]
-3. [Question about priority/approach]
-[4. [Question about integration point - if complex]]
-[5. [Question about validation criteria - if complex]]
-
-Does this match exactly what you want? If not, what should I adjust?
-───────────────────────────────────────────────
-
-[Wait for user confirmation]
-
-Ready to proceed? (continue/skip/popraw/back/stop)
-```
+3. **Ask once, only about assumptions; one consent point** - [the rule from Section 4, verbatim]
+4. **Track mode** - Remember what is already done
 ```
 
 **WHY this section:**
 - **Anti-pattern prevention**: Orchestrator describing instead of invoking
 - **Force behavior**: Explicit DO/DON'T forces actual Task tool use
-- **User checkpoints**: Prevents wasting phases if direction wrong
 
-### 4. Clarifying Questions Pattern (REQUIRED)
+### 4. Questions and Consent (the ask-once rule)
 
-**After EVERY phase (including Phase 0):** Paraphrase (2-3 sentences summarizing DECISIONS, not agent output) + 3-5 questions + confirmation loop.
+Put this rule verbatim in every generated command's Critical Rules:
 
-**Question count:** Simple phases = 3, Standard = 3-4, Complex = 4-5. Quality over quantity.
+> **Ask once, only about assumptions; one consent point** - Ask the user in ONE message, and only when you are assuming something about scope, location (claude-dev / brain-vault/.claude / ~/.claude / the source of a symlink) or what the change applies to; otherwise merge phases and act. The only gate: present the plan → user approves (an approval already given in the request counts) → the writing agent writes. **Why:** the old per-phase questions/paraphrase/gate ceremony ran in zero observed sessions, and Marcin's rule is "decide yourself, ask only about assumptions".
 
-**Question types:** (1) Scope/constraint - ALWAYS, (2) Edge case - ALWAYS, (3) Priority/approach - ALWAYS, (4) Integration point - if complex, (5) Validation criteria - if complex.
+**What this means for the generated command:**
+- No per-phase question blocks, paraphrase loops, self-reflection gates or continue/skip/back footers
+- Phase 0 names its assumptions (scope, location, target); only those become the one question message
+- The plan phase ends with a single **Consent point** line; write phases run only after it
+- Read-only phases (analysis, verification) never stop for approval
 
-**Questions must be specific and actionable** ("For [X], should behavior be [A] or [B]?"), not generic ("Is this correct?").
-
-**Confirmation loop:** Wait for user response. If corrections needed, paraphrase updated understanding + ask new questions. Repeat until confirmed. Only then offer commands (continue/skip/back/stop).
-
-**When to apply:** After Phase 0, after every agent phase, after inline phases with significant decisions. NOT after final report.
-
-### 5. Socratic Self-Reflection Gate (MANDATORY)
-
-Commands MUST include a Self-Reflection Gate before every agent invocation. The orchestrator pauses, asks itself questions, answers them, and includes key insights in the agent prompt.
-
-**Why this matters:** Without self-reflection, the orchestrator acts as a mechanical router — passing context without understanding it. Self-reflection catches architectural mismatches, missing constraints, and edge cases BEFORE they become bugs downstream.
-
-**Socratic Questioning Methodology:**
-
-Self-reflection questions must probe **essence**, not surface mechanics. Inspired by Socratic inquiry — questions that challenge assumptions, expose contradictions, and cut to what truly matters.
-
-Four Socratic moves:
-1. **Question assumptions** — "I assumed X. Is that actually true in this codebase?"
-2. **Probe the essence** — "What is the ONE thing this feature MUST do correctly to be valuable?"
-3. **Expose contradictions** — "My approach does X, but the requirement says Y. Can both be true?"
-4. **Consider consequences** — "If this breaks, what's the blast radius? What downstream phases fail?"
-
-**Surface vs Socratic — calibration by depth:**
-
-| Depth | Surface (avoid) | Socratic (use) |
-|-------|-------------------|-------------------|
-| Quick | "Is the context sufficient for the agent?" | "What would this agent misunderstand if I passed only this context?" |
-| Deep | "What architecture pattern should we use?" | "What constraint makes the obvious approach fail here?" |
-| Deep + Iteration | "Are there edge cases to consider?" | "If this assumption is wrong, which downstream decisions break?" |
-
-The distinction: surface questions have obvious answers or invite generic responses. Socratic questions force genuine reasoning about the specific situation.
-
-**Complexity-Based Depth:**
-
-| Depth | When | Questions | Passes |
-|-------|------|-----------|--------|
-| Quick | Routine/structured: re-validation, docs updates, fix loop retry N>1 | 2-3 | Single |
-| Deep | Novel/uncertain: first analysis, first implementation, new patterns | 4-5 | Single |
-| Deep + Iteration | Highly complex: schema design, cross-cutting concerns, multi-system integration | 5+ | Answer then follow-up questions from answers then answer again |
-
-Complexity depth should be calibrated to the command's specific agents and operation types. Include a table mapping the command's agents to default reflection depths.
-
-**Required elements in generated commands:**
-
-1. **New section in Orchestrator Instructions:** "Socratic Self-Reflection Gate (MANDATORY)" — placed after "Clarifying Questions Pattern", before "Phase Execution Pattern"
-2. **New Critical Rule:** referencing the gate as mandatory
-3. **Per-phase reflection:** Before each agent invocation, orchestrator reflects and includes "Key insights for agent" in the prompt
-4. **Agent prompt instruction:** Each agent prompt template includes a SELF-REFLECTION INSTRUCTION block telling the agent to self-reflect before working
-
-**Orchestrator Format Template:**
-
-Use this format for self-reflection output (visible to user):
-- Star-bordered insight block with Q&A pairs
-- "Key insights for agent" summary at the end
-- Insights MUST be included in the subsequent agent prompt
-
-**Agent Prompt Instruction Template:**
-
-Add to every agent prompt within the command:
-```
-SELF-REFLECTION INSTRUCTION:
-Before [action verb], ask yourself 2-3 questions about the best approach.
-Answer them based on [relevant context]. Document your reasoning.
-If complexity is high, iterate: ask follow-up questions based on your answers.
-```
-
-### 6. Phase Details - Sufficient Context Section
+### 5. Phase Details - Sufficient Context Section
 
 **MOST CRITICAL SECTION** - What context to pass to agent:
 
@@ -344,21 +223,7 @@ When a phase does **mechanical/deterministic** work — parsing, extracting, fil
 
 **BOUNDARY — deterministic work ONLY.** Reasoning, judgment, and synthesis stay with the agent. Do NOT script what needs the model to think; script only what a rule/regex/parser can do exactly.
 
-### 7. Commands Section
-
-```markdown
-## Commands
-
-- `continue` - Next phase
-- `skip` - Skip current phase
-- `back` - Previous phase
-- `status` - Show progress
-- `stop` - Exit workflow
-```
-
-**Standard across all commands.**
-
-### 8. Sufficient Context Principle (End Section)
+### 6. Sufficient Context Principle (End Section)
 
 **Always include at command end:**
 
@@ -383,76 +248,16 @@ When a phase does **mechanical/deterministic** work — parsing, extracting, fil
 > If NO → add missing critical info (not everything)
 ```
 
-### 9. Knowledge Capture Phase (Always Last)
-
-**Standard final phase for any multi-phase command.** Always executes — agent decides if anything is worth capturing.
-
-**WHY separate phase:** Structured post-workflow analysis catches project-specific patterns that an ad-hoc "should we update docs?" question misses. Patterns discovered during implementation are lost if not captured immediately.
-
-**Template for Phase Details:**
-
-```markdown
-### Phase N: Knowledge Capture
-**Agent**: ai-manager-agent (default — swap for project-specific agent if domain expertise needed, or run inline if command is simple)
-
-**Skills to load**: signal-vs-noise-reference (shared resource, always loaded via @../resources/ — for conciseness filtering), others at agent's discretion based on what was discovered
-
-**Sufficient context for quality**:
-```yaml
-Input needed:
-  - Completed task name + requirements summary
-  - Key implementation decisions made during workflow
-  - Validation findings (blocked issues, warnings)
-  - Testing outcome (pass/fail, retry count, failure descriptions)
-  - Files changed (ONLY if relevant to a specific non-obvious pattern)
-
-NOT needed:
-  - Full phase outputs (extract decisions only)
-  - Generic implementation details
-  - File lists without non-obvious context
-```
-
-**Prompt to agent**:
-```
-Analyze completed workflow for knowledge worth capturing.
-
-COMPLETED TASK: [task name + requirements summary]
-KEY DECISIONS: [extracted from previous phases]
-VALIDATION FINDINGS: [issues, warnings]
-TESTING OUTCOME: [pass/fail, retries, failures]
-FILES CHANGED: [only if non-obvious pattern]
-
-Agent tasks:
-1. Identify patterns worth capturing — non-obvious decisions, bugs, new integration patterns
-2. Apply signal filter: skip generic knowledge, skip one-off details, skip patterns already in existing skills
-3. Determine WHERE (which CLAUDE.md or skill) and WHAT (exact addition)
-4. PROPOSE to user — never auto-update
-5. If nothing worth capturing: say so explicitly
-
-Output: Proposals with Target / Type / Content / WHY signal
-  — OR "No patterns worth capturing" with brief explanation
-```
-
-**After agent**: Present proposals to user. No clarifying questions needed — this is the final phase.
-```
-
-**Key rules:**
-- **Always last** — never followed by another phase
-- **Always executes** — but agent may conclude "nothing worth capturing" (must say so explicitly)
-- **Never auto-updates** — proposals only, user decides
-- **Default agent: ai-manager-agent** — swap for project-specific agent when domain expertise helps quality of pattern identification
-- **signal-vs-noise-reference always available** — shared resource ensures proposals pass 3-question filter
+Optional (not a mandatory phase): when the work surfaced a non-obvious pattern, end with a one-line proposal of the CLAUDE.md/skill update — proposal only, never auto-applied.
 
 ---
 
 ## Phase Design Patterns
 
 - **Phase 0 always inline** — quick categorization, avoids wasting agent invocation
+- **Merge phases** — read-only analysis phases can run as one spawn; split only when a phase needs a different agent or the plan approval sits between them
 - **Parallel phases** — independent validations, multiple Task calls in single message
-- **User checkpoints** — approval after EVERY phase (prevents wasted work)
-- **Clarifying questions** — apply pattern from Section 4 after every phase
-- **Self-reflection before agents** — orchestrator reflects before each invocation (Section 5), depth scales with complexity
-- **Knowledge Capture always last** — agent decides if anything is signal, proposals only
+- **One consent point** — plan → user approval → write; nowhere else (Section 4)
 
 ---
 
@@ -470,17 +275,9 @@ Output: Proposals with Target / Type / Content / WHY signal
 **Problem:** Orchestrator describes phase instead of invoking.
 **Fix:** "⚠️ CRITICAL: YOU MUST INVOKE AGENTS" section forces behavior.
 
-### ❌ No User Checkpoints
-**Problem:** Ran 8 phases, Phase 3 wrong, all later work wasted.
-**Fix:** Get approval after EACH phase. Commands: continue/skip/back/stop.
-
-### ❌ No Clarifying Questions
-**Problem:** Agent assumes, user doesn't notice misalignment until later phases.
-**Fix:** MANDATORY clarifying questions after every phase. Paraphrase + 3-5 questions + confirmation.
-
-### ❌ No Self-Reflection Before Agent
-**Problem:** Orchestrator mechanically routes context to agent without considering approach. Agent produces technically correct but architecturally wrong output.
-**Fix:** MANDATORY Socratic self-reflection gate. Orchestrator asks 2-5 essence-probing questions (depth by complexity), answers them, includes key insights in agent prompt. Questions must challenge assumptions, not just check boxes.
+### ❌ Per-Phase Question Ceremony
+**Problem:** Templates demanded paraphrase + 3-5 questions after every phase, a self-reflection gate before every spawn and a continue/skip footer. Audit 2026-11-11: executed in zero observed runs (models merged phases and asked at most once), and commands generated from the template (cp-ship, kmp-ship, ios-probe) had to be overridden in the spawn prompt.
+**Fix:** The ask-once rule (Section 4): one question message only about assumptions, one consent point before writes.
 
 ---
 
@@ -490,25 +287,20 @@ Output: Proposals with Target / Type / Content / WHY signal
 
 **Structure:**
 - [ ] Description in frontmatter (<200 chars, includes usage)
-- [ ] Phases overview (with inline/agent markers)
+- [ ] Phases overview (with inline/agent markers, plan phase marked)
 - [ ] "YOU MUST INVOKE AGENTS" section
-- [ ] Clarifying Questions Pattern section
-- [ ] Socratic Self-Reflection Gate section (with complexity depth table + Socratic methodology)
-- [ ] Phase Execution Pattern template
+- [ ] Critical Rules include the ask-once rule verbatim
 - [ ] Each phase has "Sufficient context for quality" section
-- [ ] Commands section (continue, skip, back, status, stop)
+- [ ] Exactly one Consent point line (on the plan phase)
 - [ ] Sufficient Context Principle at end
-- [ ] Knowledge Capture as final phase
 
 **Content Quality:**
-- [ ] Phase 0 inline + clarifying questions
+- [ ] Phase 0 inline, names its assumptions (scope, location, target)
 - [ ] Sufficient context section for EVERY agent phase (test question applied)
-- [ ] Clarifying questions after EVERY phase (paraphrase + 3-5 questions + confirmation)
-- [ ] Socratic self-reflection before EVERY agent invocation (essence-probing, not surface-level)
+- [ ] No per-phase question blocks, self-reflection gates or continue/skip footer
 - [ ] No full YAML outputs passed (extract decisions only)
 - [ ] Project-specific rules and existing patterns included
 - [ ] Force Task invocation (not describing)
-- [ ] Commands offered ONLY after user confirmation
 
 ### Decision Tree: How Many Phases?
 
@@ -543,8 +335,6 @@ Validation command (parallel checks):
 7. **If NO**: Add missing critical info (not everything)
 
 **Result:** 50-80 lines of pure signal, not 500 lines with 80% noise.
-
----
 
 ---
 

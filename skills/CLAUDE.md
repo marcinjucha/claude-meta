@@ -14,7 +14,7 @@ All six are used by `ai-manager-agent`; `ai-agent-creator` and `ai-git-commit-pa
 | `ai-skill-creator` | 322 | Create/evaluate/refactor skills. Signal-focused content, Tier 2/3 structure, templates. |
 | `ai-skill-fine-tuning` | 474 | Update existing skills. Pattern drift, outdated content, anti-patterns, advanced features (fork, injection, hooks). |
 | `ai-claude-md` | 337 | Create/maintain CLAUDE.md files. Project-specific discoveries, WHY context, signal filtering. |
-| `ai-command-creation` | 555 | Create/refactor multi-phase commands. Sufficient context principle, orchestration, clarifying questions pattern. |
+| `ai-command-creation` | 345 | Create/refactor multi-phase commands. Sufficient context principle, orchestration, ask-once rule (one question message, one consent point). |
 | `ai-git-commit-patterns` | 283 | Commit messages and organization. WHY-focused, conventional commits, ticket extraction, PR structure. |
 
 ## Working-Style Skills (global, any project)
@@ -36,8 +36,6 @@ All six are used by `ai-manager-agent`; `ai-agent-creator` and `ai-git-commit-pa
 ## Weird Parts / Key Patterns
 
 **signal-vs-noise absorbed into shared resource**: Previously a standalone skill, now lives entirely in `resources/signal-vs-noise-reference.md`. **Why absorbed:** every skill already referenced the shared resource — the standalone skill was redundant indirection.
-
-**ai-command-creation is the largest**: **Why not split:** sufficient context principle → phase design → clarifying questions form one chain; splitting would lose it.
 
 **ai-skill-creator vs ai-skill-fine-tuning split**: "what should this skill contain?" vs "what drifted and needs updating?" — two decision frameworks that would compete for attention in one file.
 
