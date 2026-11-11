@@ -9,7 +9,7 @@ Single meta-agent that orchestrates all artifact creation and maintenance, plus 
 | Agent | Purpose | Model | Skills Loaded |
 |-------|---------|-------|---------------|
 | `ai-manager-agent` | Creates/maintains all Claude Code artifacts (agents, skills, commands, CLAUDE.md). Enforces thin-router architecture and signal-focused content. | opus | preloads ai-skill-creator, ai-skill-fine-tuning, ai-claude-md, ai-command-creation; on demand: ai-agent-creator, ai-git-commit-patterns |
-| `brain-manager` | Thin router for brain knowledge/memory operations (extract-knowledge, sync audits, orient/load, migrate). | inherit | preloads brain-conventions |
+| `brain-manager` | Worker for `/brain-meeting` phases 2/2r/4a/4b + transcript fetch (48/48 spawns, audit 2026-11 G8). | inherit | no preload (brain-conventions dropped: 4b writes no knowledge notes) |
 
 ## Weird Parts / Key Patterns
 
