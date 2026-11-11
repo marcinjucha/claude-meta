@@ -22,7 +22,6 @@ All six are used by `ai-manager-agent`; `ai-agent-creator` and `ai-git-commit-pa
 | Skill | Lines | Tracked | Purpose |
 |-------|-------|---------|---------|
 | `human-language-check` | 79 | yes | Two-pass review of reader-facing text: correctness, then de-AI/clarity. Cleans only audience text, never scaffolding. Mandated by `../CLAUDE.md` for all human-facing text. |
-| `summary-signal-first` | 124 | yes | Summary/status/recap for a named recipient: decides what gets cut and what leads (the recipient's decision). Runs BEFORE `human-language-check`. |
 | `brainstorming` | 78 | no (new) | Turn-by-turn variant-narrowing loop: 3 variants → one recommendation → his pick is the next base, variants push along named axes; he closes it; rejection CRITERIA recorded. |
 | `brain-conventions` | 91 | SYMLINK → brain-vault/.brain | Brain conventions + knowledge-distillation discipline. Edit at source in `brain-vault/.brain`. |
 
@@ -41,7 +40,9 @@ All six are used by `ai-manager-agent`; `ai-agent-creator` and `ai-git-commit-pa
 
 **"NEVER INVENT" and "AVOID AI-KNOWN" rules live in multiple places**: `ai-manager-agent` system prompt, individual skills, AND `signal-vs-noise-reference.md`. **Why:** defense-in-depth — the system prompt enforces them before any skill loads.
 
-**Working-style skills encode Marcin's global rules, not a domain**: `human-language-check`, `summary-signal-first` and `brainstorming` are the executable form of rules in `../CLAUDE.md` (language check, lead with the point, one unit per turn). **Why global:** those rules apply in every project, so the skills must be reachable from every project.
+**Working-style skills encode Marcin's global rules, not a domain**: `human-language-check` and `brainstorming` are the executable form of rules in `../CLAUDE.md` (language check, lead with the point, one unit per turn). **Why global:** those rules apply in every project, so the skills must be reachable from every project.
+
+**`summary-signal-first` retired 2026-11-11**: 0 invocations in a month; its principle lives in `../CLAUDE.md` ("The same razor on every DELIVERABLE"), and its `audit-summary.py` rejected every real coach update. Don't recreate it as a skill.
 
 ## Cross-References
 

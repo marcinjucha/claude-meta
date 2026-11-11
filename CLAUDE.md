@@ -18,7 +18,7 @@ commands/    → 22 .md: 10 native (6 ai-* + council.md + improve-process.md + w
              (/brain-social moved out 2026-10-11, now brain-vault/.claude/commands — no longer global)
 skills/      → 6 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
                ai-git-commit-patterns, ai-skill-creator, ai-skill-fine-tuning)
-             + human-language-check, summary-signal-first (tracked)
+             + human-language-check (tracked)
              + brainstorming (UNTRACKED, new)
              + brain-conventions (SYMLINK → brain-vault/.brain, untracked)
              + 15 emilkowalski/skills (animate*, review/improve-animations, emil-design-eng,
@@ -107,7 +107,9 @@ load-bearing is WHAT went: a paragraph on how a format change worked out and thr
 out differently than I assumed — all true, none of it the recipient's business, and the document
 existed to get three answers. Test per paragraph: „does the recipient need this to answer or decide?"
 When cutting, record the REASON in operator scaffolding (file header) so a week later the cut doesn't
-look like a loss. This is the parent rule whose instances are „notatki: czyść, nie dodawaj"
+look like a loss. Two cuts that are easy to miss: finished work that asks nothing of the recipient (done ≠
+reportable), and any open question he has already answered (a seat-cap question re-sent after his "no seat cap" made
+the document contradict itself) — check each question against his last answer before sending. This is the parent rule whose instances are „notatki: czyść, nie dodawaj"
 (2026-06-21) and „shared running doc = essence only, one language" (2026-07-21).
 
 **A decision question must stand on its own: shorthand from a vault note is NOT shared context.**
