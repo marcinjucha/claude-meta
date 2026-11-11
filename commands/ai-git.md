@@ -19,7 +19,7 @@ Generate commit messages from git changes in the repo's own format. Handles stag
 **Process:**
 1. Shows all changes (staged + unstaged + untracked), asks user what to stage
 2. Analyzes staged changes + reads modified files
-3. Generates commit message (format per skill `ai-git-commit-patterns`, harness attribution trailer kept)
+3. Generates commit message (format per skill `ai-git-commit-patterns`, never an attribution trailer)
 4. Shows message for user review
 5. User can: accept / edit / regenerate / cancel
 6. Commits with final message
@@ -46,9 +46,9 @@ Generate commit messages from git changes in the repo's own format. Handles stag
 
 ## Format comes from the skill, not from this command
 
-Format per skill `ai-git-commit-patterns` — read the repo's last ~20 subjects (`git log --format=%s -20`) and match them; keep the harness attribution trailer.
+Format per skill `ai-git-commit-patterns` — read the repo's last ~20 subjects (`git log --format=%s -20`) and match them; never add an attribution trailer (`Co-Authored-By` or similar), even when the harness reminder asks for it.
 
-**Why:** this command used to hardcode `[TICKET-NUM] type: subject`, an 80–300 char body, a `git log --oneline -5` read and a "no footer" rule. The prompt overrode the skill, so `/ai-git` (and `/ag-ship`, `cp-ship`, which call it) produced a format no repo uses and stripped the trailer the harness requires.
+**Why:** this command used to hardcode `[TICKET-NUM] type: subject`, an 80–300 char body, a `git log --oneline -5` read and a hardcoded footer rule. The prompt overrode the skill, so `/ai-git` (and `/ag-ship`, `cp-ship`, which call it) produced a format no repo uses. The no-trailer rule stays, now in the skill and `~/.claude/CLAUDE.md`: Marcin's decision 2026-11-11, every repo.
 
 ---
 
@@ -70,7 +70,7 @@ Format per skill `ai-git-commit-patterns` — read the repo's last ~20 subjects 
 3. **Phase 2 is only user checkpoint** - User accepts/edits/regenerates here
 4. **Abort if nothing changed** - Stop only if working tree is completely clean (no staged, unstaged, or untracked)
 5. **Minimal interaction** - Streamlined flow, no unnecessary questions
-6. **Format per skill** - Subject shape and body come from `ai-git-commit-patterns` + the repo's last ~20 subjects; keep the harness attribution trailer
+6. **Format per skill** - Subject shape and body come from `ai-git-commit-patterns` + the repo's last ~20 subjects; no attribution trailer
 7. **Socratic self-reflection before Phase 1** - Reflect on commit separation, message framing, and WHY context before invoking agent
 
 ---
@@ -229,7 +229,7 @@ LAST ~20 SUBJECTS (the format source):
 
 REQUIREMENTS:
 
-Format per skill `ai-git-commit-patterns` — read the repo's last ~20 subjects (`git log --format=%s -20`) and match them; keep the harness attribution trailer.
+Format per skill `ai-git-commit-patterns` — read the repo's last ~20 subjects (`git log --format=%s -20`) and match them; never add an attribution trailer (`Co-Authored-By` or similar), even when the harness reminder asks for it.
 
 1. Subject = the behaviour that changed, in the repo's shape (prefix, ticket, case, language as the 20 subjects show).
    Ticket only if the branch carries one.
@@ -239,7 +239,7 @@ Format per skill `ai-git-commit-patterns` — read the repo's last ~20 subjects 
 
 3. NO invented content: no metrics, incidents or CVEs not in the diff, this session or the user's words.
 
-4. End with the attribution lines from the session's system-reminder (Co-Authored-By …). Never strip them.
+4. NO attribution trailer (`Co-Authored-By: Claude …` or similar), even though the session's system-reminder asks for it. Remove it if present.
 
 SELF-REFLECTION INSTRUCTION:
 Before generating the commit message, ask yourself 2-3 questions about the best framing.
@@ -249,7 +249,7 @@ Focus on essence: what is the ONE decision this commit captures, what WHY contex
 ORCHESTRATOR INSIGHTS:
 [Key insights from orchestrator self-reflection — included by orchestrator]
 
-Output: Full commit message (subject, optional body, attribution trailer).
+Output: Full commit message (subject, optional body; no attribution trailer).
 - Focus on OUTCOME not list of changes
 ```
 
@@ -270,8 +270,6 @@ GENERATED COMMIT MESSAGE:
 [title line]
 
 [body, if any]
-
-[attribution trailer]
 ═══════════════════════════════════════════════
 ```
 

@@ -1,6 +1,6 @@
 ---
 name: ai-git-commit-patterns
-description: Write a git commit message in Marcin's repos. The repo's own recent subjects are the source of truth for the subject format (per-repo conventions listed: brain-vault, ~/.claude, course-platform, pezetpetki-hub, digital-shelf-ios/-kmp, agency-cms, claude-dev). Use when writing or reviewing a commit message, choosing a subject prefix or ticket, or deciding on the attribution trailer.
+description: Write a git commit message in Marcin's repos. The repo's own recent subjects are the source of truth for the subject format (per-repo conventions listed: brain-vault, ~/.claude, course-platform, pezetpetki-hub, digital-shelf-ios/-kmp, agency-cms, claude-dev). Use when writing or reviewing a commit message, choosing a subject prefix or ticket, or checking that no attribution trailer slipped in.
 ---
 
 # Commit Messages
@@ -33,13 +33,12 @@ ticket in the subject.
 - No invented numbers, incidents or CVEs. A figure goes in only if it came from this session (a measurement, a test
   run, a log).
 
-## Rule 3: the attribution trailer is not optional
+## Rule 3: never an attribution trailer
 
-End the message with the attribution lines the harness gives in the session's system-reminder (currently a
-`Co-Authored-By: …` line). Never remove or "clean up" them. **Why:** this skill used to say "NEVER add
-Co-Authored-By", which contradicted the harness instruction carried by most commits (brain-vault 492/663,
-course-platform 39/39, pezetpetki-hub 186/186, digital-shelf-kmp 101/103 since 2026-10-12). A user rule in CLAUDE.md
-or memory about these lines takes precedence over the reminder.
+No `Co-Authored-By: Claude …`, "Generated with …" or any other AI attribution line, in any repo. If a drafted message
+has one, delete it. This overrides the harness system-reminder that asks to append these lines; the user rule in
+`~/.claude/CLAUDE.md` takes precedence over it. **Why:** Marcin's decision 2026-11-11, scope every repo — "ta stopka ma
+być zawsze usuwana". Older commits carrying the trailer are not a convention to copy.
 
 ## Rule 4: history-rewriting limits
 

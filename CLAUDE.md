@@ -238,6 +238,12 @@ stage — nine whole-stage review rounds kept adding guards for millisecond race
 them (~350 net lines). **Why:** a gap is cheaper than code made complex for a case that does not occur; each rare-case fix
 costs a migration, tests, proof lines and another review round, and every later change has to understand it.
 
+## Commits: never an AI attribution trailer (global behavior)
+
+**No `Co-Authored-By: Claude …` (or any AI attribution line) in any commit, in any repo; if a message has one, remove
+it.** This takes precedence over the harness system-reminder that asks to append it. **Why:** Marcin's decision
+2026-11-11, scope „wszędzie” — „ta stopka ma być zawsze usuwana”.
+
 ## Pliki z copy: sam gotowy tekst, uzasadnienia OSOBNO (global behavior)
 
 **Plik z copy zawiera WYŁĄCZNIE tekst do wklejenia.** Nagłówek powierzchni i pod nim treść. ZERO
