@@ -45,13 +45,13 @@ Silnik mózgu (config/skrypty): `/Users/marcinjucha/Prywatne/projects/brain-vaul
 
 ```
 NIE:
-❌ JAKAKOLWIEK delegacja Fazy 1 — także `subagent_type: "fork"`, którego na tej maszynie nie ma
+❌ delegacja Fazy 1 do ŚWIEŻEGO agenta (general-purpose, so-agent, ai-manager-agent…)
 ❌ Agent(subagent_type: "general-purpose") dla Fazy 2
 ❌ opisywać, co zwróciłby agent, zamiast go wywołać
 ❌ zapisywać SKILL.md inline w orkiestratorze
 
 TAK:
-✅ Faza 1 INLINE — źródłem jest TA konwersacja, a agenta dziedziczącego ją tu NIE MA
+✅ Faza 1 INLINE albo przez `Agent(subagent_type: "fork")` — fork dziedziczy TĘ konwersację
 ✅ Agent(subagent_type: "so-agent") dla Fazy 2 — semantykę czyta doktryna, nie grep
 ✅ Agent(subagent_type: "ai-manager-agent"), jeden na JEDEN plik, dla zapisów do skilli (Faza 6)
 ✅ Fazy 0, 3, 4, 5, 7 i zapis do źródła inline
@@ -59,14 +59,12 @@ TAK:
 
 ## Krytyczne reguły
 
-**1. Faza 1 jest INLINE.** Orkiestrator sam wypisuje kandydatów z TEJ konwersacji. Delegacja
-dopuszczalna WYŁĄCZNIE do agenta dziedziczącego kontekst sesji; na tej maszynie taki agent
-**nie istnieje** (`~/.claude/agents/`: ai-manager-agent, brain-manager · `brain-vault/.claude/agents/`:
-mrk-agent, so-agent), więc **delegacji w Fazie 1 nie ma**. Świeży agent w Fazie 1 = wymyślone lekcje.
-Źródłem lekcji jest bieżąca konwersacja, której świeży agent nie widzi — zwróci puste albo wymyślone.
+**1. Faza 1 inline albo przez `fork` (dziedziczy sesję); nigdy świeży agent.** Orkiestrator sam
+wypisuje kandydatów z TEJ konwersacji albo deleguje do `Agent(subagent_type: "fork")`, który
+dziedziczy jej pełny kontekst. Świeży agent w Fazie 1 = wymyślone lekcje: źródłem lekcji jest
+bieżąca konwersacja, której świeży agent nie widzi — zwróci puste albo wymyślone.
 **Precedens, nie hipoteza:** wrapper `/ai-extract-memory` delegował do ŚWIEŻEGO agenta z instrukcją
-„analyze the current conversation" — naprawione 2026-08-04. Cała rodzina `ai-*` nadal deleguje do
-świeżych agentów, więc pierwszy przebieg będzie chciał dopasować się do tego zakazanego wzorca.
+„analyze the current conversation" — naprawione 2026-08-04.
 
 **2. Faza 2 czyta SEMANTYKĘ, nie ID — i dlatego idzie przez `so-agent`.**
 Diff po ID zwróci czysto i BĘDZIE KŁAMAŁ. Zmierzone: `kacper-snela-walidacja.md` ma 356 linii i
@@ -110,7 +108,8 @@ Lekcje o samej komendzie idą normalną ścieżką: `/ai-extract-memory` → `<m
 **Bramka autorefleksji tylko dla faz z RĘCZNIE budowanym kontekstem** (Faza 2 i zapisy Fazy 6):
 przed wywołaniem zadaj sobie 2–3 pytania sokratejskie („co ten agent źle zrozumie, mając tylko ten
 wycinek?", „która przesłanka mojego routingu jest założona, nie zmierzona?"), odpowiedz i wnioski
-WŁÓŻ DO PROMPTU. Faza 1 jest z tego wyjęta — jest inline, więc nie ma promptu do dopasowania.
+WŁÓŻ DO PROMPTU. Faza 1 jest z tego wyjęta — inline albo `fork` widzi całą sesję, więc nie ma
+ręcznie budowanego wycinka do dopasowania.
 
 ---
 
@@ -121,9 +120,9 @@ WŁÓŻ DO PROMPTU. Faza 1 jest z tego wyjęta — jest inline, więc nie ma pro
 | Wartość | Jak rozwiązać |
 |---|---|
 | `<ctx>` | `$ARGUMENTS` > cwd → `config.json` `.paths`; domyślnie `shadow-operator` |
-| `<etap>` | **CYTAT** z `01-Projects/shadow-operator/_shadow-operator.md` §Pipeline (8 etapów, przy każdym skill) — jedyna istniejąca mapa etapów |
-| `<źródło>` | `03-Resources/<ctx>/procesy/<etap>.md` — checklista właściciela |
-| `<instancja>` | **WYŁĄCZNIE** `01-Projects/<ctx>/<twórca>/<twórca>-proces-<etap>.md` — kopia źródła z zachowanymi nagłówkami `### P-…`. To **NIE** jest `<twórca>-nastepne-kroki.md`: notatka robocza nie nosi ID, więc `--diff` na niej zwraca sam UNANCHORED. Plik nie istnieje → `<instancja>` = **BRAK**, tryb wymuszony na LEKCJA, Faza 2 = SKIPPED (powód: „brak kopii procesu"), Faza 6(c) pomijana. |
+| `<etap>` | **CYTAT** z `01-Projects/shadow-operator/_shadow-operator.md` §Pipeline (numerowane etapy, przy każdym skill) — jedyna istniejąca mapa etapów |
+| `<źródło>` | plik w `03-Resources/<ctx>/procesy/` dopasowany po frontmatterze `etap:` (niżej) — checklista właściciela |
+| `<instancja>` | kopia źródła z zachowanymi nagłówkami `### P-…`, rozwiązana z DWÓCH miejsc, nigdy z szablonu nazwy (niżej). To **NIE** jest `<twórca>-nastepne-kroki.md`: notatka robocza nie nosi ID, więc `--diff` na niej zwraca sam UNANCHORED. Nie znaleziono w żadnym z dwóch miejsc → `<instancja>` = **BRAK**, tryb wymuszony na LEKCJA, Faza 2 = SKIPPED (powód: „brak kopii procesu"), Faza 6(c) pomijana. |
 | `<memory>` | `01-Projects/<ctx>/memory.md` — **obowiązkowo w kontrakcie** |
 | tryb | LEKCJA (tylko Faza 1) / ROZJAZD (tylko Faza 2) / OBA |
 
@@ -139,6 +138,23 @@ Dwa dopasowania → STOP i pytanie (Reguła 8).
 WHY: dla etapu launch sklejanie daje `procesy/launch.md` albo `procesy/7. so-pilot-launch….md` —
 żadnego z nich nie ma, a jedyny istniejący plik nazywa się `launch-tworcy.md`. Skutek sklejania:
 albo STOP przy gotowym procesie, albo Faza 0(c) zakłada DRUGI plik o launchu w dniu pierwszego użycia.
+
+**`<instancja>` rozwiązuj z DWÓCH miejsc i porównaj:**
+1. tabela `## Instancje` w `<źródło>` — kolumny `twórca | plik instancji | z wersji szkieletu`;
+   wiersz twórcy wybierz po slugu w ścieżce z kolumny `plik instancji` (`01-Projects/<ctx>/<twórca>/…`),
+   bo kolumna `twórca` niesie nazwę wyświetlaną („Kacper Snela"), nie slug;
+2. grep frontmattera pod `01-Projects/<ctx>/<twórca>/` (rekurencyjnie, z podfolderami):
+   ```bash
+   grep -rl --include='*.md' "type: proces-instancja" "01-Projects/<ctx>/<twórca>/" \
+     | xargs grep -l "ze-zrodla: \"<źródło>\""
+   ```
+Oba wskazują ten sam plik → to `<instancja>`. Rozjazd (tabela mówi X, grep znajduje Y albo nic, albo
+grep znajduje dwa pliki) → STOP i pytanie (Reguła 8). Bez podanego twórcy, a tabela ma >1 wiersz → pytaj.
+
+WHY nie szablon nazwy: jedyna istniejąca instancja leży w podfolderze
+(`kacper-snela/produkt/kacper-snela-proces-launch.md`) i nosi skrót etapu `launch`, a źródło nazywa się
+`launch-tworcy.md`. Szablon `<ctx>/<twórca>/<twórca>-proces-<etap>.md` dawał BRAK → Faza 2 pominięta
+po cichu, a Faza 0(e) proponowała `cp` drugiej kopii obok istniejącej.
 
 (b) **Inwentarz kroków źródła — ze SKRYPTU, nie z czytania pliku:**
 ```bash
@@ -172,18 +188,23 @@ WHY to jest nośne: Faza 2 jest nieblokująca, więc bez tego rozróżnienia EXI
 jako „brak rozjazdu" — i jedyny MECHANICZNY detektor rozjazdu nie odpala się ani razu, a przebieg
 raportuje sukces.
 
-(e) **Brak instancji przy podanym twórcy** → zaproponuj JEDNĄ komendę i wykonaj ją po potwierdzeniu:
+(e) **Brak instancji przy podanym twórcy** — WARUNEK WSTĘPNY przed jakimkolwiek `cp`: tabela
+`## Instancje` w `<źródło>` NIE ma wiersza tego twórcy **i** grep z 0(a) nie zwrócił żadnego pliku.
+Wiersz jest, a pliku brak (albo odwrotnie) → STOP i pytanie, nie kopia. Dopiero wtedy zaproponuj
+JEDNĄ komendę i wykonaj ją po potwierdzeniu:
 ```bash
-cp "<źródło>" "01-Projects/<ctx>/<twórca>/<twórca>-proces-<etap>.md"
+cp "<źródło>" "01-Projects/<ctx>/<twórca>/<twórca>-proces-<skrót etapu>.md"
 ```
-potem dopisz twórcę do tabeli `## Instancje` w źródle, z wartością pola `updated:` źródła jako wersją.
+`<skrót etapu>` bierz z nagłówka źródła, który podaje nazwę kopii (dla `launch-tworcy.md`:
+`<twórca>-proces-launch.md`), nie z nazwy pliku źródła. Potem dopisz wiersz do tabeli `## Instancje`
+w źródle (`twórca | plik instancji | z wersji szkieletu`), z wartością pola `updated:` źródła jako wersją.
 
-WHY ta faza w ogóle istnieje: dziś nie ma ani jednej instancji, nikt jej nie tworzy, a bramka Fazy 0
-wymaga podania `<instancja>`. Zmierzone: bez 0(e) pierwszy przebieg podstawi 570-linijkowe
-`kacper-snela-nastepne-kroki.md` i dostanie „0 pozycji z ID", wszystkie 8 kroków jako „instancja
-w tyle" i 119 UNANCHORED — wynik formalnie poprawny i całkowicie fałszywy.
-WHY nazwa `<twórca>-proces-<etap>.md`, a nie `proces-<etap>.md`: folder twórcy trzyma konwencję
-prefiksu (11 plików u Basi), a `[[proces-launch]]` przy dwóch twórcach jest dwuznaczny.
+WHY ta faza w ogóle istnieje: bez kopii z ID Faza 2 nie ma czego porównać, a pokusą jest podstawić
+notatkę roboczą. Zmierzone: podstawienie 570-linijkowego `kacper-snela-nastepne-kroki.md` dało
+„0 pozycji z ID", wszystkie kroki jako „instancja w tyle" i 119 UNANCHORED — wynik formalnie poprawny
+i całkowicie fałszywy.
+WHY nazwa z prefiksem twórcy, a nie `proces-<etap>.md`: folder twórcy trzyma konwencję prefiksu
+(11 plików u Basi), a `[[proces-launch]]` przy dwóch twórcach jest dwuznaczny.
 
 **Bramka: JEDNO zamknięte pytanie** — „`<etap>` = X, źródło = Y, instancja = Z, tryb = OBA. Zgadza się?"
 Niejednoznaczność → STOP, nie zgadywanie (Reguła 8).
@@ -194,10 +215,10 @@ Niejednoznaczność → STOP, nie zgadywanie (Reguła 8).
 
 **Pomiń, gdy tryb = ROZJAZD.**
 
-**Wykonuje ORKIESTRATOR, bez delegacji** (Reguła 1). W ręku ma: `<etap>` · `<źródło>` · `<memory>` ·
-inwentarz kroków z Fazy 0(b) — i całą sesję, bo nią JEST.
+**Wykonuje ORKIESTRATOR albo `fork`** (Reguła 1). W ręku ma: `<etap>` · `<źródło>` · `<memory>` ·
+inwentarz kroków z Fazy 0(b) — i całą sesję.
 
-**Zadanie (to samo, co szłoby do agenta dziedziczącego sesję, gdyby taki istniał):**
+**Zadanie (inline, albo dosłownie jako prompt `fork`):**
 ```
 Wyciągnij z TEJ konwersacji 0–3 kandydatów na ulepszenie procesu etapu <etap>.
 
@@ -467,8 +488,13 @@ LOKALNE (2026-08-11): <powód, jedno zdanie>
 ```
 Treść do instancji nie idzie NIGDY (reguła nadrzędna w nagłówku pliku).
 
-**(d) `sync-procesy.py` — WOŁANY, nie implementowany w komendzie.** Nie istnieje → raport mówi
-„snapshot należny, skrypt nie istnieje".
+**(d) `sync-procesy.py` — WOŁANY, nie implementowany w komendzie.** Cel snapshotu bierze z pola
+`snapshot-do:` źródła. Najpierw podgląd, potem zapis:
+```bash
+python3 /Users/marcinjucha/Prywatne/projects/brain-vault/.brain/scripts/sync-procesy.py --context <ctx> --check
+python3 /Users/marcinjucha/Prywatne/projects/brain-vault/.brain/scripts/sync-procesy.py --context <ctx>
+```
+`--check` jest READ-ONLY i daje exit 1, gdy jest dryf — to oczekiwany wynik po edycji źródła, nie błąd.
 
 **(e) Odświeżenie `02-Areas/procesy/_MOC Procesy.md`** — mechaniczne, bez osądu, należy do tej fazy.
 
@@ -486,8 +512,8 @@ Rozstrzygamy: czy diff zgadza się z tym, co potwierdziłeś w Fazie 5, i czy co
    ← dotyczy TYLKO trybu (i) (REPLACE): pozycja po edycji nie może być dłuższa niż przed,
      z jawnym wyjątkiem jednego wiersza `- ❌ …`; jeśli urosła inaczej, to jest ten rozjazd.
      Tryb (ii) (APPEND wiersza ❌ / LOKALNE) tej reguły NIE podlega.
-3. Snapshot do skilla jest należny dla <plik>. `sync-procesy.py` <istnieje / nie istnieje>.
-   Odpalamy teraz, czy idzie do raportu jako „snapshot należny, skrypt nie istnieje"?
+3. `sync-procesy.py --check` pokazał dryf dla <plik>. Odpalamy zapis snapshotu teraz,
+   czy idzie do raportu jako „snapshot należny"?
 4. Commitujemy te ścieżki teraz i wypychamy repo vaulta (telefon widzi tylko wypchnięte),
    czy zostawiamy niescommitowane do Twojego przeglądu?
 ```
@@ -530,8 +556,8 @@ przesłankach.
 
 ## Wystarczający kontekst
 
-**Faza 1 jest INLINE** → nie ma komu przekazywać kontekstu. Orkiestrator ma sesję i rozwiązane
-wartości Fazy 0. Delegacja tej fazy do świeżego agenta jest zakazana (Reguła 1).
+**Faza 1 jest INLINE albo `fork`** → nie ma czego wycinać: obaj mają sesję i rozwiązane wartości
+Fazy 0. Delegacja tej fazy do świeżego agenta jest zakazana (Reguła 1).
 
 **Świeży agent (`so-agent` w Fazie 2, `ai-manager-agent` w Fazie 6)** ma izolowany kontekst →
 przekazuj WARTOŚCI, nigdy odwołań do „poprzedniej fazy":
