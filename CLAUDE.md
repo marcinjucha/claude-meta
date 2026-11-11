@@ -19,11 +19,12 @@ commands/    → 22 .md: 10 native (6 ai-* + council.md + improve-process.md + w
 skills/      → 6 meta skills (ai-agent-creator, ai-claude-md, ai-command-creation,
                ai-git-commit-patterns, ai-skill-creator, ai-skill-fine-tuning)
              + human-language-check (tracked)
-             + brainstorming (UNTRACKED, new)
+             + brainstorming (tracked since 4628ba3)
+             + stage-goal (tracked; programming artifact, to move to claude-dev)
              + brain-conventions (SYMLINK → brain-vault/.brain, untracked)
              + 15 emilkowalski/skills (animate*, review/improve-animations, emil-design-eng,
                apple-design, write-swift, break-ui, prototype, … — GITIGNORED, third-party)
-  resources/ → 4 shared reference files used across multiple skills via @../resources/
+  resources/ → 4 shared reference files, referenced by the meta skills via `@../resources/`, read on demand only
   synced/    → synced anthropic-skills:* copies (untracked, not authored here)
 docs/        → Official Claude Code documentation (agents-doc.md, skill-doc.md)
 evals/       → skill-ab.py (A/B eval of ONE model decision of a skill/command: tool-free `claude -p`,
@@ -47,7 +48,7 @@ memory.md    → tracked session-memory buffer
 
 **Artifact-file writes MUST route through ai-manager-agent, never the orchestrator inline**: The `ai-*` command family (ai-commands, ai-skill, ai-agent, ai-curate-memory) mandates that any file creation / implementation / edit to an artifact-definition file (`commands/*.md`, `skills/**/SKILL.md`, `agents/*.md`) goes through the `ai-manager-agent` subagent — the main loop must not write those files itself, even with full context. **Why:** a session running `/ai-commands` rationalized writing the command files inline ("I have context, it's procedural") and bypassed the command's explicit "must use ai-manager-agent" rule; user caught it. Rationalizations ("simpler", "full context") do NOT override an explicit MUST. Mechanical backstop: a global `~/.claude/settings.json` `PreToolUse` hook (matcher `Write|Edit`) fires a non-blocking reminder (via `hookSpecificOutput.additionalContext`) whenever an artifact-definition path is touched — non-blocking (exit 0) so the legitimate path (the subagent itself writing the files) is never blocked. CLAUDE.md files are intentionally out of scope (editable via the agent but not gated). Rule originates in the `ai-*` command bodies; enforcement hook lives in `~/.claude/settings.json`.
 
-**Shared resources at `skills/resources/`**: 4 reference files (signal-vs-noise, skill-ecosystem, skill-structure, why-over-how) shared across the meta skills via `@../resources/` paths. **Why:** avoids duplicating foundational reference content across 6 skills.
+**Shared resources at `skills/resources/`**: 4 reference files (signal-vs-noise, skill-ecosystem, skill-structure, why-over-how) referenced by the meta skills via `@../resources/` paths. **Why:** avoids duplicating foundational reference content across 6 skills. They are NOT auto-loaded: an `@` path in a SKILL.md is only a pointer, read when the model decides to (0 reads in a month, audit 2026-11-11). The quality filter that always applies is the three CRITICAL rules inline in `agents/ai-manager-agent.md`.
 
 **statusline-command.sh has hardcoded macOS path**: Line 8 reads `.effortLevel` from `/Users/marcinjucha/.claude/settings.json` via `jq` — only works on the original dev machine, not on VPS.
 

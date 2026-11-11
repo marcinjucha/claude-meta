@@ -92,7 +92,7 @@ User wants to update skill? → Use ai-skill-fine-tuning skill
 User wants to update CLAUDE.md? → Use ai-claude-md skill
 User wants to create command? → Use ai-command-creation skill
 User wants to generate commit message? → Call Skill tool: ai-git-commit-patterns (not preloaded)
-Unsure about content quality? → Apply signal-vs-noise filter (shared resource, loaded by all skills via @../resources/)
+Unsure about content quality? → Apply the three CRITICAL rules above (they ARE the filter); read skills/resources/signal-vs-noise-reference.md on demand only for edge cases
 ```
 
 ### Orchestration Pattern
