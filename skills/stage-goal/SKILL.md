@@ -70,8 +70,11 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
     SHAs it mixed point-0 and final proofs (Marki). The old wording „także linie bazowe” made the hook demand all 221
     `<GROUP> baseline '…'` lines the prove script prints (Ustawienia marki): name point 0, never „linie bazowe”.
     Tested Polish clause: `evals/stop-hook/conditions/C.md` (from „; wszystkie w jednej wiadomości” to „Nie
-    blokuje”, +283 chars over the old one). „commit przyrostu” in it is load-bearing: requiring tool output for
-    EVERY point made the eval judge refuse a complete close, since points proven in earlier increments have none;
+    blokuje”, 305 chars, +172 over the old one). „commit przyrostu” in it is load-bearing: requiring tool output for
+    EVERY point made the eval judge refuse a complete close, since points proven in earlier increments have none.
+    Never compress „oparta na wyjściu narzędzia pokazanym w tej sesji, nie na samym zapewnieniu”: eval 2026-11-13
+    (haiku, 10 reps, `proof-line-asserted-only`), without it 0.20, with only „nie zapewnienie” 0.40, with it
+    0.60–0.80. „Jeśli jest” at point 0 stays too: stages without a point 0 would get a proof demanded that cannot exist;
   - pause clause: Marcin's own message (not the assistant's) telling it to stop + the assistant's reply naming the
     missing proofs and their SHA = condition met for this session; the stage stays open, the next session sets
     `/goal` again. WHY: the hook knows only met/unmet and the assistant cannot pause a goal (Marki: „kończymy na
