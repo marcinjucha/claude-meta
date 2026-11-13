@@ -46,6 +46,17 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
   new standard each round: human-language-check visible for part of 49 new strings, the inventory without per-entry
   evidence, screenshot sheets of brand B only. The points never said what the transcript must show, so the judge
   invented it. `check` warns on such a point without the form.
+- **Every `NAME: n/m` proof line names where n comes from: a tool command whose output lists the items.**
+  course-platform: HLC = the new Polish strings `scripts/ship-plan.py close` prints; ZRZUTY = every shot of every
+  surface the stage changed, both brands, every width (until ship-plan prints that list, print the shot names you
+  count); RĘCZNE = the numbered hand guard-off entries in `docs/decisions.md`. WHY: Płatności i wideo marki,
+  2026-11-13 — `ZRZUTY: … n/n` had no n, the assistant counted the settings page only (3/3), the advisor rejected it,
+  the real n was 12 per brand; HLC passed at once because its n was a printed list (33).
+- **A security point names the wall the stage ADDS (database / adapter / server fn) and demands a guard-off proof only
+  where that refusal is the ONLY wall on its path**; a refusal the database repeats gets a recorded reason, not a
+  proof. WHY: same stage — „strażniki server fn wyłączone ręcznie” for panel fns the database refuses anyway (cutting
+  the fn check changes no outcome, so no proof can exist; Marcin: „nie rozumiem tego”), and a playback point already
+  met by walls proven a stage earlier. Paste-ready wording: skeleton point 3.
 - **Decision markers:** `[decyzja Marcina]` = ask Marcin before that increment; `[do decyzji w decisions.md]` =
   decide yourself and record it with the rejected variants. The legend goes in the spec's intro.
 - **„Poza zakresem:” as ONE line.** The script lifts it into the goal; a multi-line scope cannot be lifted.

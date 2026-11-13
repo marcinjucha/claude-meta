@@ -5,9 +5,9 @@
 Zbuduj w <repo> etap „<Nazwa etapu>” (<skąd zakres: plik z decyzjami produktu / wyceną, ścieżka w vaulcie>). Wymaga etapów „<…>”. <Co ten etap ZNOSI z wcześniejszych decyzji, jeśli coś>. [decyzja Marcina] = pytasz Marcina przed przyrostem, nie rozstrzygasz sam; [do decyzji w decisions.md] = rozstrzygasz sam i zapisujesz z odrzuconymi wariantami. Gotowe, gdy:
 1. <punkt, który hook może sprawdzić w rozmowie: wklejona linia wyjścia, liczba, nazwany plik>
 2. <…> [decyzja Marcina przed przyrostem N: <pytanie>]
-3. Bezpieczeństwo: <negatywy izolacji> — każdy z wyłączonym zabezpieczeniem w <skrypcie dowodowym repo>.
-4. <punkt z działaniem człowieka lub procesu: zrzuty obejrzane, inwentarz, przeklikanie> — kończy się linią dowodu w stałej formie, opartą na wyjściu narzędzia z tej sesji: `ZRZUTY: marka A n/n, marka B n/n obejrzane`, `INVENTORY: 0 bez rozstrzygnięcia (N pozycji)`.
-N. <pakiet weryfikacji repo: lista z CLAUDE.md „Stage process”>, teksty dla ludzi po human-language-check: `HLC: n/n tekstów`.
+3. Bezpieczeństwo: <negatywy izolacji, każdy z nazwaną ścianą, którą etap DODAJE: baza / adapter / server fn>. Każda odmowa, która jest JEDYNĄ ścianą na swojej ścieżce, ma dowód z wyłączonym zabezpieczeniem (linia w skrypcie dowodowym albo ręcznie, zapisana w decisions.md: `RĘCZNE: n/n`, n = numerowane wpisy); odmowa, którą powtarza baza, ma tylko zapis, dlaczego nie ma osobnego dowodu.
+4. <punkt z działaniem człowieka lub procesu: zrzuty obejrzane, inwentarz, przeklikanie> — kończy się linią dowodu w stałej formie, opartą na wyjściu narzędzia z tej sesji: `ZRZUTY: marka A n/n, marka B n/n obejrzane` (n = wszystkie zrzuty każdej powierzchni, którą etap zmienił, obie marki, każda szerokość; nazwy liczonych zrzutów wypisane w rozmowie), `INVENTORY: 0 bez rozstrzygnięcia (N pozycji)` (N = <polecenie, którego wyjście wypisuje pozycje>).
+N. <pakiet weryfikacji repo: lista z CLAUDE.md „Stage process”>, teksty dla ludzi po human-language-check: `HLC: n/n tekstów` (n = <lista z narzędzia repo; course-platform: nowe polskie teksty, które wypisuje `python3 scripts/ship-plan.py close`>).
 Poza zakresem: <jedna linia; trafia też do celu, gdy się zmieści>
 
 <WKLEJ z CLAUDE.md „Stage process”: regułę przeglądów według prawdopodobieństwa>
