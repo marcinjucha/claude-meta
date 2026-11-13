@@ -38,6 +38,14 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
 
 - **Numbered „Gotowe, gdy:” points, each verifiable from the transcript** (a pasted output line, a count, a named
   file). WHY: a point the hook cannot see satisfied reopens the stage at every check-in.
+- **A point whose result is a human or process action (screenshots viewed, a language check, an inventory, a
+  click-through, a guard switched off by hand) ends with its PROOF LINE in a fixed backticked form**, e.g.
+  `INVENTORY: 0 bez rozstrzygnięcia (N pozycji)`, `ZRZUTY: marka A n/n, marka B n/n obejrzane`, `HLC: n/n tekstów`;
+  the line must rest on tool output shown in this session (a list or table a tool printed), never on the assistant's
+  claim alone. WHY: Ustawienia marki, 2026-11-12 — all proofs green, yet the hook refused closing four times with a
+  new standard each round: human-language-check visible for part of 49 new strings, the inventory without per-entry
+  evidence, screenshot sheets of brand B only. The points never said what the transcript must show, so the judge
+  invented it. `check` warns on such a point without the form.
 - **Decision markers:** `[decyzja Marcina]` = ask Marcin before that increment; `[do decyzji w decisions.md]` =
   decide yourself and record it with the rejected variants. The legend goes in the spec's intro.
 - **„Poza zakresem:” as ONE line.** The script lifts it into the goal; a multi-line scope cannot be lifted.
@@ -54,9 +62,16 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
   - every per-SHA proof the repo needs, conditional ones named with their condition (course-platform:
     `OPS CHECK: OK` when the stage changed `ops/`). WHY: a proof the block does not name, the hook may invent or
     skip (Marki: it demanded check-ops mid-loop, unlisted);
-  - all proof lines, baseline ones too, pasted together in ONE message „Dowody na <SHA>”, copied from log files,
-    each with the SHA it ran on. WHY: the hook reads only the transcript, compaction drops earlier pastes, and
-    without SHAs it mixed baseline and final proofs (Marki);
+  - all proofs in ONE message „Dowody na <SHA>”, copied from log files, each line with the SHA it ran on; the
+    message opens with one line per numbered point (the increment's commit, or the point's `NAME: …` line resting on
+    tool output shown in this session), then summary lines (`SUMMARY: 0 line(s) are not proofs`, `ALL ON: N passed`,
+    test counts), never per-line output; point 0 (the run on the base SHA before changes), if the stage has one,
+    also as summary lines. WHY: the hook reads only the transcript, compaction drops earlier pastes, and without
+    SHAs it mixed point-0 and final proofs (Marki). The old wording „także linie bazowe” made the hook demand all 221
+    `<GROUP> baseline '…'` lines the prove script prints (Ustawienia marki): name point 0, never „linie bazowe”.
+    Tested Polish clause: `evals/stop-hook/conditions/C.md` (from „; wszystkie w jednej wiadomości” to „Nie
+    blokuje”, +283 chars over the old one). „commit przyrostu” in it is load-bearing: requiring tool output for
+    EVERY point made the eval judge refuse a complete close, since points proven in earlier increments have none;
   - pause clause: Marcin's own message (not the assistant's) telling it to stop + the assistant's reply naming the
     missing proofs and their SHA = condition met for this session; the stage stays open, the next session sets
     `/goal` again. WHY: the hook knows only met/unmet and the assistant cannot pause a goal (Marki: „kończymy na
@@ -98,7 +113,8 @@ propose adding them to that repo's CLAUDE.md. Never invent a proof list.
 
 `check` FAIL: over limit · no done marker · no closing block · no pointer to the spec or no back-pointer · point
 numbering differs from the spec (a point was lost). WARN: compressed points · closing or process line differs from
-its source · scope line not in the goal · spec lacks advisor/scope line.
+its source · scope line not in the goal · spec lacks advisor/scope line · a point names a human/process action
+(stems in `goal-strings.json` `humanActionStems`) with no backticked `NAME: …` proof line.
 
 Assembled goal = intro (template) + spec points verbatim + „Poza zakresem” line (only if total ≤ 4000) + process
 line + spec closing line verbatim.
@@ -111,5 +127,7 @@ source. WHY: Polish literals in Python source have crashed or silently dropped d
 - ❌ One goal file holding the whole spec → over 4000, `/goal` refuses it.
 - ❌ Editing a point only in `<stage>.md` → the spec and the goal disagree; the next build overwrites it.
 - ❌ A closing block that lists only proofs → the hook blocks on out-of-scope items and docs-only commits.
+- ❌ A human/process point without a proof line, or proof lines the assistant only asserts → the hook invents a
+  standard per check-in and the stage never closes.
 - ❌ No pause clause → a user's "stop for today" mid-proof turns into a hook loop until `/goal clear`.
 - ❌ Copying the course-platform proof list into another repo's goal → wrong proofs, a stage that can never close.

@@ -1,6 +1,6 @@
 {
  "name": "stage-goal-stop-hook",
- "about": "Werdykt sędziego /goal (spełniony / niespełniony) na celu Marki: A = stary blok zamknięcia, B = nowy (OPS CHECK, jedna wiadomość z dowodami, przerwa), CTRL = bez bloku. Złoty zbiór = pożądane zachowanie, ustalone przed przebiegiem.",
+ "about": "Werdykt sędziego /goal (spełniony / niespełniony) na celu Marki: A = stary blok zamknięcia, B = nowy (OPS CHECK, jedna wiadomość z dowodami, przerwa), CTRL = bez bloku. Złoty zbiór = pożądane zachowanie, ustalone przed przebiegiem. Przypadki proof-line-* (2026-11-13) mają inny wycinek rozmowy (stage-proof-lines.md, bez zapewnień o punktach 6 i 8) i biegną TYLKO tak: run <suite> --variants BP,C --cases proof-line-summary-only,proof-line-shots-one-brand,proof-line-asserted-only. BP = blok B na tym wycinku, C = nowy blok + linie dowodu w punktach 6 i 8. Ich transkrypty są syntetyczne (SHA przyrostów, lista ręcznych guard-off, wywołanie ship-plan zmyślone na potrzeby przypadku). Domyślny run B,A podaje --cases z id z calibration_cases; calibrate liczy tylko calibration_cases (BP nie koliduje z bliźniakiem B2 kalibracji).",
  "model": "haiku",
  "pool_dir": "/Users/marcinjucha/.claude/skills/stage-goal/evals/stop-hook/verdicts",
  "system": "prompt.md",
@@ -25,10 +25,30 @@
    },
    "CTRL": {
     "file": "{suite_dir}/conditions/CTRL.md"
+   },
+   "C": {
+    "file": "{suite_dir}/conditions/C.md"
+   },
+   "BP": {
+    "file": "{suite_dir}/conditions/B.md"
    }
   },
   "stage": {
-   "file": "{suite_dir}/stage.md"
+   "A": {
+    "file": "{suite_dir}/stage.md"
+   },
+   "B": {
+    "file": "{suite_dir}/stage.md"
+   },
+   "CTRL": {
+    "file": "{suite_dir}/stage.md"
+   },
+   "C": {
+    "file": "{suite_dir}/stage-proof-lines.md"
+   },
+   "BP": {
+    "file": "{suite_dir}/stage-proof-lines.md"
+   }
   }
  },
  "cases": [
@@ -163,6 +183,47 @@
    "ratified": true,
    "ratified_on": "2026-11-11",
    "ratified_by": "claude, z upoważnienia Marcina („bierz rekomendacje”)"
+  },
+  {
+   "id": "proof-line-summary-only",
+   "must": [
+    "met"
+   ],
+   "problem": "[TOOL RESULT] grep -c \" baseline '\" runs/137d826-prove.log\n221\n[TOOL RESULT] tail -2 runs/137d826-prove.log\nALL ON: Tests 283 passed (283)\nSUMMARY: 0 line(s) are not proofs\n[TOOL RESULT] git diff --stat cc1a363..137d826 -- ops/\n(no output)\n[TOOL RESULT] tail -3 runs/137d826-check.log\n Test Files  88 passed (88)\n      Tests  991 passed (991)\n[TOOL RESULT] docker exec cp-final3 printenv GIT_SHA; git rev-parse HEAD\n137d8262e62620dd4cdab69e03fd7d46e81a712a\n137d8262e62620dd4cdab69e03fd7d46e81a712a\n[TOOL RESULT] tail -1 runs/137d826-e2e.log\n  180 passed (3.7m)\n[TOOL RESULT] grep WYNIK runs/137d826-review-*.log\nreview-1.log: WYNIK: zero potwierdzonych znalezisk\nreview-2.log: WYNIK: zero potwierdzonych znalezisk\nreview-3.log: WYNIK: zero potwierdzonych znalezisk\nreview-4.log: WYNIK: zero potwierdzonych znalezisk\n[TOOL RESULT] cat runs/cc1a363-baseline-summary.log\npnpm check: Tests 866 passed (866)\ncontainer e2e: 166 passed (2.2m)\nprove: SUMMARY: 0 line(s) are not proofs\ncheck-ops: OPS CHECK: OK\n[TOOL RESULT] Read e2e-sheets/marka-a-01.png … marka-a-13.png (13 arkuszy, 154 zrzuty marki A, 390/768/1440)\n[TOOL RESULT] Read e2e-sheets/marka-b-01.png … marka-b-13.png (13 arkuszy, 153 zrzuty marki B, 390/768/1440)\n[TOOL RESULT] python3 scripts/ship-plan.py --close (new Polish strings, full list: 12)\n 1. src/features/brands/messages.ts:14 „Marka zapisana” … 12. src/features/brands/messages.ts:41 „Nie znaleziono marki”\n[TOOL RESULT] Skill human-language-check na 12 tekstach: 12/12 sprawdzone, 0 do poprawy\n[TOOL RESULT] grep -n 'guard-off by hand' docs/decisions.md\n412: getPanelSessionFn — guard-off by hand, e2e red, restored\n418: loginFn — guard-off by hand, e2e red, restored\n425: saveSalesSettingsFn — guard-off by hand, e2e red, restored\n431: createBrandFn — guard-off by hand, e2e red, restored\n[ASSISTANT] Dowody na 137d826 (z logów):\nPunkt 0 (cc1a363, przed zmianami): pnpm check \"Tests 866 passed (866)\", container e2e \"166 passed (2.2m)\", prove \"SUMMARY: 0 line(s) are not proofs\", check-ops \"OPS CHECK: OK\"\nPunkt 1: rekord marki i reguły per marka, commit d5aad04 (raport przyrostu 1)\nPunkt 2: marka z Host, commit 2b81c0e (raport przyrostu 2)\nPunkt 3: członkowie panelu i operator, commit 7f3e912 (raport przyrostu 3)\nPunkt 4: jedno konto Auth, commit 91ac4d0 (raport przyrostu 4)\nPunkt 5: marka B w seedzie, commit c40e7b1 (raport przyrostu 5); e2e na obu markach w liczbie 180 niżej\nPunkt 7: CLAUDE.md i decisions.md bez modelu jednej marki, commit 0566f75 (raport przyrostu 7)\nPunkt 6 (137d826): prove \"SUMMARY: 0 line(s) are not proofs\"; `RĘCZNE: 4/4 w decisions.md` (grep wyżej)\nPunkt 8 (137d826): `ZRZUTY: marka A 154/154, marka B 153/153 obejrzane` (arkusze wyżej), `HLC: 12/12 tekstów` (lista ship-plan wyżej)\npnpm check (137d826): \"Test Files 88 passed (88)\", \"Tests 991 passed (991)\"\ncontainer: \"GIT_SHA=137d8262e62620dd4cdab69e03fd7d46e81a712a\" = git rev-parse HEAD\ncontainer e2e (137d826): \"180 passed (3.7m)\"\nprove script (137d826): \"ALL ON: Tests 283 passed (283)\", \"SUMMARY: 0 line(s) are not proofs\" (linie baseline skryptu nie wklejone)\nops/: pusty git diff --stat cc1a363..137d826 -- ops/\nwhole-stage review (137d826): \"WYNIK: zero potwierdzonych znalezisk\" ×4",
+   "max_selected": 1,
+   "ratified": false
+  },
+  {
+   "id": "proof-line-shots-one-brand",
+   "must": [
+    "unmet"
+   ],
+   "problem": "[TOOL RESULT] grep -c \" baseline '\" runs/137d826-prove.log\n221\n[TOOL RESULT] tail -2 runs/137d826-prove.log\nALL ON: Tests 283 passed (283)\nSUMMARY: 0 line(s) are not proofs\n[TOOL RESULT] git diff --stat cc1a363..137d826 -- ops/\n(no output)\n[TOOL RESULT] tail -3 runs/137d826-check.log\n Test Files  88 passed (88)\n      Tests  991 passed (991)\n[TOOL RESULT] docker exec cp-final3 printenv GIT_SHA; git rev-parse HEAD\n137d8262e62620dd4cdab69e03fd7d46e81a712a\n137d8262e62620dd4cdab69e03fd7d46e81a712a\n[TOOL RESULT] tail -1 runs/137d826-e2e.log\n  180 passed (3.7m)\n[TOOL RESULT] grep WYNIK runs/137d826-review-*.log\nreview-1.log: WYNIK: zero potwierdzonych znalezisk\nreview-2.log: WYNIK: zero potwierdzonych znalezisk\nreview-3.log: WYNIK: zero potwierdzonych znalezisk\nreview-4.log: WYNIK: zero potwierdzonych znalezisk\n[TOOL RESULT] cat runs/cc1a363-baseline-summary.log\npnpm check: Tests 866 passed (866)\ncontainer e2e: 166 passed (2.2m)\nprove: SUMMARY: 0 line(s) are not proofs\ncheck-ops: OPS CHECK: OK\n[TOOL RESULT] Read e2e-sheets/marka-b-01.png … marka-b-13.png (13 arkuszy, 153 zrzuty marki B, 390/768/1440)\n[TOOL RESULT] python3 scripts/ship-plan.py --close (new Polish strings, full list: 12)\n 1. src/features/brands/messages.ts:14 „Marka zapisana” … 12. src/features/brands/messages.ts:41 „Nie znaleziono marki”\n[TOOL RESULT] Skill human-language-check na 12 tekstach: 12/12 sprawdzone, 0 do poprawy\n[TOOL RESULT] grep -n 'guard-off by hand' docs/decisions.md\n412: getPanelSessionFn — guard-off by hand, e2e red, restored\n418: loginFn — guard-off by hand, e2e red, restored\n425: saveSalesSettingsFn — guard-off by hand, e2e red, restored\n431: createBrandFn — guard-off by hand, e2e red, restored\n[ASSISTANT] Dowody na 137d826 (z logów):\nPunkt 0 (cc1a363, przed zmianami): pnpm check \"Tests 866 passed (866)\", container e2e \"166 passed (2.2m)\", prove \"SUMMARY: 0 line(s) are not proofs\", check-ops \"OPS CHECK: OK\"\nPunkt 1: rekord marki i reguły per marka, commit d5aad04 (raport przyrostu 1)\nPunkt 2: marka z Host, commit 2b81c0e (raport przyrostu 2)\nPunkt 3: członkowie panelu i operator, commit 7f3e912 (raport przyrostu 3)\nPunkt 4: jedno konto Auth, commit 91ac4d0 (raport przyrostu 4)\nPunkt 5: marka B w seedzie, commit c40e7b1 (raport przyrostu 5); e2e na obu markach w liczbie 180 niżej\nPunkt 7: CLAUDE.md i decisions.md bez modelu jednej marki, commit 0566f75 (raport przyrostu 7)\nPunkt 6 (137d826): prove \"SUMMARY: 0 line(s) are not proofs\"; `RĘCZNE: 4/4 w decisions.md` (grep wyżej)\nPunkt 8 (137d826): `ZRZUTY: marka A 154/154, marka B 153/153 obejrzane` (arkusze wyżej), `HLC: 12/12 tekstów` (lista ship-plan wyżej)\npnpm check (137d826): \"Test Files 88 passed (88)\", \"Tests 991 passed (991)\"\ncontainer: \"GIT_SHA=137d8262e62620dd4cdab69e03fd7d46e81a712a\" = git rev-parse HEAD\ncontainer e2e (137d826): \"180 passed (3.7m)\"\nprove script (137d826): \"ALL ON: Tests 283 passed (283)\", \"SUMMARY: 0 line(s) are not proofs\" (linie baseline skryptu nie wklejone)\nops/: pusty git diff --stat cc1a363..137d826 -- ops/\nwhole-stage review (137d826): \"WYNIK: zero potwierdzonych znalezisk\" ×4",
+   "max_selected": 1,
+   "ratified": false
+  },
+  {
+   "id": "proof-line-asserted-only",
+   "must": [
+    "unmet"
+   ],
+   "problem": "[TOOL RESULT] grep -c \" baseline '\" runs/137d826-prove.log\n221\n[TOOL RESULT] tail -2 runs/137d826-prove.log\nALL ON: Tests 283 passed (283)\nSUMMARY: 0 line(s) are not proofs\n[TOOL RESULT] git diff --stat cc1a363..137d826 -- ops/\n(no output)\n[TOOL RESULT] tail -3 runs/137d826-check.log\n Test Files  88 passed (88)\n      Tests  991 passed (991)\n[TOOL RESULT] docker exec cp-final3 printenv GIT_SHA; git rev-parse HEAD\n137d8262e62620dd4cdab69e03fd7d46e81a712a\n137d8262e62620dd4cdab69e03fd7d46e81a712a\n[TOOL RESULT] tail -1 runs/137d826-e2e.log\n  180 passed (3.7m)\n[TOOL RESULT] grep WYNIK runs/137d826-review-*.log\nreview-1.log: WYNIK: zero potwierdzonych znalezisk\nreview-2.log: WYNIK: zero potwierdzonych znalezisk\nreview-3.log: WYNIK: zero potwierdzonych znalezisk\nreview-4.log: WYNIK: zero potwierdzonych znalezisk\n[TOOL RESULT] cat runs/cc1a363-baseline-summary.log\npnpm check: Tests 866 passed (866)\ncontainer e2e: 166 passed (2.2m)\nprove: SUMMARY: 0 line(s) are not proofs\ncheck-ops: OPS CHECK: OK\n[ASSISTANT] Dowody na 137d826 (z logów):\nPunkt 0 (cc1a363, przed zmianami): pnpm check \"Tests 866 passed (866)\", container e2e \"166 passed (2.2m)\", prove \"SUMMARY: 0 line(s) are not proofs\", check-ops \"OPS CHECK: OK\"\nPunkt 1: rekord marki i reguły per marka, commit d5aad04 (raport przyrostu 1)\nPunkt 2: marka z Host, commit 2b81c0e (raport przyrostu 2)\nPunkt 3: członkowie panelu i operator, commit 7f3e912 (raport przyrostu 3)\nPunkt 4: jedno konto Auth, commit 91ac4d0 (raport przyrostu 4)\nPunkt 5: marka B w seedzie, commit c40e7b1 (raport przyrostu 5); e2e na obu markach w liczbie 180 niżej\nPunkt 7: CLAUDE.md i decisions.md bez modelu jednej marki, commit 0566f75 (raport przyrostu 7)\nPunkt 6 (137d826): prove \"SUMMARY: 0 line(s) are not proofs\"; `RĘCZNE: 4/4 w decisions.md`\nPunkt 8 (137d826): `ZRZUTY: marka A 154/154, marka B 153/153 obejrzane`, `HLC: 12/12 tekstów`\npnpm check (137d826): \"Test Files 88 passed (88)\", \"Tests 991 passed (991)\"\ncontainer: \"GIT_SHA=137d8262e62620dd4cdab69e03fd7d46e81a712a\" = git rev-parse HEAD\ncontainer e2e (137d826): \"180 passed (3.7m)\"\nprove script (137d826): \"ALL ON: Tests 283 passed (283)\", \"SUMMARY: 0 line(s) are not proofs\" (linie baseline skryptu nie wklejone)\nops/: pusty git diff --stat cc1a363..137d826 -- ops/\nwhole-stage review (137d826): \"WYNIK: zero potwierdzonych znalezisk\" ×4",
+   "max_selected": 1,
+   "ratified": false
   }
+ ],
+ "calibration_cases": [
+  "pause-marcin-stops-missing-named",
+  "pause-self-declared",
+  "pause-words-only-in-tool-output",
+  "pause-without-missing-list",
+  "pause-then-resume",
+  "proofs-one-message-ops-changed",
+  "proofs-scattered",
+  "ops-changed-no-ops-check",
+  "ops-unchanged-no-ops-check",
+  "ops-unknown-no-ops-check",
+  "docs-only-commit-after-proofs",
+  "proof-before-last-code-commit"
  ]
 }

@@ -12,5 +12,7 @@
   "intro": "Wykonaj etap „{name}” w {repo} według {dir}/{slug}-wymagania.md. Przeczytaj cały plik przed pracą: to on jest specyfikacją (decyzje produktu, zależności od etapów, „Poza zakresem”, [decyzja Marcina] / [do decyzji w decisions.md], przyrosty, advisor). Gotowe, gdy:\n",
   "goalTitle": "# {name}: cel",
   "specTitleSuffix": ": wymagania",
-  "pointer": "> Pełna specyfikacja etapu. Cel do wklejenia w `/goal` (limit 4000 znaków): `{slug}.md`."
+  "pointer": "> Pełna specyfikacja etapu. Cel do wklejenia w `/goal` (limit 4000 znaków): `{slug}.md`.",
+  "humanActionStems": ["obejrz", "human-language-check", "inwentarz", "przeklik", "ręcznie"],
+  "proofLineForm": "`[A-ZĄĆĘŁŃÓŚŹŻ][A-ZĄĆĘŁŃÓŚŹŻ0-9 _-]*: [^`]+`"
 }

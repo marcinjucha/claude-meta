@@ -22,6 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 S = json.load(open(os.path.join(HERE, "goal-strings.json"), encoding="utf-8"))
 LIMIT = S["limit"]
 POINT_RE = re.compile(r"^(\d+)\. ")
+PROOF_FORM = re.compile(S["proofLineForm"])
 
 
 def repo_root():
@@ -46,6 +47,12 @@ def first_line(lines, prefix):
         if l.startswith(prefix):
             return l
     return None
+
+
+def unproven_actions(points):
+    """Numbers of points naming a human/process action with no backticked `NAME: ...` proof line."""
+    return [n for n, l in points
+            if any(s in l.lower() for s in S["humanActionStems"]) and not PROOF_FORM.search(l)]
 
 
 def parse_spec(text):
@@ -187,6 +194,9 @@ def check_one(root, d, slug, proc):
     elif [l for _, l in gpts] != [l for _, l in spec["points"]]:
         diff = [x for (x, a), (_, b) in zip(gpts, spec["points"]) if a != b]
         warns.append("compressed points: %s" % ",".join(diff))
+    bare = unproven_actions(gpts)  # the goal, not the spec: the hook reads the goal
+    if bare:
+        warns.append("human/process action without a proof line (`NAME: ...`): %s" % ",".join(bare))
     if proc is not None and proc not in body:
         warns.append("process line differs from CLAUDE.md")
     if spec["scope"] and spec["scope"] not in body:
