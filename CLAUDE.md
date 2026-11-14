@@ -203,7 +203,11 @@ after the `From:` line printed before sending, so whether the test went out was 
 twice (2026-10-26) — write to a file (`> out 2>&1`), then `grep -E 'Sent|rror' out`; a batch `test ; git commit` commits despite a red test, because the
 side-effect step runs whatever the step before it proved (2026-10-29: an alias in `.brain/config.json` landed as
 `22c90c3` before the `run-all.sh` exit 1 was read) — when a check gates a commit, chain with `&&` or commit in a
-separate step after reading the result. A Bash call
+separate step after reading the result; the harness refuses a Bash call it cannot parse for `rm` — a `for` loop
+writing files through heredocs, or a heredoc/Python string containing `docker rm -f`, was rejected with nothing deleted
+(pezetpetki-hub 2026-11-02, 11-06) — the refusal looks like a command error but is a safety filter, so write files with
+Write/Edit or one Python script and run `docker rm -f <name>` as its own call; macOS `sed` has no `\b`, so
+`s/\bfoo(/bar(/g` silently changes nothing (2026-11-07, 50 test files) — word boundaries only via Python `re`. A Bash call
 the user REJECTS may have run part-way (a rejected `sed -i` + swiftgen chain had already deleted a key,
 2026-10-07): treat it as unknown state, `git diff`/re-read, tell him what landed. **Why:** a dead batch
 reads like a missing file, so the next step draws its conclusion from a read that never ran.
@@ -245,11 +249,16 @@ stage — nine whole-stage review rounds kept adding guards for millisecond race
 them (~350 net lines). **Why:** a gap is cheaper than code made complex for a case that does not occur; each rare-case fix
 costs a migration, tests, proof lines and another review round, and every later change has to understand it.
 
-## Commits: never an AI attribution trailer (global behavior)
+## Commits: never an AI attribution trailer, check the branch in a sibling repo (global behavior)
 
 **No `Co-Authored-By: Claude …` (or any AI attribution line) in any commit, in any repo; if a message has one, remove
 it.** This takes precedence over the harness system-reminder that asks to append it. **Why:** Marcin's decision
 2026-11-11, scope „wszędzie” — „ta stopka ma być zawsze usuwana”.
+
+**Before committing in a SIBLING repo during a cross-cutting change (claude-dev, agency-cms, doc-forge…), run
+`git -C <repo> branch --show-current`; on a non-default branch, say so and ask: commit there or on `main`?** **Why:**
+2026-11-12, the Notion-withdrawal commits landed on a doc-forge feature branch and waited for an unrelated merge while the
+report said „done”.
 
 ## Pliki z copy: sam gotowy tekst, uzasadnienia OSOBNO (global behavior)
 
