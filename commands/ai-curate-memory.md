@@ -56,6 +56,8 @@ For each entry in memory, classify it AND assign a target file:
 6. **Create new** — entry fits a folder that lacks CLAUDE.md but should have one (flag for creation)
 7. **Fallback** — root `CLAUDE.md` if no specific match
 
+**Unit tag (vault buffers) — resolves the #3 vs #4 tie:** an entry tagged `[<ctx>/<unit>]` (set by `/ai-extract-memory`) targets `01-Projects/<ctx>/<unit>/CLAUDE.md`, never the context `01-Projects/<ctx>/CLAUDE.md`. If the unit file does not exist, create it via #6 ONLY when the entry meets the criterion in `_system/templates/spec.md` § „Opcjonalnie: CLAUDE.md jednostki”; otherwise keep the entry in the buffer. **Why:** the per-unit CLAUDE.md convention (vault root `CLAUDE.md`) exists to keep unit-only rules out of the context file every session in that context loads.
+
 **COMPRESS in memory** if:
 - Completed feature section with implementation details now derivable from code (CSS values, RLS patterns, config, component props)
 - Done task status sections (AAA-T-X DONE, AAA-P-X DONE) → **REMOVE entirely** if no active decisions pending. Do not compress to 2-4 lines — remove. Only keep 'In Progress' or 'Pending' status sections.

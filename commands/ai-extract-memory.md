@@ -107,6 +107,8 @@ Append under the matching section:
 - **Title** — one-line explanation with WHY context
 ```
 
+**Unit-scoped lesson in a brain-vault buffer:** a lesson that binds ONLY one unit (a folder `01-Projects/<ctx>/<unit>/`: creator, client, case) starts with the tag `[<ctx>/<unit>]`, e.g. `- [shadow-operator/kacper-snela] **Title** — …`. **Why:** without the tag `/ai-curate-memory` promotes the lesson to the context CLAUDE.md and bloats exactly the file the per-unit CLAUDE.md convention relieves (criterion: `_system/templates/spec.md` § „Opcjonalnie: CLAUDE.md jednostki”).
+
 ## Rules
 
 - Do NOT add framework basics or standard patterns derivable from code
