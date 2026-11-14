@@ -14,5 +14,6 @@
   "specTitleSuffix": ": wymagania",
   "pointer": "> Pełna specyfikacja etapu. Cel do wklejenia w `/goal` (limit 4000 znaków): `{slug}.md`.",
   "humanActionStems": ["obejrz", "human-language-check", "inwentarz", "przeklik", "ręcznie"],
-  "proofLineForm": "`[A-ZĄĆĘŁŃÓŚŹŻ][A-ZĄĆĘŁŃÓŚŹŻ0-9 _-]*: [^`]+`"
+  "proofLineForm": "`[A-ZĄĆĘŁŃÓŚŹŻ][A-ZĄĆĘŁŃÓŚŹŻ0-9 _-]*: [^`]+`",
+  "scriptRefForm": "scripts/|\\b[\\w.-]+\\.(py|sh)\\b"
 }

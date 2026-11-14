@@ -38,20 +38,18 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
 
 - **Numbered „Gotowe, gdy:” points, each verifiable from the transcript** (a pasted output line, a count, a named
   file). WHY: a point the hook cannot see satisfied reopens the stage at every check-in.
-- **A point whose result is a human or process action (screenshots viewed, a language check, an inventory, a
-  click-through, a guard switched off by hand) ends with its PROOF LINE in a fixed backticked form**, e.g.
-  `INVENTORY: 0 bez rozstrzygnięcia (N pozycji)`, `ZRZUTY: marka A n/n, marka B n/n obejrzane`, `HLC: n/n tekstów`;
-  the line must rest on tool output shown in this session (a list or table a tool printed), never on the assistant's
-  claim alone. WHY: Ustawienia marki, 2026-11-12 — all proofs green, yet the hook refused closing four times with a
-  new standard each round: human-language-check visible for part of 49 new strings, the inventory without per-entry
-  evidence, screenshot sheets of brand B only. The points never said what the transcript must show, so the judge
-  invented it. `check` warns on such a point without the form.
-- **Every `NAME: n/m` proof line names where n comes from: a tool command whose output lists the items.**
-  course-platform: HLC = the new Polish strings `scripts/ship-plan.py close` prints; ZRZUTY = every shot of every
-  surface the stage changed, both brands, every width (until ship-plan prints that list, print the shot names you
-  count); RĘCZNE = the numbered hand guard-off entries in `docs/decisions.md`. WHY: Płatności i wideo marki,
-  2026-11-13 — `ZRZUTY: … n/n` had no n, the assistant counted the settings page only (3/3), the advisor rejected it,
-  the real n was 12 per brand; HLC passed at once because its n was a printed list (33).
+- **A point whose result is a judgment (screenshots viewed, a language check, an inventory, a click-through, a guard
+  switched off by hand) ends with a backticked proof line PRINTED BY A SCRIPT the point names BEFORE the line** — the
+  script compares a deterministic item list with a subagent's per-item report; never a `NAME: n/m` the model writes,
+  even with a printed list beside it. course-platform example: `python3 scripts/judgment_report.py tally HLC|ZRZUTY
+  <expected> <report>` prints `HLC: n/m obejrzane, k usterek, j brakujących` (`expected strings|shots` lists the
+  items, the subagent writes `<id> | ok|usterka | <note>`). No such script in the repo → write one before the stage
+  or drop the proof from the goal. `check` warns on a judgment point without a proof line, and on a proof line no
+  script precedes. WHY: a model-written count got a new standard from the hook each round — Ustawienia marki
+  2026-11-12 (four refusals: HLC on part of 49 strings, inventory without per-entry evidence, one brand's sheets),
+  Płatności i wideo marki 2026-11-13 (`ZRZUTY` without n: 3/3 counted, real 12 per brand); Funkcje marki 2026-11-14:
+  `HLC: 17/17 tekstów` from a subagent was refused ~8 times („the skill's own output” — a skill has none) until
+  `/goal clear`, and `ZRZUTY` passed only on a per-file subagent report.
 - **A security point names the wall the stage ADDS (database / adapter / server fn) and demands a guard-off proof only
   where that refusal is the ONLY wall on its path**; a refusal the database repeats gets a recorded reason, not a
   proof. WHY: same stage — „strażniki server fn wyłączone ręcznie” for panel fns the database refuses anyway (cutting
@@ -86,10 +84,9 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
     Never compress „oparta na wyjściu narzędzia pokazanym w tej sesji, nie na samym zapewnieniu”: eval 2026-11-13
     (haiku, 10 reps, `proof-line-asserted-only`), without it 0.20, with only „nie zapewnienie” 0.40, with it
     0.60–0.80. „Jeśli jest” at point 0 stays too: stages without a point 0 would get a proof demanded that cannot exist;
-  - pause clause: Marcin's own message (not the assistant's) telling it to stop + the assistant's reply naming the
-    missing proofs and their SHA = condition met for this session; the stage stays open, the next session sets
-    `/goal` again. WHY: the hook knows only met/unmet and the assistant cannot pause a goal (Marki: „kończymy na
-    dzisiaj” mid-proof → 7 re-prompts until `/goal clear`). [do potwierdzenia] that the hook honours it;
+  - no pause clause: the dependable stop is Marcin's `/goal clear`, nothing in the condition. WHY: the real hook
+    refused the clause (Marki, 2026-11-11: „wymienienie braków nie spełnia warunku”); if it loops, one reply with the
+    state and „wpisz /goal clear”;
   - does NOT block: anything in „Poza zakresem”, `[do potwierdzenia]` needing external access, proposals handed to
     Marcin.
 
@@ -128,7 +125,8 @@ propose adding them to that repo's CLAUDE.md. Never invent a proof list.
 `check` FAIL: over limit · no done marker · no closing block · no pointer to the spec or no back-pointer · point
 numbering differs from the spec (a point was lost). WARN: compressed points · closing or process line differs from
 its source · scope line not in the goal · spec lacks advisor/scope line · a point names a human/process action
-(stems in `goal-strings.json` `humanActionStems`) with no backticked `NAME: …` proof line.
+(stems in `goal-strings.json` `humanActionStems`) with no backticked `NAME: …` proof line · a proof line with no
+script named before it in its point (`scriptRefForm`: `scripts/` or a `.py`/`.sh` name).
 
 Assembled goal = intro (template) + spec points verbatim + „Poza zakresem” line (only if total ≤ 4000) + process
 line + spec closing line verbatim.
@@ -141,7 +139,7 @@ source. WHY: Polish literals in Python source have crashed or silently dropped d
 - ❌ One goal file holding the whole spec → over 4000, `/goal` refuses it.
 - ❌ Editing a point only in `<stage>.md` → the spec and the goal disagree; the next build overwrites it.
 - ❌ A closing block that lists only proofs → the hook blocks on out-of-scope items and docs-only commits.
-- ❌ A human/process point without a proof line, or proof lines the assistant only asserts → the hook invents a
-  standard per check-in and the stage never closes.
-- ❌ No pause clause → a user's "stop for today" mid-proof turns into a hook loop until `/goal clear`.
+- ❌ A judgment point without a proof line, or a proof line the model writes instead of a script printing it → the
+  hook invents a standard per check-in and the stage never closes.
+- ❌ A pause clause in the closing block → the hook refuses it anyway; stopping is Marcin's `/goal clear`.
 - ❌ Copying the course-platform proof list into another repo's goal → wrong proofs, a stage that can never close.

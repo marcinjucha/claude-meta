@@ -23,6 +23,7 @@ S = json.load(open(os.path.join(HERE, "goal-strings.json"), encoding="utf-8"))
 LIMIT = S["limit"]
 POINT_RE = re.compile(r"^(\d+)\. ")
 PROOF_FORM = re.compile(S["proofLineForm"])
+SCRIPT_REF = re.compile(S["scriptRefForm"])
 
 
 def repo_root():
@@ -53,6 +54,24 @@ def unproven_actions(points):
     """Numbers of points naming a human/process action with no backticked `NAME: ...` proof line."""
     return [n for n, l in points
             if any(s in l.lower() for s in S["humanActionStems"]) and not PROOF_FORM.search(l)]
+
+
+def unscripted_proofs(points):
+    """Numbers of points with a `NAME: ...` proof line that no script names before it.
+
+    The script must appear between the previous proof line (or the point start) and this one, so a
+    script named only AFTER the line (`HLC: n/n` (n = what ship-plan.py lists)) does not count: that
+    line is still a count the model writes, which the stop hook refuses (Funkcje marki, 2026-11-14).
+    """
+    out = []
+    for n, l in points:
+        start = 0
+        for m in PROOF_FORM.finditer(l):
+            if not SCRIPT_REF.search(l[start:m.start()]):
+                out.append(n)
+                break
+            start = m.end()
+    return out
 
 
 def parse_spec(text):
@@ -197,6 +216,9 @@ def check_one(root, d, slug, proc):
     bare = unproven_actions(gpts)  # the goal, not the spec: the hook reads the goal
     if bare:
         warns.append("human/process action without a proof line (`NAME: ...`): %s" % ",".join(bare))
+    unscripted = unscripted_proofs(gpts)
+    if unscripted:
+        warns.append("proof line not printed by a named script (name it before the line): %s" % ",".join(unscripted))
     if proc is not None and proc not in body:
         warns.append("process line differs from CLAUDE.md")
     if spec["scope"] and spec["scope"] not in body:
