@@ -161,7 +161,10 @@
     "claude-hud@claude-hud": true,
     "frontend-design@claude-plugins-official": true,
     "taste-skill@taste-skill": true,
-    "impeccable@impeccable": true
+    "impeccable@impeccable": true,
+    "figma@claude-plugins-official": true,
+    "firebase@firebase": true,
+    "firebase@anthropic-plugin-directory": true
   },
   "extraKnownMarketplaces": {
     "claude-hud": {
@@ -181,10 +184,17 @@
         "source": "github",
         "repo": "pbakaus/impeccable"
       }
+    },
+    "firebase": {
+      "source": {
+        "source": "github",
+        "repo": "firebase/firebase-tools"
+      }
     }
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "medium",
+  "advisorModel": "fable",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
