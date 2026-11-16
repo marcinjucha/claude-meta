@@ -4,6 +4,7 @@
   "doneMarkers": ["Gotowe, gdy:", "Skrót warunku ukończenia:"],
   "scopeMarker": "Poza zakresem",
   "closingMarker": "Zamknięcie (dla stop hooka):",
+  "closingReview": "/code-review high",
   "advisorMarker": "Advisor:",
   "processLabel": "Process line for the goal",
   "quoteOpen": "„",

@@ -12,6 +12,6 @@ Poza zakresem: <jedna linia; trafia też do celu, gdy się zmieści>
 
 <WKLEJ z CLAUDE.md „Stage process”: regułę przeglądów według prawdopodobieństwa>
 <WKLEJ z CLAUDE.md „Stage process”: dwie reguły MUST (testy jak kod produkcyjny, Boy Scout)>
-Przyrosty osobno (<0. linia bazowa>, <1. …>, …): każdy projekt → implementacja → review tylko tego przyrostu → <weryfikacja repo> → osobny commit, zanim ruszy następny. Niezależny przegląd innym narzędziem i wszystkie poprawki PRZED długim skryptem dowodowym, potem dowody raz. Na koniec review całego etapu (diff od startu do HEAD) do zera potwierdzonych znalezisk.
+Przyrosty osobno (<0. linia bazowa>, <1. …>, …): każdy projekt → implementacja → review tylko tego przyrostu → <weryfikacja repo> → osobny commit, zanim ruszy następny. Niezależny przegląd innym narzędziem i wszystkie poprawki PRZED długim skryptem dowodowym, potem dowody raz. Na koniec `/code-review high` całego etapu (diff od bazy etapu do HEAD), powtarzany do zera potwierdzonych znalezisk; poprawki przed zamrożeniem kodu i końcowymi dowodami.
 <WKLEJ z CLAUDE.md „Stage process”: linię „Advisor:”>
-<WKLEJ z CLAUDE.md „Stage process”: blok „Zamknięcie (dla stop hooka):” z listą dowodów repo — jedna linia; „Dowody na <SHA>” zaczyna się od linii na punkt, potem linie podsumowania, punkt 0 nazwany wprost, nigdy „linie bazowe”>
+<WKLEJ z CLAUDE.md „Stage process”: blok „Zamknięcie (dla stop hooka):” z listą dowodów repo — jedna linia; „Dowody na <SHA>” zaczyna się od linii na punkt, potem linie podsumowania, punkt 0 nazwany wprost, nigdy „linie bazowe”; pozycja przeglądu w bloku = `/code-review high` od bazy do finalnego SHA, linia `CODE-REVIEW: 0 potwierdzonych na <SHA>`>

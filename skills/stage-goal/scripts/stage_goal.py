@@ -196,6 +196,9 @@ def check_one(root, d, slug, proc):
         fails.append("no closing block")
     elif spec["closing"] and gclosing != spec["closing"]:
         warns.append("closing differs from spec")
+    if gclosing and S["closingReview"] not in gclosing:
+        fails.append("closing block does not require '%s' on the whole-stage diff (base..final SHA)"
+                     % S["closingReview"])
     if slug + S["specSuffix"] + ".md" not in body:
         fails.append("no pointer to spec")
     if "`%s.md`" % slug not in spec_text:

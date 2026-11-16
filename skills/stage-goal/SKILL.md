@@ -58,12 +58,15 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
 - **Decision markers:** `[decyzja Marcina]` = ask Marcin before that increment; `[do decyzji w decisions.md]` =
   decide yourself and record it with the rejected variants. The legend goes in the spec's intro.
 - **„Poza zakresem:” as ONE line.** The script lifts it into the goal; a multi-line scope cannot be lifted.
-- **Increments, each with its own review + commit, whole-stage review last.** Put the independent review with a
-  different tool (e.g. `/code-review high`) and all its fixes BEFORE the long proof run. Origin: pezetpetki-hub
-  Strona i blog, 2026-11-07 — four whole-stage rounds said "zero findings", `/code-review high` still found
-  normal-use bugs, and three full proof runs went to SHAs that then changed. Closing order = whole-stage review to
+- **Increments, each with its own review + commit, whole-stage review last.** The last whole-stage round is
+  REQUIRED to be `/code-review high` on the whole-stage diff (stage base..HEAD), repeated until zero confirmed
+  findings, all its fixes BEFORE the long proof run. Origin: pezetpetki-hub Strona i blog, 2026-11-07 — four
+  whole-stage rounds said "zero findings", `/code-review high` still found normal-use bugs, and three full proof runs
+  went to SHAs that then changed. WHY required, not an example: Marcin 2026-11-16 (Raport sprzedaży) expected it at
+  the stage's end while neither the goal nor the instructions said so. Closing order = whole-stage review to
   zero → its fixes and Boy Scout commits → code frozen → final proofs; nothing but docs after the first final proof
-  (Marki, 2026-11-11: the final SHA moved four times, each move = a full new proof set).
+  (Marki, 2026-11-11: the final SHA moved four times, each move = a full new proof set). A commit touching code after
+  the zero round → the round runs again on the new final SHA (the zero round must be on the final SHA).
 - **Closing block „Zamknięcie (dla stop hooka):” on ONE line**, shape:
   - final SHA = last commit touching code, tests, migrations, `ops/` or the proof script; docs-only commits need
     no new proofs or review;
@@ -71,6 +74,14 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
   - every per-SHA proof the repo needs, conditional ones named with their condition (course-platform:
     `OPS CHECK: OK` when the stage changed `ops/`). WHY: a proof the block does not name, the hook may invent or
     skip (Marki: it demanded check-ops mid-loop, unlisted);
+  - final review round = `/code-review high` from stage base to the final SHA, repeated until zero confirmed findings,
+    its fixes before code freeze. It REPLACES the repo proof item „wynik ostatniej rundy przeglądu całego etapu
+    („zero potwierdzonych znalezisk”)” — never add a second review item (the hook could demand two reviews). `check`
+    FAILs a closing line without `/code-review high`. [do potwierdzenia] wording, NOT eval-tested yet (+183 chars over
+    the old item): „wynik ostatniej rundy `/code-review high` na diffie całego etapu (baza..finalny SHA), powtarzanego
+    do zera potwierdzonych znalezisk, z poprawkami przed zamrożeniem kodu: `CODE-REVIEW: 0 potwierdzonych na <SHA>`,
+    oparta na wyjściu narzędzia pokazanym w tej sesji”. The `CODE-REVIEW` line rests on the review's tool output in
+    the transcript, never typed by the model (same reason as the judgment-proof rule above);
   - all proofs in ONE message „Dowody na <SHA>”, copied from log files, each line with the SHA it ran on; the
     message opens with one line per numbered point (the increment's commit, or the point's `NAME: …` line resting on
     tool output shown in this session), then summary lines (`SUMMARY: 0 line(s) are not proofs`, `ALL ON: N passed`,
