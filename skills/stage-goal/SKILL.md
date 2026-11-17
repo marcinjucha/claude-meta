@@ -58,15 +58,22 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
 - **Decision markers:** `[decyzja Marcina]` = ask Marcin before that increment; `[do decyzji w decisions.md]` =
   decide yourself and record it with the rejected variants. The legend goes in the spec's intro.
 - **„Poza zakresem:” as ONE line.** The script lifts it into the goal; a multi-line scope cannot be lifted.
-- **Increments, each with its own review + commit, whole-stage review last.** The last whole-stage round is
-  REQUIRED to be `/code-review high` on the whole-stage diff (stage base..HEAD), repeated until zero confirmed
-  findings, all its fixes BEFORE the long proof run. Origin: pezetpetki-hub Strona i blog, 2026-11-07 — four
-  whole-stage rounds said "zero findings", `/code-review high` still found normal-use bugs, and three full proof runs
-  went to SHAs that then changed. WHY required, not an example: Marcin 2026-11-16 (Raport sprzedaży) expected it at
-  the stage's end while neither the goal nor the instructions said so. Closing order = whole-stage review to
-  zero → its fixes and Boy Scout commits → code frozen → final proofs; nothing but docs after the first final proof
-  (Marki, 2026-11-11: the final SHA moved four times, each move = a full new proof set). A commit touching code after
-  the zero round → the round runs again on the new final SHA (the zero round must be on the final SHA).
+- **Increments, each with its own review + commit, whole-stage review last.** A stage is several increments, so its
+  last round is REQUIRED to be `/code-review high` on the whole-stage diff (stage base..HEAD): AT MOST 3 rounds, the
+  loop ends earlier after a round with zero confirmed findings OR with only narrower cases than the previous round;
+  every round's prompt carries the likelihood filter (fix only what normal use hits, another brand's or buyer's data,
+  data loss, wrong amounts); everything else goes to the repo's `decisions.md` as accepted classes. A change outside a stage
+  gets the same loop when it exceeds ~300 changed lines or touches schema, migrations, permissions or payments,
+  otherwise ONE `/code-review medium` round, no loop. WHY: Marcin 2026-11-17 — „zależy mi na tym, żeby jakość kodu była wysoka. Jak jest dużo zmian, to
+  chcę mieć pełen przegląd. Jedynie nie chcę, żeby to było nadużywane”; in Raport sprzedaży five rounds added
+  cache/refetch guards that an audit then removed. Origin of the whole-stage round: pezetpetki-hub Strona i blog,
+  2026-11-07 — four whole-stage rounds said "zero findings", `/code-review high` still found normal-use bugs, and
+  three full proof runs went to SHAs that then changed. Closing order = whole-stage review → its fixes and Boy Scout
+  commits → code frozen → final proofs; nothing but docs after the first final proof (Marki, 2026-11-11: the final SHA
+  moved four times, each move = a full new proof set). The round that ends the loop runs on the final SHA, so after
+  round 3 only critical findings (other brand's/buyer's data, data loss, wrong amounts) are fixed, each with one
+  confirming round on the new final SHA [do potwierdzenia: Marcin's 3-round cap does not say how a round-3 fix is
+  confirmed].
 - **Closing block „Zamknięcie (dla stop hooka):” on ONE line**, shape:
   - final SHA = last commit touching code, tests, migrations, `ops/` or the proof script; docs-only commits need
     no new proofs or review;
@@ -74,14 +81,22 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
   - every per-SHA proof the repo needs, conditional ones named with their condition (course-platform:
     `OPS CHECK: OK` when the stage changed `ops/`). WHY: a proof the block does not name, the hook may invent or
     skip (Marki: it demanded check-ops mid-loop, unlisted);
-  - final review round = `/code-review high` from stage base to the final SHA, repeated until zero confirmed findings,
-    its fixes before code freeze. It REPLACES the repo proof item „wynik ostatniej rundy przeglądu całego etapu
-    („zero potwierdzonych znalezisk”)” — never add a second review item (the hook could demand two reviews). `check`
-    FAILs a closing line without `/code-review high`. [do potwierdzenia] wording, NOT eval-tested yet (+183 chars over
-    the old item): „wynik ostatniej rundy `/code-review high` na diffie całego etapu (baza..finalny SHA), powtarzanego
-    do zera potwierdzonych znalezisk, z poprawkami przed zamrożeniem kodu: `CODE-REVIEW: 0 potwierdzonych na <SHA>`,
-    oparta na wyjściu narzędzia pokazanym w tej sesji”. The `CODE-REVIEW` line rests on the review's tool output in
-    the transcript, never typed by the model (same reason as the judgment-proof rule above);
+  - final review = the capped `/code-review high` loop above. It REPLACES the repo proof item „wynik ostatniej rundy
+    przeglądu całego etapu („zero potwierdzonych znalezisk”)” — never add a second review item (the hook could demand
+    two reviews). Clause (+321 chars over the old item; source `evals/stop-hook/conditions/E2.md`): „`/code-review
+    high` baza..finalny SHA, najwyżej 3 rundy, poprawki przed zamrożeniem kodu, reszta jako przyjęte klasy w
+    decisions.md: `CODE-REVIEW: <SHA>, rundy: <N>, ostatnia: 0 potwierdzonych|tylko węższe niż poprzednia|limit 3,
+    przyjęte klasy: <K>` (K = wpisy ostatniej rundy w decisions.md, 0 przy zerze potwierdzonych), oparta na wyjściu
+    narzędzia pokazanym w tej sesji, nie na samym zapewnieniu”. Budget it: Funkcje marki's goal had 8 chars left. The line
+    rests on the review's tool output in the transcript (the forked Skill result), never typed by the model (same
+    reason as the judgment-proof rule above); a capped ending with accepted findings is a valid close. The old line
+    `CODE-REVIEW: 0 potwierdzonych na <SHA>` and „do zera” could never close a capped loop. `check` FAILs a closing
+    line without `/code-review high`, without a `CODE-REVIEW:` line, or with the old shape. [do potwierdzenia] eval 2026-11-17
+    (haiku, 10 reps per case, gold met/unmet/met): without the K gloss (E) `final-round-shown` 7/10 and 6/10 (the
+    judge wanted decisions.md entries behind „przyjęte klasy: 0”), `asserted-only` 10/10 ×2, `capped-accepted`
+    8/10 and 9/10; with it (E2) 8/10, 10/10, 10/10, `shown-handoff-tail` 9/10. E2's remaining misses are fixture
+    noise (the Marki ZRZUTY filter), but E2 was worded after seeing these cases, so the mark stays until a fresh
+    case set or a real stage close passes it. Old item (DR) on `capped-accepted`: 0/10.
   - all proofs in ONE message „Dowody na <SHA>”, copied from log files, each line with the SHA it ran on; the
     message opens with one line per numbered point (the increment's commit, or the point's `NAME: …` line resting on
     tool output shown in this session), then summary lines (`SUMMARY: 0 line(s) are not proofs`, `ALL ON: N passed`,
@@ -95,9 +110,15 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
     Never compress „oparta na wyjściu narzędzia pokazanym w tej sesji, nie na samym zapewnieniu”: eval 2026-11-13
     (haiku, 10 reps, `proof-line-asserted-only`), without it 0.20, with only „nie zapewnienie” 0.40, with it
     0.60–0.80. „Jeśli jest” at point 0 stays too: stages without a point 0 would get a proof demanded that cannot exist;
-  - no pause clause: the dependable stop is Marcin's `/goal clear`, nothing in the condition. WHY: the real hook
-    refused the clause (Marki, 2026-11-11: „wymienienie braków nie spełnia warunku”); if it loops, one reply with the
-    state and „wpisz /goal clear”;
+  - no pause clause: the dependable stop is `/goal clear` from outside the session, nothing in the condition. WHY:
+    the real hook refused the clause (Marki, 2026-11-11: „wymienienie braków nie spełnia warunku”);
+  - if the hook refuses a close the worker holds complete: ONE message with the proof state (the full „Dowody na
+    <SHA>”, what the hook demands, „cel do wyczyszczenia”), then end the turn; no further reworks or reply variants.
+    The person clears the goal; under the Discord bridge nobody can type, so the coordinator sends a `goal` action
+    with condition „clear”. WHY: Raport sprzedaży, 2026-11-17 — five of nine refusals got a bare „Wpisz
+    `/goal clear`”, the hook judged that line as the close („the assistant's last message is only `/goal
+    clear`”), Claude Code cut the loop after 9 refusals (`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`) and the bridge got an
+    empty report;
   - does NOT block: anything in „Poza zakresem”, `[do potwierdzenia]` needing external access, proposals handed to
     Marcin.
 
@@ -133,8 +154,9 @@ propose adding them to that repo's CLAUDE.md. Never invent a proof list.
 | `build <slug> --write [--force]` | write `<slug>.md`; refuses to replace a hand-compressed goal without `--force`; over limit → writes nothing, exit 1 |
 | `check [<slug>\|all]` | `all` = only stages with a `-wymagania.md` sibling (legacy single-file goals listed as skipped) |
 
-`check` FAIL: over limit · no done marker · no closing block · no pointer to the spec or no back-pointer · point
-numbering differs from the spec (a point was lost). WARN: compressed points · closing or process line differs from
+`check` FAIL: over limit · no done marker · no closing block · closing without `/code-review high`, without a
+`CODE-REVIEW:` line, or with the uncapped shape (`reviewOldForms`) · no pointer to the spec or no back-pointer · point
+numbering differs from the spec (a point was lost). WARN: process line with the uncapped review (`reviewOldForms`) · compressed points · closing or process line differs from
 its source · scope line not in the goal · spec lacks advisor/scope line · a point names a human/process action
 (stems in `goal-strings.json` `humanActionStems`) with no backticked `NAME: …` proof line · a proof line with no
 script named before it in its point (`scriptRefForm`: `scripts/` or a `.py`/`.sh` name).
@@ -152,5 +174,8 @@ source. WHY: Polish literals in Python source have crashed or silently dropped d
 - ❌ A closing block that lists only proofs → the hook blocks on out-of-scope items and docs-only commits.
 - ❌ A judgment point without a proof line, or a proof line the model writes instead of a script printing it → the
   hook invents a standard per check-in and the stage never closes.
-- ❌ A pause clause in the closing block → the hook refuses it anyway; stopping is Marcin's `/goal clear`.
+- ❌ A pause clause in the closing block → the hook refuses it anyway; stopping is `/goal clear` from outside.
+- ❌ Answering each refusal of a complete close with „wpisz /goal clear” → the hook judges that line as the close,
+  the 9-refusal cap ends the run and the report is empty; one proof-state message, then the coordinator clears.
+- ❌ A review rule „repeated until zero confirmed findings” → no cap, the loop adds guards for ever narrower cases.
 - ❌ Copying the course-platform proof list into another repo's goal → wrong proofs, a stage that can never close.

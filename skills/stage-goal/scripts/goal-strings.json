@@ -5,6 +5,8 @@
   "scopeMarker": "Poza zakresem",
   "closingMarker": "Zamknięcie (dla stop hooka):",
   "closingReview": "/code-review high",
+  "closingReviewLine": "`CODE-REVIEW: ",
+  "reviewOldForms": ["do zera potwierdzonych", "CODE-REVIEW: 0 potwierdzonych na"],
   "advisorMarker": "Advisor:",
   "processLabel": "Process line for the goal",
   "quoteOpen": "„",

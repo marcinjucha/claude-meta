@@ -199,6 +199,12 @@ def check_one(root, d, slug, proc):
     if gclosing and S["closingReview"] not in gclosing:
         fails.append("closing block does not require '%s' on the whole-stage diff (base..final SHA)"
                      % S["closingReview"])
+    if gclosing and S["closingReviewLine"] not in gclosing:
+        fails.append("closing block has no %s...` line (the review's proof line)" % S["closingReviewLine"])
+    if gclosing and any(f in gclosing for f in S["reviewOldForms"]):
+        fails.append("closing block has the uncapped review wording (a 3-round loop could never close)")
+    if proc is not None and any(f in proc for f in S["reviewOldForms"]):
+        warns.append("process line in CLAUDE.md has the uncapped review wording (fix the repo profile)")
     if slug + S["specSuffix"] + ".md" not in body:
         fails.append("no pointer to spec")
     if "`%s.md`" % slug not in spec_text:
