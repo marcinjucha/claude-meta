@@ -70,10 +70,8 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
   2026-11-07 — four whole-stage rounds said "zero findings", `/code-review high` still found normal-use bugs, and
   three full proof runs went to SHAs that then changed. Closing order = whole-stage review → its fixes and Boy Scout
   commits → code frozen → final proofs; nothing but docs after the first final proof (Marki, 2026-11-11: the final SHA
-  moved four times, each move = a full new proof set). The round that ends the loop runs on the final SHA, so after
-  round 3 only critical findings (other brand's/buyer's data, data loss, wrong amounts) are fixed, each with one
-  confirming round on the new final SHA [do potwierdzenia: Marcin's 3-round cap does not say how a round-3 fix is
-  confirmed].
+  moved four times, each move = a full new proof set). The round that ends the loop runs on the final SHA. [do
+  potwierdzenia] open: what happens when a round-3 fix changes code (the cap allows no fourth round).
 - **Closing block „Zamknięcie (dla stop hooka):” on ONE line**, shape:
   - final SHA = last commit touching code, tests, migrations, `ops/` or the proof script; docs-only commits need
     no new proofs or review;
@@ -94,9 +92,11 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
     line without `/code-review high`, without a `CODE-REVIEW:` line, or with the old shape. [do potwierdzenia] eval 2026-11-17
     (haiku, 10 reps per case, gold met/unmet/met): without the K gloss (E) `final-round-shown` 7/10 and 6/10 (the
     judge wanted decisions.md entries behind „przyjęte klasy: 0”), `asserted-only` 10/10 ×2, `capped-accepted`
-    8/10 and 9/10; with it (E2) 8/10, 10/10, 10/10, `shown-handoff-tail` 9/10. E2's remaining misses are fixture
-    noise (the Marki ZRZUTY filter), but E2 was worded after seeing these cases, so the mark stays until a fresh
-    case set or a real stage close passes it. Old item (DR) on `capped-accepted`: 0/10.
+    8/10 and 9/10; with it (E2) 8/10, 10/10, 10/10, `shown-handoff-tail` 9/10. Old item (DR) on the same excerpt:
+    `final-round-shown` 10/10, `handoff-tail` 10/10, `capped-accepted` 0/10 — the new clause buys the capped close
+    at the cost of a stricter judge on a complete one. E2's misses: the Marki ZRZUTY filter (fixture), and once the
+    likelihood filter in the review prompt read as „a self-written narrowed filter” against `/code-review high`. E2
+    was worded after seeing these cases, so the mark stays until a fresh case set or a real stage close passes it.
   - all proofs in ONE message „Dowody na <SHA>”, copied from log files, each line with the SHA it ran on; the
     message opens with one line per numbered point (the increment's commit, or the point's `NAME: …` line resting on
     tool output shown in this session), then summary lines (`SUMMARY: 0 line(s) are not proofs`, `ALL ON: N passed`,
