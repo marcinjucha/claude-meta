@@ -168,6 +168,13 @@ its source · scope line not in the goal · spec lacks advisor/scope line · a p
 (stems in `goal-strings.json` `humanActionStems`) with no backticked `NAME: …` proof line · a proof line with no
 script named before it in its point (`scriptRefForm`: `scripts/` or a `.py`/`.sh` name).
 
+**Before tightening a `check` rule:** run `check all` in each repo with goals and show Marcin how many goals would
+FAIL and their lengths after the change. Closed goals stay FAIL; open ones are rebuilt by their thread; the repo
+CLAUDE.md profiles (closing block from „Stage process”) get the new text in the same change. WHY: 2026-11-16 the FAIL
+for a closing block without `/code-review high` failed all 8 course-platform goals with a spec, the open one
+included, three would exceed 4000 chars, and every NEW stage would fail too, since its closing block comes from the
+repo CLAUDE.md.
+
 Assembled goal = intro (template) + spec points verbatim + „Poza zakresem” line (only if total ≤ 4000) + process
 line + spec closing line verbatim.
 
