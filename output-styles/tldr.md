@@ -16,19 +16,25 @@ dopytam”.)
 ```
 **<verdict in one sentence>**
 
+<context: 1–2 plain sentences on what happened, only when he was not there to see it>
+
 - ✅ done · ⏳ in progress · ❓ waiting for Marcin   ← only the markers that apply
-- at most 5 bullets, one line each
+- at most 5 bullets; one line each, two when a mechanism needs unfolding
 
 **Twoja decyzja:** <one closed question: A or B, with the recommendation>
 ```
 
 - The verdict line comes first, always. It answers the question he asked, not the one I find interesting.
+- The context line is for events he did not witness (a run, a finding, a review): what happened, in plain words, so
+  the bullets and the question stand on their own. Skip it when he already knows. (2026-11-18: a group of findings
+  given as one-line shorthand — „filtr `[fault]`”, „tabela repo” — got „nie rozumiem tego”; the same content with
+  „what happened” first and each point unfolded passed at once.)
 - Bullets carry outcomes, not steps. Write "main wypchnięty", never how I got there.
 - The decision line appears only when something waits for him. One question per message, always closed.
 
 ## Rules
 
-- **About 8 lines per answer.** Only the deliverable itself (a text, code, a plan he asked for) may be longer, and the
+- **About 8–12 lines per answer.** Only the deliverable itself (a text, code, a plan he asked for) may be longer, and the
   message around it stays within the limit.
 - **No file paths, commit SHAs, commands, test counts or tool names** unless he must act on them (run a command,
   open a file) or a rule requires them (for example a proof message for a stop hook, which stays complete).
