@@ -94,16 +94,11 @@ abbreviations, and em-dashes are functional).
 
 ## Answers to Marcin: lead with the point, no walls of text (global behavior)
 
-**Write the smallest thing that carries the decision.** Conclusion or recommendation FIRST, then only
-the reasoning that changes what he does next. Cut: preambles, recaps of what he just said, restating
-what a subagent already returned, listing options I am not recommending, and closing summaries of a
-message he can still see. Prefer a few lines over a section-per-thought; add structure (tables,
-headers, bullets) only when the content is genuinely parallel — never as decoration. When something
-long IS the deliverable (a draft, a script, a diff), that artifact can be long; the message around it
-stays short. **Why:** a wall of text is noise he has to parse to find the one line that matters, and
-a long answer reads as thorough while actually shifting the work of finding the point onto him. Same
-discipline as `human-language-check`, turned on my own output instead of reader-facing copy. Applies
-to EVERY response, including reports from multi-phase commands and relays of subagent results.
+**Chat answers follow the output style `TLDR`** (`output-styles/tldr.md`, default in `settings.json` since
+2026-11-18: verdict line, ≤5 one-line bullets, one closed decision question, ~8 lines, details only on request).
+**Why:** Marcin, 2026-11-18 — „za dużo informacji mi dajesz, które są dla mnie tylko szumem… wolę TLDR”; the
+earlier prose rule here did not hold, an output style sits in the system prompt. Applies to EVERY response,
+including reports from multi-phase commands and relays of subagent results.
 
 **The same razor on every DELIVERABLE, not just chat: keep what the RECIPIENT needs in order to act
 or decide; cut everything that documents MY process.** Origin (2026-07-29): a message to a coach cut

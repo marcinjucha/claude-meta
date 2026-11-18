@@ -164,7 +164,8 @@
     "impeccable@impeccable": true,
     "figma@claude-plugins-official": true,
     "firebase@firebase": true,
-    "firebase@anthropic-plugin-directory": true
+    "firebase@anthropic-plugin-directory": true,
+    "discord@anthropic-plugin-directory": false
   },
   "extraKnownMarketplaces": {
     "claude-hud": {
@@ -200,5 +201,6 @@
   "skipWorkflowUsageWarning": true,
   "editorMode": "normal",
   "autoScrollEnabled": true,
-  "voiceEnabled": false
+  "voiceEnabled": false,
+  "outputStyle": "TLDR"
 }
