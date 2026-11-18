@@ -16,7 +16,7 @@ Slash commands for managing Claude Code artifacts and utilities. All `ai-*` arti
 | `/ai-curate-memory` | Promote mature memory entries to CLAUDE.md files, existing skills, existing commands, or brain knowledge notes | ai-manager-agent (all CLAUDE.md/skill/command writes); analysis inline |
 | `/website` | Professional website/landing page from a brief: real-site references → impeccable build → motion → verification | impeccable (+ its agents), inline orchestration; ai-manager-agent in Phase 6 (proposals only) |
 
-Also here: `council.md`, `improve-process.md` (the only writer of process checklists `brain-vault/03-Resources/<ctx>/procesy/<repo>-<proces>.md`, called by `/brain-finish` after its report, terminal only; checklists are loaded by `/brain-load` Faza 2.9), `website.md` (native), and 12 `brain-*` symlinks into `brain-vault/.brain` (edit at source; 4 committed as symlink blobs, 8 untracked). `/brain-social` moved out on 2026-10-11; it now lives in `brain-vault/.claude/commands`.
+Also here: `council.md`, `website.md` (native), and 11 `brain-*` symlinks into `brain-vault/.brain` (edit at source; 3 committed as symlink blobs, 8 untracked). Among them `/brain-checklist` (lives in the vault so Grokbot, which reads the whole vault, sees it): the only writer of process checklists `brain-vault/03-Resources/<ctx>/procesy/<repo>-<proces>.md`, called by `/brain-finish` after its report, terminal only; checklists are loaded by `/brain-load` Faza 2.9. `/brain-social` moved out on 2026-10-11; it now lives in `brain-vault/.claude/commands`.
 
 ## Weird Parts / Key Patterns
 
