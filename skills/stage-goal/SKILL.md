@@ -149,7 +149,10 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
     clear`”), Claude Code cut the loop after 9 refusals (`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`) and the bridge got an
     empty report;
   - does NOT block: anything in „Poza zakresem”, `[do potwierdzenia]` needing external access, proposals handed to
-    Marcin.
+    Marcin, and the merge, push, deploy and live restart of the stage's branch, which wait for Marcin's „tak” after
+    the stage — the block names them in its „Nie blokuje” clause. WHY: Wołanie ClaudeBota z kanałów (claude-bot,
+    2026-11-21) — all eight points proven on the final SHA, yet the hook refused eight times: the block never named the
+    merge, so the unmerged branch read as unfinished work („a pending user decision, not an impossibility”).
 
 ## Repo profile — read it, never copy it into this skill
 
