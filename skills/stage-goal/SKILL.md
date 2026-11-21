@@ -68,11 +68,20 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
   chcę mieć pełen przegląd. Jedynie nie chcę, żeby to było nadużywane”; in Raport sprzedaży five rounds added
   cache/refetch guards that an audit then removed. Origin of the whole-stage round: pezetpetki-hub Strona i blog,
   2026-11-07 — four whole-stage rounds said "zero findings", `/code-review high` still found normal-use bugs, and
-  three full proof runs went to SHAs that then changed. Closing order = whole-stage review → its fixes and Boy Scout
-  commits → code frozen → final proofs; nothing but docs after the first final proof (Marki, 2026-11-11: the final SHA
-  moved four times, each move = a full new proof set). The round that ends the loop runs on the final SHA; when a
-  round-3 fix changes code, only those fixes get ONE `/code-review medium` round on their own diff (round-3
-  SHA..final SHA), the same rule as a small change (Marcin, 17.11).
+  three full proof runs went to SHAs that then changed. Closing order = whole-stage high round on the code as it stands
+  (base..H) → its fixes and Boy Scout commits → ONE `/code-review medium` round on those fixes only
+  (H..final SHA) → code frozen → final proofs; nothing but docs after the first final proof (Marki, 2026-11-11: the
+  final SHA moved four times, each move = a full new proof set). Whatever the medium round finds goes to accepted
+  classes (decisions.md, or the report where the repo has none) or to a new thread — never another round, never a
+  code change. WHY: claude-bot „Odłączeni wykonawcy”, 21.11 — the clause „high baza..finalny SHA” made the hook refuse
+  twice („finalny SHA nie jest objęty rundą high”) after a correct medium round on the fixes, forcing a second full high
+  round whose fixes needed review again; the chain of medium rounds on successive fixes found mostly bugs the previous
+  fix introduced, then oscillated on one mechanism, while the per-increment rounds had found the real normal-use bugs.
+- **Before the whole-stage high round, one live run of the real tool for every external format or behaviour the code
+  relies on** (CLI output, hooks, session behaviour). WHY: the same stage — test fakes encoded wrong assumptions; one
+  live run showed a `claude -p` result line starts with `{"duration_api_ms"`, not `{"type":"result"`, and that
+  `/goal` survives a process exit and `--resume` (code keeping its own copy of the goal was removed). These two
+  findings mattered more than any review round's.
 - **Closing block „Zamknięcie (dla stop hooka):” on ONE line**, shape:
   - final SHA = last commit touching code, tests, migrations, `ops/` or the proof script; docs-only commits need
     no new proofs or review;
@@ -82,16 +91,29 @@ hand; `check` reports it as compressed (WARN, not FAIL — a permanently red che
     skip (Marki: it demanded check-ops mid-loop, unlisted);
   - final review = the capped `/code-review high` loop above. It REPLACES the repo proof item „wynik ostatniej rundy
     przeglądu całego etapu („zero potwierdzonych znalezisk”)” — never add a second review item (the hook could demand
-    two reviews). Clause (+346 chars over the old item; source `evals/stop-hook/conditions/E3.md`): „`/code-review
-    high` baza..finalny SHA, najwyżej 3 rundy, poprawki przed zamrożeniem kodu, reszta jako przyjęte klasy w
-    decisions.md: `CODE-REVIEW: <SHA>, rundy: <N>, ostatnia: 0 potwierdzonych|tylko węższe niż poprzednia|limit 3 (+
-    medium na poprawkach), przyjęte klasy: <K>` (K = wpisy ostatniej rundy w decisions.md, 0 przy zerze potwierdzonych), oparta na wyjściu
-    narzędzia pokazanym w tej sesji, nie na samym zapewnieniu”. Budget it: Funkcje marki's goal had 8 chars left. A
-    medium round on round-3 fixes reads `ostatnia: limit 3 + medium na poprawkach: 0 potwierdzonych`. The line
+    two reviews). Clause (424 chars, the same length as the E3 wording below): „`/code-review high` baza..H,
+    najwyżej 3 rundy; poprawki (H..finalny SHA) jedną `/code-review medium`, jej znaleziska: decisions.md albo nowy
+    wątek, bez dalszej rundy: `CODE-REVIEW: <SHA>, high: <baza>..<H>, rundy: <N>, ostatnia: 0 potwierdzonych|tylko
+    węższe|limit 3, medium: <H>..<SHA>|brak, przyjęte klasy: <K>` (K = 0 przy zerze potwierdzonych), oparta na
+    wyjściu narzędzia pokazanym w tej sesji, nie na samym zapewnieniu”. One-round form (claude-bot, 405 chars):
+    „`/code-review high` baza..H, jedna runda; jej poprawki (H..finalny SHA) jedną `/code-review medium`, jej
+    znaleziska: raport albo nowy wątek, bez dalszej rundy: `CODE-REVIEW: <SHA>, high: <baza>..<H>, rundy: 1, ostatnia:
+    0 potwierdzonych|poprawione, medium: <H>..<SHA>|brak, przyjęte klasy: <K>` (K = 0 przy zerze potwierdzonych),
+    oparta na wyjściu narzędzia pokazanym w tej sesji, nie na samym zapewnieniu”. H = the SHA the last high round
+    saw, defined by „poprawki (H..finalny SHA)”; not „zamrożenie”, because process lines say „poprawki przed
+    zamrożeniem kodu” and a freeze before the fixes would mean two things in one goal. Both ranges sit in the line so
+    the hook can verify which code each round saw; `|brak` = no fixes after the high round (the E3 judge once read a
+    bare parenthesis as mandatory). Budget: swapped into szybkie-dowody it stays 3995/4000, into Odłączeni wykonawcy
+    3597 → 3623. Never compress „oparta na wyjściu…” (eval 2026-11-13 below). [do potwierdzenia] this wording has no
+    eval run and no real stage close; untested cuts against E3: „tylko węższe” (was „tylko węższe niż poprzednia”), K
+    gloss without „wpisy … w decisions.md” (E vs E2 showed the gloss mattered), no explicit „po niej bez zmian kodu”
+    (carried only by `medium: <H>..<SHA>` ending on the final SHA). The line
     rests on the review's tool output in the transcript (the forked Skill result), never typed by the model (same
     reason as the judgment-proof rule above); a capped ending with accepted findings is a valid close. The old line
     `CODE-REVIEW: 0 potwierdzonych na <SHA>` and „do zera” could never close a capped loop. `check` FAILs a closing
-    line without `/code-review high`, without a `CODE-REVIEW:` line, or with the old shape. [do potwierdzenia] eval 2026-11-17
+    line without `/code-review high`, without a `CODE-REVIEW:` line, with the old shape, or with „baza..finalny SHA”
+    (`reviewOldRange`). Evals below are of the PREVIOUS wording (E3 = „baza..finalny SHA … limit 3 (+ medium na
+    poprawkach)”, source `evals/stop-hook/conditions/E3.md`). [do potwierdzenia] eval 2026-11-17
     (haiku, 10 reps per case, gold met/unmet/met): without the K gloss (E) `final-round-shown` 7/10 and 6/10 (the
     judge wanted decisions.md entries behind „przyjęte klasy: 0”), `asserted-only` 10/10 ×2, `capped-accepted`
     8/10 and 9/10; with it (E2) 8/10, 10/10, 10/10, `shown-handoff-tail` 9/10. Old item (DR) on the same excerpt:
@@ -162,7 +184,7 @@ propose adding them to that repo's CLAUDE.md. Never invent a proof list.
 | `check [<slug>\|all]` | `all` = only stages with a `-wymagania.md` sibling (legacy single-file goals listed as skipped) |
 
 `check` FAIL: over limit · no done marker · no closing block · closing without `/code-review high`, without a
-`CODE-REVIEW:` line, or with the uncapped shape (`reviewOldForms`) · no pointer to the spec or no back-pointer · point
+`CODE-REVIEW:` line, with the uncapped shape (`reviewOldForms`) or the high round on base..final SHA (`reviewOldRange`) · no pointer to the spec or no back-pointer · point
 numbering differs from the spec (a point was lost). WARN: process line with the uncapped review (`reviewOldForms`) · compressed points · closing or process line differs from
 its source · scope line not in the goal · spec lacks advisor/scope line · a point names a human/process action
 (stems in `goal-strings.json` `humanActionStems`) with no backticked `NAME: …` proof line · a proof line with no
@@ -193,4 +215,6 @@ source. WHY: Polish literals in Python source have crashed or silently dropped d
   the 9-refusal cap ends the run and the report is empty; one proof-state message, then „stan bez zmian, dowody na
   <SHA> wyżej”, and the coordinator clears.
 - ❌ A review rule „repeated until zero confirmed findings” → no cap, the loop adds guards for ever narrower cases.
+- ❌ The high round on „baza..finalny SHA” → its own fixes leave the final SHA uncovered, the hook demands another
+  high round, and the fixes of that one need review again (claude-bot, 21.11).
 - ❌ Copying the course-platform proof list into another repo's goal → wrong proofs, a stage that can never close.

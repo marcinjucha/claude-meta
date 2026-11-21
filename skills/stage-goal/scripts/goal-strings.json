@@ -7,6 +7,7 @@
   "closingReview": "/code-review high",
   "closingReviewLine": "`CODE-REVIEW: ",
   "reviewOldForms": ["do zera potwierdzonych", "CODE-REVIEW: 0 potwierdzonych na"],
+  "reviewOldRange": ["baza..finalny SHA"],
   "advisorMarker": "Advisor:",
   "processLabel": "Process line for the goal",
   "quoteOpen": "„",

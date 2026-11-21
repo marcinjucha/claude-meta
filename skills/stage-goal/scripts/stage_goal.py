@@ -197,12 +197,14 @@ def check_one(root, d, slug, proc):
     elif spec["closing"] and gclosing != spec["closing"]:
         warns.append("closing differs from spec")
     if gclosing and S["closingReview"] not in gclosing:
-        fails.append("closing block does not require '%s' on the whole-stage diff (base..final SHA)"
-                     % S["closingReview"])
+        fails.append("closing block does not require '%s' on the whole-stage diff" % S["closingReview"])
     if gclosing and S["closingReviewLine"] not in gclosing:
         fails.append("closing block has no %s...` line (the review's proof line)" % S["closingReviewLine"])
     if gclosing and any(f in gclosing for f in S["reviewOldForms"]):
         fails.append("closing block has the uncapped review wording (a 3-round loop could never close)")
+    if gclosing and any(f in gclosing for f in S["reviewOldRange"]):
+        fails.append("closing block puts the high round on base..final SHA (its fixes then force another high"
+                     " round): high on base..H, medium on H..final SHA")
     if proc is not None and any(f in proc for f in S["reviewOldForms"]):
         warns.append("process line in CLAUDE.md has the uncapped review wording (fix the repo profile)")
     if slug + S["specSuffix"] + ".md" not in body:
